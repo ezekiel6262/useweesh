@@ -1,0 +1,27 @@
+{
+  "name": "intentos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IntentOS — a single-chain Intent Operating System native to X Layer",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "contracts"
+  ],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "chain": "npm run chain -w @intentos/contracts",
+    "deploy:local": "npm run deploy:local -w @intentos/contracts",
+    "demo": "npm run demo -w @intentos/solver-core",
+    "api": "npm run dev -w @intentos/api",
+    "solvers": "npm run dev -w @intentos/solver-agent",
+    "web": "npm run dev -w @intentos/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2",
+    "@types/node": "^22.9.0"
+  }
+}
