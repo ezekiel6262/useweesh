@@ -2,11 +2,11 @@ import {
   catalogFromDeployment,
   explainDraft,
   parseIntent,
-  type DeploymentFile,
   type IntentSpec,
 } from "@intentos/intent-ai";
 import { hashOutcome, hashPolicy, type Address } from "@intentos/intent-schema";
-import { PREVIEW_UNIVERSE } from "./universe.js";
+import { previewAuction } from "./auction.js";
+import { PREVIEW_ASSETS, PREVIEW_SOLVERS, PREVIEW_UNIVERSE, PREVIEW_VENUES } from "./universe.js";
 
 /**
  * The playground, compiled to run in the browser.
@@ -31,6 +31,7 @@ export interface ParsedView {
   quotesAvailable: boolean;
   outcome: {
     kind: number;
+    kindLabel: string;
     inputSymbol: string;
     inputAmount: string;
     maxSlippageBps: number;
@@ -48,6 +49,8 @@ export interface ParsedView {
   metadata: { schedule: unknown; conditions: unknown[] };
   commitment: { outcomeHash: string; policyHash: string };
 }
+
+const KIND_LABEL = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"] as const;
 
 export async function parse(prompt: string): Promise<ParsedView> {
   const parsed = await parseIntent(prompt, {
@@ -69,6 +72,7 @@ export async function parse(prompt: string): Promise<ParsedView> {
     quotesAvailable: false,
     outcome: {
       kind: draft.outcome.kind,
+      kindLabel: KIND_LABEL[draft.outcome.kind] ?? `KIND_${draft.outcome.kind}`,
       inputSymbol: symbolOf(draft.outcome.inputToken),
       inputAmount: draft.outcome.inputAmount.toString(),
       maxSlippageBps: draft.outcome.maxSlippageBps,
@@ -100,7 +104,18 @@ export async function parse(prompt: string): Promise<ParsedView> {
   };
 }
 
-export const assets = catalog.all().map((asset) => ({ symbol: asset.symbol, kind: asset.kind }));
+export const assets = PREVIEW_ASSETS.map((asset) => ({
+  symbol: asset.symbol,
+  kind: asset.kind,
+  name: asset.name,
+  assetRef: asset.assetRef,
+  attested: asset.attested,
+  class: asset.class,
+  usdPrice: asset.usdPrice,
+}));
+
+export const solvers = PREVIEW_SOLVERS;
+export const venues = PREVIEW_VENUES.map((v) => ({ name: v.name, feeBps: v.feeBps }));
 
 function symbolOf(token: string): string {
   return (
@@ -111,8 +126,14 @@ function symbolOf(token: string): string {
 
 declare global {
   interface Window {
-    IntentOS: { parse: typeof parse; assets: typeof assets };
+    IntentOS: {
+      parse: typeof parse;
+      previewAuction: typeof previewAuction;
+      assets: typeof assets;
+      solvers: typeof solvers;
+      venues: typeof venues;
+    };
   }
 }
 
-window.IntentOS = { parse, assets };
+window.IntentOS = { parse, previewAuction, assets, solvers, venues };

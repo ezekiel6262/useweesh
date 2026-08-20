@@ -39,3 +39,44 @@ export function normalise(deployment: DeploymentFile): DeploymentFile {
 }
 
 export const PREVIEW_UNIVERSE = normalise(RAW_PREVIEW);
+
+export interface PreviewAsset {
+  symbol: string;
+  name: string;
+  kind: "base" | "xstock";
+  decimals: number;
+  usdPrice: number;
+  assetRef: string;
+  attested: boolean;
+  class: "cash" | "equity" | "etf";
+}
+
+export const PREVIEW_ASSETS: PreviewAsset[] = [
+  { symbol: "USDT", name: "Tether USD", kind: "base", decimals: 6, usdPrice: 1, assetRef: "FIAT:USD", attested: true, class: "cash" },
+  { symbol: "TSLAx", name: "Tesla xStock", kind: "xstock", decimals: 18, usdPrice: 330, assetRef: "ISIN:US88160R1014", attested: true, class: "equity" },
+  { symbol: "NVDAx", name: "NVIDIA xStock", kind: "xstock", decimals: 18, usdPrice: 180, assetRef: "ISIN:US67066G1040", attested: true, class: "equity" },
+  { symbol: "AAPLx", name: "Apple xStock", kind: "xstock", decimals: 18, usdPrice: 230, assetRef: "ISIN:US0378331005", attested: true, class: "equity" },
+  { symbol: "SPYx", name: "S&P 500 xStock", kind: "xstock", decimals: 18, usdPrice: 640, assetRef: "ISIN:US78462F1030", attested: true, class: "etf" },
+  { symbol: "GOOGLx", name: "Alphabet xStock", kind: "xstock", decimals: 18, usdPrice: 200, assetRef: "ISIN:US02079K3059", attested: true, class: "equity" },
+];
+
+export const PREVIEW_VENUES = [
+  {
+    name: "OKX-DEX-sim",
+    feeBps: 30,
+    depthMultiplier: { TSLAx: 1.4, NVDAx: 1.5, AAPLx: 1.3, SPYx: 0.8, GOOGLx: 0.9 } as Record<string, number>,
+    priceSkewBps: { TSLAx: 0, NVDAx: -8, AAPLx: 0, SPYx: 12, GOOGLx: 6 } as Record<string, number>,
+  },
+  {
+    name: "XSwap-sim",
+    feeBps: 20,
+    depthMultiplier: { TSLAx: 0.9, NVDAx: 0.8, AAPLx: 1.0, SPYx: 1.6, GOOGLx: 1.2 } as Record<string, number>,
+    priceSkewBps: { TSLAx: 10, NVDAx: 4, AAPLx: 6, SPYx: -14, GOOGLx: -6 } as Record<string, number>,
+  },
+];
+
+export const PREVIEW_SOLVERS = [
+  { name: "aggressive", reputationBps: 7200, fulfilled: 18, failed: 1, feeBps: 8, style: "tight guarantees, wins on price" },
+  { name: "conservative", reputationBps: 9100, fulfilled: 11, failed: 0, feeBps: 15, style: "leaves headroom, rarely fails a win" },
+  { name: "balanced", reputationBps: 5000, fulfilled: 0, failed: 0, feeBps: 12, style: "default; not yet bonded in this preview" },
+];

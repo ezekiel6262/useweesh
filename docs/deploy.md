@@ -9,17 +9,23 @@ That is also why it is safe to host publicly: there is nothing to leak and nothi
 
 ## Vercel
 
-Import `ezekiel6262/useweesh` at [vercel.com/new](https://vercel.com/new) and set:
+Import `ezekiel6262/useweesh` at [vercel.com/new](https://vercel.com/new). The **repo-root**
+`vercel.json` is enough — do not set a Root Directory:
 
 | Setting | Value |
 |---|---|
-| Root Directory | `apps/web` |
+| Root Directory | _empty_ (repository root) |
 | Framework Preset | Other |
-| Build Command | `npm run build` |
-| Output Directory | `public` |
+| Build Command | `npm run build:web` |
+| Output Directory | `apps/web/public` |
+| Install Command | `npm install` |
 
-`apps/web/vercel.json` already declares the last three, so in practice only the root directory
-needs picking. No environment variables are required.
+No environment variables are required. The playground is a static grammar parser plus an
+auction preview; it never signs or submits.
+
+If you instead set Root Directory to `apps/web`, that package's own `vercel.json` still works
+as long as the install can see the workspace packages (`@intentos/intent-ai`,
+`@intentos/intent-schema`). Prefer the repo-root settings above.
 
 > If the Vercel MCP connector reports `You don't have permission to create the project`, the
 > connected account is not an Owner or Member with project-create rights on that team. Either
