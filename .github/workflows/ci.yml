@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Contracts compile against the solc build in node_modules, so no binary download is
+      # needed and the job works on a runner with no egress to binaries.soliditylang.org.
+      - name: Build contracts
+        run: npm run build -w @intentos/contracts
+
+      # The ABIs the offchain packages import are generated from the compiled artifacts;
+      # regenerating here catches a checked-in copy that has drifted from the contracts.
+      - name: Check generated ABIs are current
+        run: |
+          npm run gen:abi
+          git diff --exit-code packages/intent-schema/src/abi.ts
+
+      - run: npm run build
+      - run: npm test
