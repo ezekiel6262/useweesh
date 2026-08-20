@@ -16,19 +16,22 @@
     --sans:"Work Sans",system-ui,sans-serif; --serif:"Newsreader",Georgia,serif; --mono:"IBM Plex Mono",monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);overflow-x:hidden}
   a{color:var(--accent);text-decoration:none}
   .shell{max-width:760px;margin:0 auto;padding:0 20px 56px}
   header{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)}
   .brand{margin-right:auto;font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);display:flex;gap:8px;align-items:center}
   nav a{color:var(--ink-muted);margin-left:14px;font-size:13px}
   nav a.on{color:var(--accent)}
-  .card{background:var(--surface);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);margin-top:16px}
+  .card{background:var(--surface);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);margin-top:16px;min-width:0}
   .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);margin:0 0 10px;font-weight:600}
-  .id{font-family:var(--mono);font-size:13px;word-break:break-all;margin:0 0 12px}
-  .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px}
+  .id{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere;margin:0 0 12px;line-height:1.55}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px;min-width:0;align-items:baseline}
   .row:last-child{border-bottom:0}
-  .mono{font-family:var(--mono);font-size:12px;color:var(--ink-muted);word-break:break-all;text-align:right}
+  .row > *{min-width:0}
+  .row.stack{flex-direction:column;align-items:stretch;gap:6px}
+  .row.stack .mono{text-align:left;background:var(--bg);border-radius:8px;padding:8px 10px;line-height:1.55}
+  .mono{font-family:var(--mono);font-size:12px;color:var(--ink-muted);overflow-wrap:anywhere;text-align:right}
   .pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:#efe9df;color:var(--ink-faint)}
   .pill.win{background:#e4efe9;color:var(--yes)}
   .pill.bid{background:#f4ead0;color:var(--warn)}
@@ -84,12 +87,12 @@ async function load() {
         <p class="id">${esc(id)}</p>
         <div class="row"><span>status</span><span class="pill ${tone(data.statusLabel)}">${esc(data.statusLabel)}</span></div>
         <div class="row"><span>kind</span><span class="mono">${esc(data.kindLabel)}</span></div>
-        <div class="row"><span>owner</span><a class="mono" href="${x}/address/${data.owner}" target="_blank">${esc(data.owner)}</a></div>
-        <div class="row"><span>solver</span><span class="mono">${data.selectedSolver && data.selectedSolver !== "0x0000000000000000000000000000000000000000" ? esc(data.selectedSolver) : "—"}</span></div>
-        <div class="row"><span>auction ends</span><span class="mono">${data.auctionEndsAt ? new Date(Number(data.auctionEndsAt) * 1000).toISOString() : "—"}</span></div>
-        <div class="row"><span>deadline</span><span class="mono">${data.deadline ? new Date(Number(data.deadline) * 1000).toISOString() : "—"}</span></div>
-        <div class="row"><span>outcome hash</span><span class="mono">${esc(data.outcomeHash)}</span></div>
-        <div class="row"><span>policy hash</span><span class="mono">${esc(data.policyHash)}</span></div>
+        <div class="row"><span>owner</span><a class="mono" title="${esc(data.owner)}" href="${x}/address/${data.owner}" target="_blank">${esc(short(data.owner))}</a></div>
+        <div class="row"><span>solver</span><span class="mono" title="${esc(data.selectedSolver ?? "")}">${data.selectedSolver && data.selectedSolver !== "0x0000000000000000000000000000000000000000" ? esc(short(data.selectedSolver)) : "—"}</span></div>
+        <div class="row"><span>auction ends</span><span class="mono">${data.auctionEndsAt ? new Date(Number(data.auctionEndsAt) * 1000).toISOString().replace(".000Z","Z") : "—"}</span></div>
+        <div class="row"><span>deadline</span><span class="mono">${data.deadline ? new Date(Number(data.deadline) * 1000).toISOString().replace(".000Z","Z") : "—"}</span></div>
+        <div class="row stack"><span>outcome hash</span><span class="mono">${esc(data.outcomeHash)}</span></div>
+        <div class="row stack"><span>policy hash</span><span class="mono">${esc(data.policyHash)}</span></div>
         <div class="row"><span>registry</span><a class="mono" href="${x}/address/${data.contracts?.intentRegistry}" target="_blank">${short(data.contracts?.intentRegistry)}</a></div>
       </div>
       <div class="card">

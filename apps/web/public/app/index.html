@@ -19,7 +19,7 @@
     --mono: "IBM Plex Mono", ui-monospace, monospace;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); min-height: 100%; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); min-height: 100%; overflow-x: hidden; }
   a { color: var(--accent); text-decoration: none; }
   a:hover { opacity: .75; }
   button { font: inherit; }
@@ -40,10 +40,11 @@
     border-radius: 999px; padding: 7px 12px;
   }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yes); margin-right: 6px; }
-  .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .9fr); gap: 16px; padding-top: 18px; }
-  @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
-  .card { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
-  .lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr); gap: 16px; padding-top: 18px; }
+  @media (min-width: 901px) { .workspace { grid-template-columns: minmax(0, 1.15fr) minmax(0, 320px); } }
+  @media (max-width: 900px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
+  .card { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+  .lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   textarea {
     width: 100%; min-height: 120px; resize: vertical; background: var(--bg); color: var(--ink);
     border: 1px solid var(--divider); border-radius: 10px; padding: 12px 14px; font: inherit;
@@ -63,9 +64,10 @@
     background: none; border-radius: 999px; padding: 4px 10px; cursor: pointer;
   }
   .chip:hover { color: var(--accent); border-color: var(--accent); }
-  .stack { display: grid; gap: 14px; align-content: start; }
-  pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
+  .stack { display: grid; gap: 14px; align-content: start; min-width: 0; }
+  pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table-wrap { overflow-x: auto; min-width: 0; }
   th { text-align: left; color: var(--ink-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; padding: 0 8px 8px 0; border-bottom: 1px solid var(--divider); }
   td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--divider); color: var(--ink-muted); vertical-align: middle; }
   td.num, th.num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink); }
@@ -75,21 +77,55 @@
   .guards { display: flex; flex-wrap: wrap; gap: 6px; }
   .guard { font-family: var(--mono); font-size: 11px; background: #efe9df; color: var(--ink-faint); border-radius: 10px; padding: 4px 8px; }
   .guard.on { background: #e4efe9; color: var(--yes); }
-  .note { color: var(--ink-muted); font-size: 12.5px; }
-  .hash { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); word-break: break-all; }
-  .hash b { display: block; text-transform: uppercase; letter-spacing: .06em; font-size: 10px; margin-bottom: 3px; font-weight: 500; }
-  .hash + .hash { margin-top: 10px; }
+  .note { color: var(--ink-muted); font-size: 12.5px; overflow-wrap: anywhere; }
   .err { color: var(--no); font-size: 13px; margin-top: 10px; }
   .hide { display: none !important; }
   .kind { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .05em; color: var(--accent); background: var(--accent-soft); border-radius: 10px; padding: 3px 8px; }
-  .pill { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; background: #efe9df; color: var(--ink-faint); }
+  .pill { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; background: #efe9df; color: var(--ink-faint); white-space: nowrap; flex-shrink: 0; }
   .pill.win { background: #e4efe9; color: var(--yes); }
   .pill.bid { background: #f4ead0; color: var(--warn); }
   .pill.no { background: #f6e3e0; color: var(--no); }
-  .empty { color: var(--ink-faint); font-size: 13.5px; padding: 8px 0 4px; }
-  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--divider); font-size: 13px; }
+  .empty { color: var(--ink-faint); font-size: 13.5px; padding: 8px 0 4px; line-height: 1.55; }
+  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--divider); font-size: 13px; min-width: 0; }
   .row:last-child { border-bottom: 0; }
-  .mono { font-family: var(--mono); font-size: 12px; }
+  .row > * { min-width: 0; }
+  .mono { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  .kv { display: grid; min-width: 0; }
+  .kv-row {
+    display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+    gap: 8px 12px; align-items: baseline; min-width: 0;
+    padding: 8px 0; border-bottom: 1px solid var(--divider);
+  }
+  .kv-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .kv-row:first-child { padding-top: 0; }
+  .kv-k { color: var(--ink-muted); font-size: 12.5px; }
+  .kv-v { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+  .kv-v a { color: var(--accent); }
+  .kv > .note { padding-top: 8px; }
+  .commit { display: grid; gap: 12px; min-width: 0; }
+  .commit-item { min-width: 0; }
+  .commit-item .kv-k {
+    display: block; font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint);
+    margin: 0 0 6px;
+  }
+  .hash-box {
+    display: flex; align-items: flex-start; gap: 8px; min-width: 0;
+    background: var(--bg); border-radius: 8px; padding: 8px 10px;
+  }
+  .hash-box code {
+    flex: 1; min-width: 0; font-family: var(--mono); font-size: 11px;
+    line-height: 1.55; color: var(--ink-muted); overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .copy {
+    flex-shrink: 0; margin: 0; cursor: pointer;
+    font-family: var(--sans); font-size: 10.5px; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase;
+    color: var(--accent); background: none; border: 0; padding: 2px 0;
+  }
+  .copy:hover { opacity: .75; }
+  .commit-note { margin: 2px 0 0; color: var(--ink-faint); font-size: 11.5px; line-height: 1.45; }
   .solver { border-top: 1px solid var(--divider); padding-top: 10px; margin-top: 10px; }
   .solver:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
   .solver.head { display: flex; justify-content: space-between; gap: 8px; }
@@ -151,7 +187,7 @@
     <div class="card" id="sessionCard">
       <h2 class="lab">Session</h2>
       <div id="sessionEmpty" class="empty">Connect a wallet on X Layer testnet to mint USDT and submit.</div>
-      <div id="sessionBody" class="hide"></div>
+      <div id="sessionBody" class="kv hide"></div>
     </div>
 
     <div class="card hide" id="guardCard">
@@ -161,8 +197,23 @@
 
     <div class="card hide" id="hashCard">
       <h2 class="lab">Commitment</h2>
-      <div class="hash"><b>outcome</b><span id="outcomeHash"></span></div>
-      <div class="hash"><b>policy</b><span id="policyHash"></span></div>
+      <div class="commit">
+        <div class="commit-item">
+          <span class="kv-k">outcome</span>
+          <div class="hash-box">
+            <code id="outcomeHash"></code>
+            <button type="button" class="copy" data-copy="outcomeHash">copy</button>
+          </div>
+        </div>
+        <div class="commit-item">
+          <span class="kv-k">policy</span>
+          <div class="hash-box">
+            <code id="policyHash"></code>
+            <button type="button" class="copy" data-copy="policyHash">copy</button>
+          </div>
+        </div>
+      </div>
+      <p class="commit-note">Only these hashes are stored onchain. Settlement reveals the outcome and reverts on mismatch.</p>
     </div>
 
     <div class="card hide" id="noticeCard">
@@ -206,6 +257,18 @@ const units = (value, decimals, digits = 4) => {
   return `${(v / unit).toLocaleString("en-US")}${frac ? "." + frac : ""}`;
 };
 const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "";
+const prettyHash = (h) => {
+  const s = String(h ?? "");
+  if (!/^0x[0-9a-fA-F]{16,}$/.test(s)) return s;
+  return "0x " + s.slice(2).replace(/(.{4})/g, "$1 ").trim();
+};
+const setHash = (id, value) => {
+  const el = $(id);
+  const raw = String(value ?? "");
+  el.dataset.raw = raw;
+  el.textContent = prettyHash(raw);
+  el.title = raw;
+};
 const explorer = (path) => `https://web3.okx.com/explorer/xlayer-testnet/${path}`;
 
 const EXAMPLES = [
@@ -274,21 +337,27 @@ async function refreshRecent() {
 await refreshRecent();
 
 async function renderSession() {
-  if (!account || !deployment) return;
+  if (!account) return;
   $("sessionEmpty").classList.add("hide");
   $("sessionBody").classList.remove("hide");
-  let rows = `<div class="row"><span>account</span><span class="mono">${short(account)}</span></div>`;
-  try {
-    const bals = await readBalances(deployment, account);
-    for (const b of bals) {
-      if (b.balance === 0n && b.symbol !== "USDT") continue;
-      rows += `<div class="row"><span>${esc(b.symbol)}</span><span class="mono">${units(b.balance, dp(b.symbol), 2)}</span></div>`;
+  const kv = (k, v) => `<div class="kv-row"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
+  let rows = kv("account", `<span title="${esc(account)}">${esc(short(account))}</span>`);
+  rows += kv("network", `X Layer ${deployment?.chainId ?? 1952}`);
+  if (deployment) {
+    try {
+      const bals = await readBalances(deployment, account);
+      for (const b of bals) {
+        if (b.balance === 0n && b.symbol !== "USDT") continue;
+        rows += kv(esc(b.symbol), units(b.balance, dp(b.symbol), 2));
+      }
+    } catch {
+      rows += `<div class="note">Could not read balances.</div>`;
     }
-  } catch {
-    rows += `<div class="note">Could not read balances.</div>`;
+  } else {
+    rows += `<div class="note">Deployment unavailable — balances not loaded.</div>`;
   }
   if (lastIntent) {
-    rows += `<div class="row"><span>intent</span><a class="mono" href="/intent/?id=${lastIntent}">${short(lastIntent)}</a></div>`;
+    rows += kv("intent", `<a href="/intent/?id=${lastIntent}">${esc(short(lastIntent))}</a>`);
   }
   $("sessionBody").innerHTML = rows;
 }
@@ -385,8 +454,8 @@ function renderParsed(result) {
       <td class="num">${pct(leg.weightBps)}</td>
       <td class="num">${leg.minOut === "0" ? "open" : units(leg.minOut, dp(leg.symbol))}</td></tr>`),
   ].join("");
-  $("legsWrap").innerHTML = `<table>
-    <tr><th>asset</th><th>weight</th><th class="num">share</th><th class="num">floor</th></tr>${rows}</table>`;
+  $("legsWrap").innerHTML = `<div class="table-wrap"><table>
+    <tr><th>asset</th><th>weight</th><th class="num">share</th><th class="num">floor</th></tr>${rows}</table></div>`;
   $("outcomeCard").classList.remove("hide");
 
   const policy = result.policy;
@@ -399,9 +468,15 @@ function renderParsed(result) {
     policy.allowlist.length ? `pinned to ${policy.allowlist.map(esc).join(", ")}` : "",
   ].filter(Boolean).map((g) => `<span class="guard ${/attested|pinned|reputation/.test(g) ? "on" : ""}">${g}</span>`).join("");
   $("guardCard").classList.remove("hide");
-  $("outcomeHash").textContent = result.commitment.outcomeHash;
-  $("policyHash").textContent = result.commitment.policyHash;
-  $("hashCard").classList.remove("hide");
+  const outcomeHash = result.commitment?.outcomeHash;
+  const policyHash = result.commitment?.policyHash;
+  if (outcomeHash && policyHash) {
+    setHash("outcomeHash", outcomeHash);
+    setHash("policyHash", policyHash);
+    $("hashCard").classList.remove("hide");
+  } else {
+    $("hashCard").classList.add("hide");
+  }
 
   const notices = [
     ...result.clarifications.map((c) => `<div class="note">Needs an answer — ${esc(c)}</div>`),
@@ -482,6 +557,21 @@ function renderLiveActivity(activity, txHash, winner) {
   $("auctionCard").classList.remove("hide");
 }
 
+$("hashCard").addEventListener("click", async (event) => {
+  const btn = event.target.closest("[data-copy]");
+  if (!btn) return;
+  const el = $(btn.dataset.copy);
+  const raw = el?.dataset.raw || el?.textContent || "";
+  if (!raw) return;
+  try {
+    await navigator.clipboard.writeText(raw);
+    btn.textContent = "copied";
+    setTimeout(() => { btn.textContent = "copy"; }, 1200);
+  } catch {
+    btn.textContent = "failed";
+    setTimeout(() => { btn.textContent = "copy"; }, 1200);
+  }
+});
 $("parse").addEventListener("click", runParse);
 $("connect").addEventListener("click", () => ensureWallet().catch((error) => {
   $("error").textContent = error.message;
