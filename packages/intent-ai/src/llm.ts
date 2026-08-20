@@ -1,5 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import type Anthropic from "@anthropic-ai/sdk";
 import type { AssetCatalog } from "./catalog.js";
 import { intentSpecSchema, type IntentSpec } from "./spec.js";
 
@@ -77,7 +76,15 @@ export async function parseWithLlm(
     throw new LlmUnavailableError("no Anthropic credentials configured");
   }
 
-  const client = options.client ?? new Anthropic(apiKey ? { apiKey } : {});
+  // Loaded on demand: the grammar parser is the whole story for callers without a key, and a
+  // static import would drag the SDK — and its Node-only credential handling — into every
+  // bundle, including the browser build of the playground.
+  const [{ default: AnthropicSdk }, { zodOutputFormat }] = await Promise.all([
+    import("@anthropic-ai/sdk"),
+    import("@anthropic-ai/sdk/helpers/zod"),
+  ]);
+
+  const client = options.client ?? new AnthropicSdk(apiKey ? { apiKey } : {});
   const model = options.model ?? process.env.INTENTOS_AI_MODEL ?? DEFAULT_MODEL;
   const chainName = process.env.INTENTOS_CHAIN_NAME ?? "X Layer";
 

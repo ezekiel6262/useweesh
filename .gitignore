@@ -17,3 +17,4 @@ deployments/hardhat.json
 # Runtime state of the coordinator service.
 apps/api/.mempool.json
 apps/web/dist/
+apps/web/public/app.js

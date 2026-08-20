@@ -148,6 +148,7 @@
   <a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>
 </div></footer>
 
+<script type="module" src="./app.js"></script>
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
@@ -177,18 +178,10 @@ $("chips").addEventListener("click", (event) => {
   run();
 });
 
-let status = null;
-try {
-  status = await (await fetch("/api/status")).json();
-  $("mode").innerHTML = status.mode === "live"
-    ? `network <b>${esc(status.network)}</b> · parser <b>${esc(status.parser)}</b>`
-    : `<b>playground</b> · parser <b>${esc(status.parser)}</b>`;
-  $("flowNote").textContent = status.mode === "live"
-    ? `Connected to ${status.network}.`
-    : "This page is the parser only — it never signs, submits or holds anything.";
-} catch {
-  $("mode").textContent = "offline";
-}
+const { parse, assets } = window.IntentOS;
+$("mode").innerHTML = `<b>playground</b> · parser <b>grammar</b> · ${assets.length} assets`;
+$("flowNote").textContent =
+  "This page runs entirely in your browser — it never signs, submits or holds anything.";
 
 async function run() {
   const prompt = $("prompt").value.trim();
@@ -200,14 +193,7 @@ async function run() {
   $("error").classList.add("hide");
 
   try {
-    const response = await fetch("/api/parse", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error ?? response.statusText);
-    render(result);
+    render(await parse(prompt));
   } catch (error) {
     for (const id of ["outcomeCard", "guardCard", "hashCard", "noticeCard"]) $(id).classList.add("hide");
     $("error").textContent = error.message;
@@ -220,7 +206,7 @@ async function run() {
 
 function render(result) {
   $("explanation").textContent = result.explanation;
-  $("parserNote").textContent = `parsed by ${result.parser}${result.model ? ` (${result.model})` : ""}`;
+  $("parserNote").textContent = `parsed by ${result.parser}`;
 
   const rows = [
     ...result.outcome.exits.map((exit) => `<tr>

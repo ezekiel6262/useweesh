@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && npm install",
-  "buildCommand": "cd ../.. && npm run build -w @intentos/intent-schema -w @intentos/intent-ai",
+  "buildCommand": "npm run build",
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/api/:path*", "destination": "/api/index" }]
+  "framework": null
 }

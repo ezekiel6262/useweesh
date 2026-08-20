@@ -103,9 +103,11 @@ testnet and mainnet.
 | `apps/solver-agent` | Runs bonded solvers against a deployment |
 | `apps/agent` | The one-command agent path |
 | `apps/demo` | The full loop against a live chain |
+| `apps/web` | A static playground: a sentence in, the exact committed intent out |
 
 Deeper: [architecture](docs/architecture.md) · [the intent standard](docs/intent-standard.md) ·
-[trust model](docs/security.md) · [X Layer deployment](docs/xlayer.md)
+[trust model](docs/security.md) · [X Layer deployment](docs/xlayer.md) ·
+[hosting the playground](docs/deploy.md)
 
 ## The AI, specifically
 

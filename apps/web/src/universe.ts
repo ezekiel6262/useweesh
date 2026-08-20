@@ -9,7 +9,7 @@ import type { DeploymentFile } from "@intentos/intent-ai";
  * resolve symbols to, and inventing plausible-looking mainnet addresses would be worse than
  * obviously fake ones. Nothing here is ever signed or submitted.
  */
-export const PREVIEW_UNIVERSE: DeploymentFile = {
+const RAW_PREVIEW: DeploymentFile = {
   network: "preview",
   chainId: 195,
   contracts: {},
@@ -25,7 +25,7 @@ export const PREVIEW_UNIVERSE: DeploymentFile = {
 };
 
 /** Placeholder addresses must still be valid hex, or the schema rejects every draft. */
-function normalise(deployment: DeploymentFile): DeploymentFile {
+export function normalise(deployment: DeploymentFile): DeploymentFile {
   const tokens: Record<string, `0x${string}`> = {};
   let index = 1;
   for (const symbol of Object.keys(deployment.tokens)) {
@@ -38,14 +38,4 @@ function normalise(deployment: DeploymentFile): DeploymentFile {
   return { ...deployment, tokens };
 }
 
-export function loadUniverse(): { deployment: DeploymentFile; live: boolean } {
-  const configured = process.env.INTENTOS_DEPLOYMENT_JSON;
-  if (configured) {
-    try {
-      return { deployment: normalise(JSON.parse(configured) as DeploymentFile), live: true };
-    } catch {
-      // A malformed env var should degrade to the playground, not take the site down.
-    }
-  }
-  return { deployment: normalise(PREVIEW_UNIVERSE), live: false };
-}
+export const PREVIEW_UNIVERSE = normalise(RAW_PREVIEW);
