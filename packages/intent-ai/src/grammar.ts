@@ -48,6 +48,15 @@ export function parseWithGrammar(prompt: string, catalog: AssetCatalog): Grammar
     spec.targets = spec.targets.map((t) => ({ ...t, weightPercent: null }));
   }
 
+  // "60/40", "40/30/30" — a ratio written once for the whole basket, in the order the assets
+  // were named. Common enough in how people actually describe a portfolio to be worth reading.
+  if (spec.targets.every((t) => t.weightPercent === null) && !/\bequal(?:ly|-weight(?:ed)?)?\b/.test(text)) {
+    const ratio = findRatio(text, spec.targets.length);
+    if (ratio) {
+      spec.targets = spec.targets.map((target, i) => ({ ...target, weightPercent: ratio[i]! }));
+    }
+  }
+
   spec.action = detectAction(text, spec);
   spec.maxSlippagePercent = findSlippage(text) ?? 1;
   spec.maxFeePercent = findFeeCap(text);
@@ -182,6 +191,23 @@ function findWeightFor(text: string, mention: Mention): number | null {
   const afterMatch = new RegExp(String.raw`^\s*(?:at|=|:)?\s*${PERCENT}`).exec(after);
   if (afterMatch) return Number(afterMatch[1]);
 
+  return null;
+}
+
+/** A whole-basket ratio like "60/40", if one is written and it matches the leg count. */
+function findRatio(text: string, legCount: number): number[] | null {
+  if (legCount < 2) return null;
+
+  for (const match of text.matchAll(/\b(\d{1,3}(?:\s*\/\s*\d{1,3})+)\b/g)) {
+    const parts = match[1]!.split("/").map((part) => Number(part.trim()));
+    if (parts.length !== legCount) continue;
+    if (parts.some((part) => !Number.isFinite(part) || part <= 0)) continue;
+
+    // Only read it as a split when it plausibly is one — "1/2 of my TSLA" is not a basket ratio.
+    const total = parts.reduce((sum, part) => sum + part, 0);
+    if (total !== 100 && total !== 10) continue;
+    return parts;
+  }
   return null;
 }
 

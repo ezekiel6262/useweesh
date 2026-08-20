@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IntentOS</title>
+<style>
+  :root {
+    --bg: #0b0d10; --panel: #12161b; --line: #1e252d; --ink: #e6edf3;
+    --muted: #8b98a5; --accent: #4da3ff; --good: #3fb950; --warn: #d29922; --bad: #f85149;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  }
+  a { color: var(--accent); }
+  header {
+    padding: 28px 32px 20px; border-bottom: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline; justify-content: space-between;
+  }
+  h1 { margin: 0; font-size: 21px; letter-spacing: -0.01em; }
+  h1 span { color: var(--muted); font-weight: 400; margin-left: 10px; font-size: 14px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .facts b { color: var(--ink); font-weight: 500; }
+  main { padding: 24px 32px 64px; display: grid; gap: 24px; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); }
+  @media (max-width: 940px) { main { grid-template-columns: minmax(0, 1fr); } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  section > h2 {
+    margin: 0; padding: 14px 18px; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--muted); border-bottom: 1px solid var(--line); font-weight: 600;
+  }
+  .body { padding: 16px 18px; }
+  .stack { display: grid; gap: 24px; align-content: start; }
+  textarea {
+    width: 100%; min-height: 74px; resize: vertical; background: #0b0f14; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px; font: inherit;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  button {
+    margin-top: 10px; background: var(--accent); color: #06101c; border: 0; border-radius: 7px;
+    padding: 8px 15px; font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  button:disabled { opacity: 0.55; cursor: default; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-top: 9px; }
+  .intent { border-top: 1px solid var(--line); padding: 15px 18px; }
+  .intent:first-of-type { border-top: 0; }
+  .row { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+  .prompt { font-size: 14.5px; }
+  .meta { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+  .pill {
+    font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
+  }
+  .pill.open { color: var(--accent); border-color: #1d3a5c; }
+  .pill.selected { color: var(--warn); border-color: #3d3418; }
+  .pill.fulfilled { color: var(--good); border-color: #1c3a22; }
+  .pill.expired, .pill.cancelled { color: var(--bad); border-color: #4a1f1d; }
+  .legs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .leg { font-family: var(--mono); font-size: 11.5px; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+  .leg.exit { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  th, td { padding: 6px 10px 6px 0; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-size: 12px; }
+  .bids { margin-top: 11px; border-top: 1px dashed var(--line); padding-top: 9px; }
+  .bar { height: 4px; border-radius: 2px; background: #1b2027; overflow: hidden; min-width: 46px; }
+  .bar > i { display: block; height: 100%; background: var(--good); }
+  .empty { color: var(--muted); font-size: 13.5px; }
+  code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  pre { margin: 10px 0 0; white-space: pre-wrap; font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .err { color: var(--bad); font-size: 13px; margin-top: 9px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>IntentOS<span>an Intent Operating System for X Layer</span></h1>
+  <div class="facts" id="facts"></div>
+</header>
+
+<main>
+  <div class="stack">
+    <section>
+      <h2>Declare an outcome</h2>
+      <div class="body">
+        <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets</textarea>
+        <button id="parse">Parse intent</button>
+        <div class="hint">
+          Parsing is read-only: it shows exactly what would be committed onchain, and what
+          settlement would then enforce. Submitting needs a signer — use the SDK or
+          <code>npm run demo</code>.
+        </div>
+        <div id="parsed"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Intents</h2>
+      <div id="intents"><div class="body empty">Nothing in the mempool yet.</div></div>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section>
+      <h2>Solver network</h2>
+      <div class="body" id="solvers"><div class="empty">No solvers registered.</div></div>
+    </section>
+    <section>
+      <h2>RWA attestations</h2>
+      <div class="body" id="rwa"><div class="empty">Loading…</div></div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+// Amounts cross the wire as tagged strings so bigints survive JSON. Decode them back.
+const decode = (text) =>
+  JSON.parse(text, (_k, v) => (typeof v === "string" && v.startsWith("n:") ? BigInt(v.slice(2)) : v));
+
+const api = async (path, options) => {
+  const response = await fetch(path, options);
+  const text = await response.text();
+  if (!response.ok) throw new Error(JSON.parse(text).error ?? response.statusText);
+  return decode(text);
+};
+
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+const escape = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (bps) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
+const shorten = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const units = (value, decimals, digits = 3) => {
+  const unit = 10n ** BigInt(decimals);
+  const whole = value / unit;
+  const frac = (value % unit).toString().padStart(decimals, "0").slice(0, digits).replace(/0+$/, "");
+  return `${whole.toLocaleString("en-US")}${frac ? "." + frac : ""}`;
+};
+
+let assets = new Map();
+
+async function loadDeployment() {
+  const info = await api("/api/deployment");
+  assets = new Map(info.assets.map((a) => [a.symbol, a]));
+  document.getElementById("facts").innerHTML = `
+    <div>network <b>${escape(info.network)}</b> · chain <b>${info.chainId}</b></div>
+    <div>parser <b>${escape(info.aiParser)}</b></div>
+    <div>auctioneer <b>${escape(info.coordinator)}</b></div>
+    <div>registry <b>${shorten(info.contracts.intentRegistry)}</b></div>`;
+  return info;
+}
+
+function renderParsed(result) {
+  const target = document.getElementById("parsed");
+  const notes = [
+    ...(result.assumptions ?? []).map((a) => `assumed — ${a}`),
+    ...(result.clarifications ?? []).map((c) => `needs an answer — ${c}`),
+  ];
+  target.innerHTML = "";
+  target.append(
+    el(`<div>
+      <pre>${escape(result.explanation)}</pre>
+      <div class="meta">parsed by ${escape(result.parser)}${result.model ? ` · ${escape(result.model)}` : ""}${
+        result.fallbackReason ? ` · fell back: ${escape(result.fallbackReason)}` : ""
+      }</div>
+      ${notes.length ? `<div class="meta">${notes.map(escape).join("<br>")}</div>` : ""}
+    </div>`),
+  );
+}
+
+document.getElementById("parse").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  const prompt = document.getElementById("prompt").value.trim();
+  if (!prompt) return;
+
+  button.disabled = true;
+  button.textContent = "Parsing…";
+  try {
+    // A zero recipient is fine for a preview: nothing is signed or submitted.
+    const result = await api("/api/parse", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt, recipient: "0x0000000000000000000000000000000000000001" }),
+    });
+    renderParsed(result);
+  } catch (error) {
+    document.getElementById("parsed").innerHTML = `<div class="err">${escape(error.message)}</div>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Parse intent";
+  }
+});
+
+const STATUS = ["none", "open", "selected", "fulfilled", "cancelled", "expired"];
+
+function renderIntent(intent) {
+  const legs = intent.legs
+    .map((leg) => `<span class="leg">${pct(leg.weightBps)} ${escape(leg.symbol)}</span>`)
+    .join("");
+  const exits = intent.exits
+    .map((exit) => {
+      const asset = assets.get(exit.symbol);
+      return `<span class="leg exit">−${units(exit.amountIn, asset?.decimals ?? 18, 2)} ${escape(exit.symbol)}</span>`;
+    })
+    .join("");
+
+  const guards = [
+    `fee ≤ ${pct(intent.policy.maxFeeBps)}`,
+    intent.policy.minReputationBps ? `reputation ≥ ${pct(intent.policy.minReputationBps)}` : "",
+    intent.policy.requireRwaAttested ? "RWA attested" : "",
+    intent.policy.allowlisted ? "allowlisted assets" : "",
+  ].filter(Boolean);
+
+  const bids = intent.bids.filter((b) => !b.withdrawn);
+  const bidTable = bids.length
+    ? `<div class="bids"><table>
+        <tr><th>solver</th><th class="num">fee</th><th class="num">eta</th><th class="num">guarantees</th></tr>
+        ${bids
+          .map((bid) => {
+            const won = intent.selectedSolver && bid.solver.toLowerCase() === intent.selectedSolver.toLowerCase();
+            const guarantees = bid.guaranteedOut
+              .map((g, i) => {
+                const symbol = intent.legs[i]?.symbol ?? "?";
+                return `${units(g, assets.get(symbol)?.decimals ?? 18, 2)} ${symbol}`;
+              })
+              .join("  ");
+            return `<tr>
+              <td>${shorten(bid.solver)}${won ? " ✓" : ""}</td>
+              <td class="num">${pct(bid.feeBps)}</td>
+              <td class="num">${bid.etaSeconds}s</td>
+              <td class="num">${escape(guarantees)}</td>
+            </tr>`;
+          })
+          .join("")}
+      </table></div>`
+    : `<div class="bids meta">no bids yet</div>`;
+
+  return el(`<div class="intent">
+    <div class="row">
+      <div class="prompt">${escape(intent.prompt ?? intent.summary ?? intent.intentId)}</div>
+      <span class="pill ${STATUS[intent.status]}">${escape(intent.statusLabel)}</span>
+    </div>
+    <div class="meta">${escape(intent.notional ?? "")} · ${escape(intent.source ?? "")} · ${shorten(intent.intentId)}</div>
+    <div class="legs">${exits}${legs}</div>
+    <div class="meta">${guards.map(escape).join(" · ")}</div>
+    ${bidTable}
+  </div>`);
+}
+
+async function refresh() {
+  try {
+    const [{ intents }, { solvers }, { assets: rwa }] = await Promise.all([
+      api("/api/intents?limit=25"),
+      api("/api/solvers"),
+      api("/api/rwa"),
+    ]);
+
+    const list = document.getElementById("intents");
+    list.innerHTML = "";
+    if (intents.length === 0) {
+      list.append(el(`<div class="body empty">Nothing in the mempool yet. Run <code>npm run demo</code>.</div>`));
+    } else {
+      for (const intent of intents) list.append(renderIntent(intent));
+    }
+
+    document.getElementById("solvers").innerHTML = solvers.length
+      ? `<table>
+          <tr><th>solver</th><th class="num">reputation</th><th class="num">done</th><th class="num">routed</th></tr>
+          ${solvers
+            .map(
+              (s) => `<tr>
+                <td>${shorten(s.address)}</td>
+                <td class="num"><div class="bar"><i style="width:${s.reputationBps / 100}%"></i></div></td>
+                <td class="num">${s.fulfilled}/${s.fulfilled + s.failed}</td>
+                <td class="num">${units(s.notionalSettled, 6, 0)}</td>
+              </tr>`,
+            )
+            .join("")}
+        </table>`
+      : `<div class="empty">No solvers registered.</div>`;
+
+    document.getElementById("rwa").innerHTML = `<table>
+      ${rwa
+        .map(
+          (a) => `<tr>
+            <td>${escape(a.symbol)}</td>
+            <td><code>${escape(a.assetRef || "—")}</code></td>
+            <td class="num" style="color:${a.attested ? "var(--good)" : "var(--bad)"}">${a.attested ? "attested" : "unattested"}</td>
+          </tr>`,
+        )
+        .join("")}
+    </table>`;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+await loadDeployment();
+await refresh();
+setInterval(refresh, 2_000);
+</script>
+</body>
+</html>

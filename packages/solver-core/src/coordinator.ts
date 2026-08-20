@@ -46,8 +46,10 @@ export class Coordinator {
       return { intentId, ranking: [], skipped: `intent is ${IntentStatus[record.status].toLowerCase()}` };
     }
     // Chain time: `selectWinner` is checked against the timestamp of the block it lands in.
+    // One block of margin, because a read is evaluated against the head while the transaction
+    // lands in the block after it — without it every auction is attempted once too early.
     const now = BigInt(await this.options.client.chainNow());
-    if (now < record.auctionEndsAt) {
+    if (now <= record.auctionEndsAt) {
       return { intentId, ranking: [], skipped: "auction is still open" };
     }
     if (now > record.deadline) {
@@ -72,7 +74,17 @@ export class Coordinator {
       return { intentId, ranking, skipped: reason };
     }
 
-    const txHash = await this.options.client.selectWinner(intentId, winner.bid.bidId);
+    let txHash: Hex;
+    try {
+      txHash = await this.options.client.selectWinner(intentId, winner.bid.bidId);
+    } catch (error) {
+      // Losing the race to the head block is expected and self-correcting; the next pass
+      // will close the same auction a second later.
+      if (/AuctionStillOpen/.test((error as Error).message)) {
+        return { intentId, ranking, skipped: "auction closed between the read and the write" };
+      }
+      throw error;
+    }
     this.options.log?.(
       `selected ${winner.bid.solver} for ${intentId.slice(0, 10)}… at ${winner.bid.feeBps} bps ` +
         `(${ranking.length} bid${ranking.length === 1 ? "" : "s"})`,

@@ -157,8 +157,9 @@ test("quotes turn the slippage tolerance into binding per-leg floors", async () 
   const quote = async (_tokenIn, _tokenOut, amountIn) => (amountIn * 10n ** 18n) / (100n * 10n ** 6n);
 
   const draft = await compileSpec(spec, { catalog, recipient: USER, quote, now: 1_800_000_000 });
-  const legNotional = 5_000_000_000n;
-  const quoted = (legNotional * 10n ** 18n) / (100n * 10n ** 6n);
+  // Floors are quoted off what will actually be spent: the fee cap comes off the top first.
+  const spendable = (10_000_000_000n * BigInt(10_000 - draft.policy.maxFeeBps)) / 10_000n;
+  const quoted = ((spendable / 2n) * 10n ** 18n) / (100n * 10n ** 6n);
 
   assert.equal(draft.outcome.legs[0].minOut, (quoted * 9_900n) / 10_000n);
   assert.ok(draft.outcome.legs[0].minOut > 0n);
@@ -284,4 +285,31 @@ test("an intent explains itself in the words a user would check", async () => {
 test("an empty catalog rejects everything rather than defaulting", () => {
   const empty = new AssetCatalog();
   assert.throws(() => empty.resolve("TSLA"), /no asset called/);
+});
+
+test("a whole-basket ratio is read in the order the assets were named", async () => {
+  const spec = parse("put 5,000 USDT into NVDA and AAPL, 60/40, max 0.6% slippage");
+  assert.deepEqual(
+    spec.targets.map((t) => [t.symbol, t.weightPercent]),
+    [["NVDAx", 60], ["AAPLx", 40]],
+  );
+
+  const draft = await compile(spec);
+  assert.deepEqual(draft.outcome.legs.map((l) => l.weightBps), [6_000, 4_000]);
+});
+
+test("a three-way ratio works, and a mismatched one is ignored", () => {
+  assert.deepEqual(
+    parse("40/30/30 across TSLA, NVDA and AAPL with 9,000 USDT").targets.map((t) => t.weightPercent),
+    [40, 30, 30],
+  );
+  // Two assets, three shares: not a split for this basket, so fall back to equal weight.
+  assert.deepEqual(
+    parse("buy TSLA and NVDA with 1,000 USDT, 40/30/30").targets.map((t) => t.weightPercent),
+    [null, null],
+  );
+  // A fraction in prose is not a basket ratio.
+  assert.ok(
+    parse("sell 1/2 of my TSLA and buy NVDA and AAPL").targets.every((t) => t.weightPercent === null),
+  );
 });
