@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "dev": "node build.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

@@ -12,17 +12,19 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build -w @intentos/contracts && npm run build:packages && npm run build:apps",
+    "build:packages": "npm run build -w @intentos/intent-schema -w @intentos/intent-ai -w @intentos/sdk -w @intentos/solver-core",
+    "build:apps": "npm run build -w @intentos/api -w @intentos/agent -w @intentos/solver-agent -w @intentos/demo -w @intentos/web",
+    "test": "npm run build:packages && npm run test --workspaces --if-present",
+    "gen:abi": "node scripts/gen-abi.mjs",
     "chain": "npm run chain -w @intentos/contracts",
     "deploy:local": "npm run deploy:local -w @intentos/contracts",
     "demo": "npm run dev -w @intentos/demo",
     "api": "npm run dev -w @intentos/api",
-    "solvers": "npm run dev -w @intentos/solver-agent",
-    "web": "npm run dev -w @intentos/web",
-    "gen:abi": "node scripts/gen-abi.mjs",
     "dashboard": "npm run dev -w @intentos/api",
-    "agent": "npm run dev -w @intentos/agent --"
+    "solvers": "npm run dev -w @intentos/solver-agent",
+    "agent": "npm run dev -w @intentos/agent --",
+    "web": "npm run build -w @intentos/web"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
