@@ -200,7 +200,7 @@
 <body>
 
 <div class="banner"><div class="wrap">
-  <b>Live on X Layer Testnet (1952).</b> Grok parses the intent. Your wallet submits it. Bonded solvers bid and settle onchain.
+  <b>Live on X Layer Testnet (1952).</b> Gemini parses the intent. Your wallet submits it. Bonded solvers bid and settle onchain.
 </div></div>
 
 <header><div class="wrap bar">
@@ -223,12 +223,12 @@
 <main class="wrap">
   <div id="compose" class="view on">
     <div class="hero">
-      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet · Grok · live solvers</p>
+      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet · Gemini · live solvers</p>
       <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
-      <p class="sub">Grok compiles the sentence. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
+      <p class="sub">Gemini compiles the sentence. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
       <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%</textarea>
       <div class="actions">
-        <button class="btn" id="parse">Parse with Grok</button>
+        <button class="btn" id="parse">Parse with Gemini</button>
         <button class="btn ghost" id="faucet">Get test USDT</button>
         <button class="btn" id="fulfill">Submit &amp; settle onchain</button>
         <span class="note" id="parserNote"></span>
@@ -489,7 +489,7 @@ async function runParse() {
   if (!prompt) return;
   const button = $("parse");
   button.disabled = true;
-  button.textContent = health.live ? "Grok is reading…" : "Parsing…";
+  button.textContent = health.live ? "Gemini is reading…" : "Parsing…";
   $("error").classList.add("hide");
   $("auctionCard").classList.add("hide");
   lastDraft = null;
@@ -550,7 +550,7 @@ async function runParse() {
     $("error").classList.remove("hide");
   } finally {
     button.disabled = false;
-    button.textContent = "Parse with Grok";
+    button.textContent = "Parse with Gemini";
   }
 }
 

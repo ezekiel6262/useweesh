@@ -3,16 +3,16 @@ import type { AssetCatalog } from "./catalog.js";
 import { compileSpec, type CompileOptions } from "./compile.js";
 import { parseWithGrammar } from "./grammar.js";
 import { LlmUnavailableError, hasAnthropicCredentials, parseWithLlm, type LlmParserOptions } from "./llm.js";
+import { hasGeminiCredentials, parseWithGemini } from "./gemini.js";
 import { hasGrokCredentials, parseWithGrok } from "./grok.js";
 import type { IntentSpec } from "./spec.js";
 
 /**
  * The entry point the API, the SDK and the demos all use.
  *
- * Claude parses the request when credentials are configured; the deterministic grammar takes over
- * when they are not, or when the model call fails. Either way the spec goes through the same
- * compiler and the same validation, so the path taken changes the quality of the reading, never
- * the safety of the result.
+ * Gemini parses the request when a Google key is configured; Grok and Claude are fallbacks.
+ * The deterministic grammar takes over when no model is configured, or when the model call fails.
+ * Either way the spec goes through the same compiler and the same validation.
  */
 
 export interface ParseOptions extends Omit<CompileOptions, "prompt" | "source">, LlmParserOptions {
@@ -26,7 +26,7 @@ export interface ParsedIntent {
   draft: IntentDraft;
   spec: IntentSpec;
   /** Which parser produced the spec, and the model when one was used. */
-  parser: "grok" | "claude" | "grammar";
+  parser: "gemini" | "grok" | "claude" | "grammar";
   model?: string;
   /** Set when the model was meant to run but could not. */
   fallbackReason?: string;
@@ -41,7 +41,10 @@ export async function parseIntent(prompt: string, options: ParseOptions): Promis
   const wantsLlm =
     options.prefer === "llm" ||
     (options.prefer !== "grammar" &&
-      (Boolean(options.client) || hasGrokCredentials() || hasAnthropicCredentials(options.apiKey)));
+      (Boolean(options.client) ||
+        hasGeminiCredentials() ||
+        hasGrokCredentials() ||
+        hasAnthropicCredentials(options.apiKey)));
 
   let spec: IntentSpec | undefined;
   let parser: ParsedIntent["parser"] = "grammar";
@@ -50,7 +53,12 @@ export async function parseIntent(prompt: string, options: ParseOptions): Promis
 
   if (wantsLlm) {
     try {
-      if (hasGrokCredentials() && !options.client) {
+      if (hasGeminiCredentials() && !options.client) {
+        const result = await parseWithGemini(trimmed, options.catalog);
+        spec = result.spec;
+        model = result.model;
+        parser = "gemini";
+      } else if (hasGrokCredentials() && !options.client) {
         const result = await parseWithGrok(trimmed, options.catalog);
         spec = result.spec;
         model = result.model;

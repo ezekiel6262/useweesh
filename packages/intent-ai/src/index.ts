@@ -4,5 +4,6 @@ export * from "./grammar.js";
 export * from "./compile.js";
 export * from "./llm.js";
 export * from "./grok.js";
+export * from "./gemini.js";
 export * from "./parse.js";
 export * from "./explain.js";

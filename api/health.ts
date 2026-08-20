@@ -10,7 +10,13 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       live: true,
       network: deployment.network,
       chainId: deployment.chainId,
-      parser: process.env.XAI_API_KEY ? "grok" : process.env.ANTHROPIC_API_KEY ? "claude" : "grammar",
+      parser: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+        ? "gemini"
+        : process.env.XAI_API_KEY
+          ? "grok"
+          : process.env.ANTHROPIC_API_KEY
+            ? "claude"
+            : "grammar",
       operators: {
         coordinator: Boolean(process.env.COORDINATOR_PRIVATE_KEY),
         solverA: Boolean(process.env.SOLVER_A_PRIVATE_KEY),
