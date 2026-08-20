@@ -13,7 +13,8 @@ library IntentLib {
         BASKET, // single asset in -> weighted set of assets out (xStocks portfolios)
         REBALANCE, // exit legs -> base asset -> entry legs, in one atomic settlement
         RWA_ONBOARD, // acquire an attested tokenized real-world asset
-        BATCH // several of the above declared together
+        BATCH, // several of the above declared together
+        PAYMENT // 1:1 stablecoin send, including a cash sleeve of the input asset
     }
 
     enum Status {
@@ -59,6 +60,8 @@ library IntentLib {
     /// @param tokenAllowlist     If non-empty, every output token must appear here.
     /// @param minReputationBps   Floor on the winning solver's reputation score.
     /// @param requireRwaAttested Every output token must be attested in the RWARegistry.
+    /// @param requireCompliant   Winning solver must carry a live KYB attestation.
+    /// @param sponsorGas         Winning solver must be willing to pay settlement gas.
     struct Policy {
         uint256 maxNotional;
         uint64 validAfter;
@@ -66,6 +69,8 @@ library IntentLib {
         uint16 maxFeeBps;
         uint16 minReputationBps;
         bool requireRwaAttested;
+        bool requireCompliant;
+        bool sponsorGas;
         address[] tokenAllowlist;
     }
 
@@ -107,13 +112,15 @@ library IntentLib {
         return
             keccak256(
                 abi.encode(
-                    keccak256("IntentOS.Policy.v1"),
+                    keccak256("IntentOS.Policy.v2"),
                     p.maxNotional,
                     p.validAfter,
                     p.validUntil,
                     p.maxFeeBps,
                     p.minReputationBps,
                     p.requireRwaAttested,
+                    p.requireCompliant,
+                    p.sponsorGas,
                     keccak256(abi.encodePacked(p.tokenAllowlist))
                 )
             );

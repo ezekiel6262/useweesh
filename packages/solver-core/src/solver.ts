@@ -1,5 +1,5 @@
 import type { Address, Hex } from "viem";
-import { IntentStatus, type IntentDraft } from "@intentos/intent-schema";
+import { IntentStatus, SolverCapability, type IntentDraft } from "@intentos/intent-schema";
 import { IntentOSClient, conditionsHold, verifyDraftAgainstRecord } from "@intentos/sdk";
 import { planIntent, planHashOf } from "./planner.js";
 import { Quoter, type Venue } from "./quotes.js";
@@ -28,6 +28,10 @@ export interface SolverOptions {
   venues?: Venue[];
   /** Base asset used as the intermediate hop and as the unit of account. */
   baseToken?: Address;
+  /** Owner-attested KYB. Required when the intent's policy asks for compliant solvers. */
+  kyb?: boolean;
+  /** Capability bits this solver will honour (AI, RWA, stable, gasless, agent). */
+  capabilities?: number;
   log?: (message: string, detail?: Record<string, unknown>) => void;
 }
 
@@ -124,6 +128,15 @@ export class Solver {
     const conditions = conditionsHold(draft, observations);
     if (!conditions.hold) {
       this.record(intentId, "skipped", `conditions not met: ${conditions.failed.join("; ")}`);
+      return;
+    }
+
+    if (draft.policy.requireCompliant && !this.options.kyb) {
+      this.record(intentId, "declined", "intent requires a KYB-attested solver");
+      return;
+    }
+    if (draft.policy.sponsorGas && ((this.options.capabilities ?? 0) & SolverCapability.GASLESS) === 0) {
+      this.record(intentId, "declined", "intent requires gas-sponsored fulfillment");
       return;
     }
 

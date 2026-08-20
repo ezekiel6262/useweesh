@@ -17,7 +17,20 @@ export enum IntentKind {
   REBALANCE = 2,
   RWA_ONBOARD = 3,
   BATCH = 4,
+  PAYMENT = 5,
 }
+
+export const INTENT_KIND_LABEL = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH", "PAYMENT"] as const;
+
+/** Bitmask advertised by a solver and optionally attested by the registry owner. */
+export const SolverCapability = {
+  AI: 1,
+  COMPLIANT: 2,
+  RWA: 4,
+  STABLE: 8,
+  AGENT: 16,
+  GASLESS: 32,
+} as const;
 
 /** Matches IntentLib.Status. */
 export enum IntentStatus {
@@ -69,6 +82,10 @@ export interface Policy {
   minReputationBps: number;
   /** Every acquired asset must carry a live attestation in the RWARegistry. */
   requireRwaAttested: boolean;
+  /** Winning solver must carry a live KYB attestation in SolverRegistry. */
+  requireCompliant: boolean;
+  /** Winning solver must be willing to pay settlement gas. */
+  sponsorGas: boolean;
   /** If non-empty, restricts every token the intent may touch. */
   tokenAllowlist: Address[];
 }
@@ -117,7 +134,7 @@ export interface RecurrenceRule {
  * than settled at a bad moment.
  */
 export interface Condition {
-  kind: "price" | "drawdown" | "volatility" | "time" | "portfolio-drift";
+  kind: "price" | "drawdown" | "volatility" | "time" | "portfolio-drift" | "volume" | "funding";
   /** Token or symbol the condition is about. */
   subject?: string;
   operator: "lt" | "lte" | "gt" | "gte";

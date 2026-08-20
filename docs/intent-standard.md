@@ -1,4 +1,4 @@
-# The IntentOS Intent Standard v0.1
+# The IntentOS Intent Standard v0.2
 
 An intent is a commitment to an outcome. This is what one contains, how it is encoded, and what
 the chain will hold a solver to.
@@ -11,7 +11,7 @@ each other by a shared fixture — see [Hashing](#hashing).
 
 ```solidity
 struct Outcome {
-    Kind    kind;            // SWAP | BASKET | REBALANCE | RWA_ONBOARD | BATCH
+    Kind    kind;            // SWAP | BASKET | REBALANCE | RWA_ONBOARD | BATCH | PAYMENT
     address inputToken;      // what the user parts with; the base asset for a REBALANCE
     uint256 inputAmount;     // 0 for a pure rebalance — the exits fund it
     address recipient;       // where the outputs land
@@ -27,7 +27,7 @@ struct ExitLeg   { address token; uint256 amountIn; uint256 minOut; }
 Rules the contracts enforce:
 
 - `legs` is non-empty and `weightBps` sums to exactly `10_000`.
-- `SWAP` and `RWA_ONBOARD` take exactly one leg.
+- `SWAP`, `RWA_ONBOARD` and `PAYMENT` take exactly one leg.
 - `REBALANCE` needs at least one exit; everything else must have none.
 - `maxSlippageBps` may not exceed 2000 (20%), whatever the intent says.
 - A leg whose token *is* the input asset is legal — that is a cash sleeve, and it is transferred
@@ -46,6 +46,8 @@ struct Policy {
     uint16  maxFeeBps;          // ceiling on the solver's success fee
     uint16  minReputationBps;   // floor on the winning solver's EMA score
     bool    requireRwaAttested; // every acquired asset must be attested onchain
+    bool    requireCompliant;   // winning solver must carry a live KYB attestation
+    bool    sponsorGas;         // winning solver must be willing to pay settlement gas
     address[] tokenAllowlist;   // if non-empty, pins the intent to these assets
 }
 ```

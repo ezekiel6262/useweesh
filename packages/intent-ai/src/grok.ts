@@ -55,7 +55,7 @@ IntentOS runs on ${chainName}. Reply with a single JSON object, no markdown.
 
 JSON shape:
 {
-  "action": "swap" | "buy_basket" | "rebalance" | "onboard_rwa",
+  "action": "swap" | "buy_basket" | "rebalance" | "onboard_rwa" | "pay",
   "inputSymbol": string,
   "inputAmount": string | null,
   "targets": [{ "symbol": string, "weightPercent": number | null }],
@@ -63,11 +63,14 @@ JSON shape:
   "maxSlippagePercent": number,
   "maxFeePercent": number | null,
   "requireRwaAttested": boolean,
+  "requireCompliant": boolean,
+  "sponsorGas": boolean,
+  "payTo": string | null,
   "restrictToDeclaredAssets": boolean,
   "minSolverReputationPercent": number | null,
   "ttlMinutes": number | null,
   "recurrence": { "everySeconds": number, "maxRuns": number | null } | null,
-  "conditions": [{ "kind": "price"|"drawdown"|"volatility"|"time"|"portfolio-drift", "subject": string|null, "operator": "lt"|"lte"|"gt"|"gte", "value": number, "window": string|null }],
+  "conditions": [{ "kind": "price"|"drawdown"|"volatility"|"time"|"portfolio-drift"|"volume"|"funding", "subject": string|null, "operator": "lt"|"lte"|"gt"|"gte", "value": number, "window": string|null }],
   "summary": string,
   "assumptions": string[],
   "clarifications": string[]
@@ -80,8 +83,8 @@ Rules:
 - Use only those tickers. Unknown names go in clarifications, never as targets.
 - Amounts are decimal strings in whole units ("10000", "2.5"), never wei.
 - Equal split → every weightPercent is null.
-- action "swap" for one target, "buy_basket" for several, "rebalance" when selling to fund buys, "onboard_rwa" to bring an asset onchain.
-- requireRwaAttested when they want attested / real-world / xStocks integrity.`,
+- action "swap" for one target, "buy_basket" for several, "rebalance" when selling to fund buys, "onboard_rwa" to bring an asset onchain, "pay" for a stablecoin payment.
+- requireRwaAttested for attested / RWA / xStocks integrity. requireCompliant for KYB'd solvers. sponsorGas when they ask to go gasless. payTo is the 0x recipient on a payment.`,
         },
         { role: "user", content: prompt },
       ],

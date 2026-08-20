@@ -155,6 +155,31 @@ describe("PolicyEngine and RWARegistry", () => {
     expect((await env.rwaRegistry.requestAt(0)).resolved).to.equal(true);
   });
 
+  it("rejects a non-KYB solver when the intent requires a compliant path", async () => {
+    const { env, tsla, outcome } = await loadFixture(fixture);
+    const policy = { ...ZERO_POLICY, requireCompliant: true };
+    await expect(settleUnder(env, outcome, policy, [env.addresses.base, tsla])).to.be.revertedWithCustomError(
+      env.policyEngine,
+      "SolverNotCompliant",
+    );
+  });
+
+  it("lets a KYB-attested solver fill a compliant intent", async () => {
+    const { env, tsla, outcome } = await loadFixture(fixture);
+    const policy = { ...ZERO_POLICY, requireCompliant: true };
+    const { intentId } = await submitIntent(env, env.signers.user, outcome, policy);
+    await env.intentRegistry
+      .connect(env.signers.solverB)
+      .placeBid(intentId, 10, 30, ethers.ZeroHash, outcome.legs.map(() => 0n));
+    await time.increase(25);
+    await env.intentRegistry.connect(env.signers.coordinator).selectWinner(intentId, 0);
+    await expect(
+      env.settlement
+        .connect(env.signers.solverB)
+        .settle(intentId, outcome, policy, [route(env.addresses.routerA, [env.addresses.base, tsla])], []),
+    ).to.not.be.reverted;
+  });
+
   it("refuses a slippage tolerance beyond the protocol ceiling", async () => {
     const { env, tsla, outcome } = await loadFixture(fixture);
     const wild = { ...outcome, maxSlippageBps: 2_500 };

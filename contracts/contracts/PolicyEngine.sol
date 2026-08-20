@@ -27,6 +27,11 @@ contract PolicyEngine {
     error SlippageTooHigh();
     error WeightsInvalid();
     error NoLegs();
+    error SolverNotCompliant();
+    error SolverCannotSponsorGas();
+
+    /// @dev Mirrors SolverRegistry.CAP_GASLESS.
+    uint32 public constant CAP_GASLESS = 32;
 
     constructor(SolverRegistry solvers_, RWARegistry rwa_) {
         solvers = solvers_;
@@ -50,6 +55,8 @@ contract PolicyEngine {
         if (policy.maxNotional != 0 && notional > policy.maxNotional) revert NotionalTooLarge();
         if (feeBps > policy.maxFeeBps) revert FeeTooHigh();
         if (solvers.reputationOf(solver) < policy.minReputationBps) revert SolverReputationTooLow();
+        if (policy.requireCompliant && !solvers.kybAttested(solver)) revert SolverNotCompliant();
+        if (policy.sponsorGas && !solvers.hasCapabilities(solver, CAP_GASLESS)) revert SolverCannotSponsorGas();
 
         for (uint256 i = 0; i < outcome.legs.length; i++) {
             address token = outcome.legs[i].token;

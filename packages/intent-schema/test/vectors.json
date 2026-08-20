@@ -29,12 +29,14 @@
       "maxFeeBps": 30,
       "minReputationBps": 0,
       "requireRwaAttested": false,
+      "requireCompliant": false,
+      "sponsorGas": false,
       "tokenAllowlist": []
     },
     "expected": {
       "outcomeHash": "0xf582d252776bdd52321620c6129808b54f72e60dcaeb82e02011e6107bad9256",
-      "policyHash": "0xb12e24c9c84ac6c8268fa4259875aae76962c46c420212176d8868babe375cfa",
-      "intentId": "0xe7b598979777896ba815b823e843700c970992eb8842b028be37710fd575cf41"
+      "policyHash": "0x934f0f45e79851675343e0085b21234883e8184d282e7eefb901180db6a15e42",
+      "intentId": "0xe9cd7aa0859390de51c04a1b759e48f151fd337cfbf7b502d561435c23552b28"
     }
   },
   {
@@ -82,6 +84,8 @@
       "maxFeeBps": 25,
       "minReputationBps": 4000,
       "requireRwaAttested": true,
+      "requireCompliant": true,
+      "sponsorGas": true,
       "tokenAllowlist": [
         "0x0000000000000000000000000000000000000021",
         "0x0000000000000000000000000000000000000022",
@@ -91,8 +95,8 @@
     },
     "expected": {
       "outcomeHash": "0x59cfb8ca057ad494a8d2f1be4f3ee89c96fb27e7df0b09e4553543ea494d4e24",
-      "policyHash": "0xf5546c83b6adc117940f01512dde17c34a4dff5ebfc6f415841a79cd30acf65d",
-      "intentId": "0xb2e768d7f00fb5972a6d94468f050e6bd660f68275ddc680a4e7b2f664205871"
+      "policyHash": "0x609ce5b1eb1fdbd53866ce93a4714c222d23a2607789f75ec01193552801a0cf",
+      "intentId": "0xbd3fc61f9eac67bdf0cb2a24c6439fc604bcecaf65594cb517ab170cdb9f4f38"
     }
   },
   {
@@ -146,12 +150,56 @@
       "maxFeeBps": 40,
       "minReputationBps": 6000,
       "requireRwaAttested": false,
+      "requireCompliant": false,
+      "sponsorGas": false,
       "tokenAllowlist": []
     },
     "expected": {
       "outcomeHash": "0x3142180910459626ee22dcdbaea72420400ecaeb24999a628900a6c3af6302b4",
-      "policyHash": "0x37719c678fff836d9f8aa4d754c4a79d7f3a0c176331b6c1f6b960c0c728e27c",
-      "intentId": "0xbc77055750a4272951b06e5e6adef9464a9fa3a408f7848c2cfad9970da4457f"
+      "policyHash": "0x4d5531993d804aaeae8c5959acc9c05d3fc59fa7f6b102537de34681ddb739b0",
+      "intentId": "0x2dfff7af793bf3c3b5190c38b42fb132def88f2d9e279910269012c3a26df37c"
+    }
+  },
+  {
+    "name": "gasless stablecoin payment to a named recipient",
+    "chainId": 31337,
+    "registry": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "owner": "0x00000000000000000000000000000000000A11cE",
+    "salt": "0x0404040404040404040404040404040404040404040404040404040404040404",
+    "auctionEndsAt": "1800000020",
+    "deadline": "1800000600",
+    "outcome": {
+      "kind": 5,
+      "inputToken": "0x0000000000000000000000000000000000000011",
+      "inputAmount": "500000000",
+      "recipient": "0x000000000000000000000000000000000000cafE",
+      "maxSlippageBps": 0,
+      "legs": [
+        {
+          "token": "0x0000000000000000000000000000000000000011",
+          "weightBps": 10000,
+          "minOut": "500000000"
+        }
+      ],
+      "exits": []
+    },
+    "policy": {
+      "maxNotional": "500000000",
+      "validAfter": "0",
+      "validUntil": "1800090000",
+      "maxFeeBps": 0,
+      "minReputationBps": 0,
+      "requireRwaAttested": false,
+      "requireCompliant": false,
+      "sponsorGas": true,
+      "tokenAllowlist": [
+        "0x0000000000000000000000000000000000000011"
+      ]
+    },
+    "expected": {
+      "outcomeHash": "0xc86bff48a64ee7d99f99ea6fe45738668f96cb63a44b873b18d96769fa15d4b9",
+      "policyHash": "0x239d2fec6adaf5e8afe2c3883edad92dd4e618ac36aac2ec24259039f4083c31",
+      "intentId": "0x8934b3882aabc9657dfa5fa81eb82c1855d2554ec1df4900c466bfd8f2f12c04"
     }
   }
 ]

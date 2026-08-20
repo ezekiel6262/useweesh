@@ -44,6 +44,8 @@ export interface ParsedView {
     maxFeeBps: number;
     minReputationBps: number;
     requireRwaAttested: boolean;
+    requireCompliant: boolean;
+    sponsorGas: boolean;
     allowlist: string[];
   };
   timing: { auctionSeconds: number; settleSeconds: number };
@@ -51,7 +53,7 @@ export interface ParsedView {
   commitment: { outcomeHash: string; policyHash: string };
 }
 
-const KIND_LABEL = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"] as const;
+const KIND_LABEL = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH", "PAYMENT"] as const;
 
 export async function parse(prompt: string): Promise<ParsedView> {
   const parsed = await parseIntent(prompt, {
@@ -92,6 +94,8 @@ export async function parse(prompt: string): Promise<ParsedView> {
       maxFeeBps: draft.policy.maxFeeBps,
       minReputationBps: draft.policy.minReputationBps,
       requireRwaAttested: draft.policy.requireRwaAttested,
+      requireCompliant: draft.policy.requireCompliant,
+      sponsorGas: draft.policy.sponsorGas,
       allowlist: draft.policy.tokenAllowlist.map(symbolOf),
     },
     timing: {

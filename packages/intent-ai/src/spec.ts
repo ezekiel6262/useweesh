@@ -12,7 +12,7 @@ import { z } from "zod";
 
 export const intentSpecSchema = z.object({
   action: z
-    .enum(["swap", "buy_basket", "rebalance", "onboard_rwa"])
+    .enum(["swap", "buy_basket", "rebalance", "onboard_rwa", "pay"])
     .describe("What the user wants to happen"),
   inputSymbol: z.string().describe("Ticker of the asset being spent, e.g. USDT"),
   inputAmount: z
@@ -43,6 +43,16 @@ export const intentSpecSchema = z.object({
   requireRwaAttested: z
     .boolean()
     .describe("Require every acquired asset to carry a live RWA attestation onchain"),
+  requireCompliant: z
+    .boolean()
+    .describe("Only KYB-attested / compliant solvers may win the auction"),
+  sponsorGas: z
+    .boolean()
+    .describe("The winning solver must sponsor settlement gas"),
+  payTo: z
+    .string()
+    .nullable()
+    .describe("Recipient address when this is a payment. null means the submitting account."),
   restrictToDeclaredAssets: z
     .boolean()
     .describe("Pin the intent to exactly the assets named, via an onchain token allowlist"),
@@ -61,7 +71,7 @@ export const intentSpecSchema = z.object({
   conditions: z
     .array(
       z.object({
-        kind: z.enum(["price", "drawdown", "volatility", "time", "portfolio-drift"]),
+        kind: z.enum(["price", "drawdown", "volatility", "time", "portfolio-drift", "volume", "funding"]),
         subject: z.string().nullable(),
         operator: z.enum(["lt", "lte", "gt", "gte"]),
         value: z.number(),
@@ -91,6 +101,9 @@ export function emptySpec(overrides: Partial<IntentSpec> = {}): IntentSpec {
     maxSlippagePercent: 1,
     maxFeePercent: null,
     requireRwaAttested: false,
+    requireCompliant: false,
+    sponsorGas: false,
+    payTo: null,
     restrictToDeclaredAssets: false,
     minSolverReputationPercent: null,
     ttlMinutes: null,

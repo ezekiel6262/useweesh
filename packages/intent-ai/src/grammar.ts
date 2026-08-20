@@ -58,14 +58,28 @@ export function parseWithGrammar(prompt: string, catalog: AssetCatalog): Grammar
   }
 
   spec.action = detectAction(text, spec);
-  spec.maxSlippagePercent = findSlippage(text) ?? 1;
-  spec.maxFeePercent = findFeeCap(text);
+  spec.requireCompliant = /\b(kyb|kyc|compliant solvers?|only compliant|kyb'?d)\b/.test(text);
+  spec.sponsorGas = /\b(gasless(?:ly)?|sponsor(?:ed)? gas|pay(?:s|ing)? (?:the )?gas)\b/.test(text);
   spec.minSolverReputationPercent = findReputationFloor(text);
-  spec.requireRwaAttested = /\b(attested|verified|regulated|compliant)\b/.test(text);
+  spec.requireRwaAttested = /\b(attested|verified|regulated)\b/.test(text) || spec.action === "onboard_rwa";
   spec.restrictToDeclaredAssets = /\b(only these|nothing else|no other (?:assets|tokens)|exactly these)\b/.test(text);
   spec.ttlMinutes = findTtlMinutes(text);
   spec.recurrence = findRecurrence(text);
   spec.conditions = findConditions(text, catalog);
+
+  if (spec.action === "pay") {
+    const payee = /0x[a-fA-F0-9]{40}/.exec(prompt);
+    spec.payTo = payee ? payee[0] : null;
+    if (spec.targets.length === 0) {
+      spec.targets = [{ symbol: spec.inputSymbol, weightPercent: 100 }];
+    }
+    spec.maxSlippagePercent = findSlippage(text) ?? 0;
+    spec.maxFeePercent = findFeeCap(text) ?? 0;
+    if (!spec.payTo) spec.clarifications.push("Which address should receive the payment?");
+  } else {
+    spec.maxSlippagePercent = findSlippage(text) ?? 1;
+    spec.maxFeePercent = findFeeCap(text);
+  }
 
   if (spec.targets.length === 0) {
     spec.clarifications.push("Which assets should the intent end up holding?");
@@ -214,7 +228,13 @@ function findRatio(text: string, legCount: number): number[] | null {
 function detectAction(text: string, spec: IntentSpec): IntentSpec["action"] {
   if (/\b(tokeni[sz]e|bring .* onchain|onboard|issue .* onchain)\b/.test(text)) return "onboard_rwa";
   if (spec.exits.length > 0 || /\brebalance|reweight|rotate\b/.test(text)) return "rebalance";
+  const namesXstock = spec.targets.some((t) => !isStableSymbol(t.symbol));
+  if (!namesXstock && /\b(pay(?:ing|ment|roll|out)?|subscription)\b/.test(text)) return "pay";
   return spec.targets.length > 1 ? "buy_basket" : "swap";
+}
+
+function isStableSymbol(symbol: string): boolean {
+  return /^(USDT|USDC|USDG|DAI)$/i.test(symbol);
 }
 
 function findSlippage(text: string): number | null {
@@ -272,6 +292,10 @@ function findRecurrence(text: string): IntentSpec["recurrence"] {
     monthly: 2_592_000,
   };
 
+  if (/\bevery monday\b/.test(text)) {
+    return { everySeconds: named.week!, maxRuns: null };
+  }
+
   const everyN = /\bevery\s+(\d+)\s*(hour|day|week|month)s?\b/.exec(text);
   if (everyN) {
     return { everySeconds: Number(everyN[1]) * named[everyN[2]!]!, maxRuns: null };
@@ -312,6 +336,26 @@ function findConditions(text: string, catalog: AssetCatalog): IntentSpec["condit
     conditions.push({ kind: "portfolio-drift", subject: null, operator: "gt", value: Number(driftRule[1]), window: null });
   }
 
+  const volumeRule = /\b(?:24h\s+)?volume\s+(?:exceeds|above|over|>)\s+\$?(\d[\d,_]*)/g;
+  for (const match of text.matchAll(volumeRule)) {
+    conditions.push({
+      kind: "volume",
+      subject: null,
+      operator: "gt",
+      value: Number(match[1]!.replace(/[,_]/g, "")),
+      window: "24h",
+    });
+  }
+
+  if (/\bfunding is positive\b/.test(text)) {
+    conditions.push({ kind: "funding", subject: null, operator: "gt", value: 0, window: null });
+  }
+
+  const volSpike = /\bvolatility spikes? above\s+(\d+(?:\.\d+)?)/.exec(text);
+  if (volSpike) {
+    conditions.push({ kind: "volatility", subject: "volatility", operator: "gt", value: Number(volSpike[1]), window: null });
+  }
+
   return conditions;
 }
 
@@ -340,6 +384,8 @@ export function describeSpec(spec: IntentSpec): string {
     }
     case "onboard_rwa":
       return `Bring ${legs || "an asset"} onchain and take a position in it.`;
+    case "pay":
+      return `Pay ${spec.inputAmount ?? "?"} ${spec.inputSymbol} to ${spec.payTo ?? "the named address"}${spec.sponsorGas ? ", gaslessly" : ""}.`;
     case "swap":
       return `Swap ${spec.inputAmount ?? "?"} ${spec.inputSymbol} into ${legs || "?"}.`;
     default:

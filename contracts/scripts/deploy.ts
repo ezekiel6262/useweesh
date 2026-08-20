@@ -167,6 +167,23 @@ async function main() {
       await (await registry.register(`intentos://solver/${name}`, { value: bond })).wait();
       console.log(`registered ${name} solver ${await solver.getAddress()}`);
     }
+    const capAi = await solverRegistry.CAP_AI();
+    const capCompliant = await solverRegistry.CAP_COMPLIANT();
+    const capRwa = await solverRegistry.CAP_RWA();
+    const capStable = await solverRegistry.CAP_STABLE();
+    const capAgent = await solverRegistry.CAP_AGENT();
+    const capGasless = await solverRegistry.CAP_GASLESS();
+    await (await solverRegistry.attestCapabilities(
+      await solverA.getAddress(),
+      capAi | capRwa | capStable | capGasless,
+    )).wait();
+    await (await solverRegistry.attestCapabilities(
+      await solverB.getAddress(),
+      capCompliant | capRwa | capStable | capAgent | capGasless,
+    )).wait();
+    await (await solverRegistry.attestKyb(await solverB.getAddress(), true)).wait();
+    console.log("solver A: AI + RWA + stable + gasless");
+    console.log("solver B: KYB + RWA + stable + agent + gasless");
   }
 
   const deployment = {

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — an Intent Operating System for X Layer</title>
-<meta name="description" content="State an outcome. Competing AI solvers work out how. The chain enforces that they did — live on X Layer." />
+<title>IntentOS — X Layer-native OS for agents, stablecoins, and RWAs</title>
+<meta name="description" content="Declare any outcome on X Layer — xStocks baskets, gasless stablecoin payments, RWA flows — and let AI plus compliant solvers fulfill it." />
 <meta property="og:title" content="IntentOS" />
-<meta property="og:description" content="State what should be true afterwards. AI solvers compete over how. The chain enforces that they did." />
+<meta property="og:description" content="The X Layer-native Intent Operating System for agents, stablecoins, and Real World Assets." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -87,6 +87,12 @@
   h2.serif { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 20px; }
   .stages { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   @media (max-width: 900px) { .stages { grid-template-columns: minmax(0, 1fr); } }
+  .grid2 { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .card pre.intent {
+    margin: 14px 0 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   .card {
     background: var(--surface); border-radius: 14px; padding: 20px 22px;
     box-shadow: var(--shadow-card);
@@ -138,16 +144,17 @@
 <main class="wrap">
   <div class="hero">
     <p class="kicker">AN INTENT OPERATING SYSTEM · X LAYER</p>
-    <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
+    <h1 class="lede">Agents, stablecoins, and <em>real-world assets</em>.</h1>
     <p class="sub">
-      Users and agents declare an outcome — a basket of xStocks, a rebalance, an RWA onboard.
-      Competing solvers bid on how. Settlement sizes the legs from your weights and reverts if the floors are missed.
+      IntentOS is the X Layer-native operating system for outcomes. Declare a gasless USDG payment,
+      a six-name xStocks basket, or an RWA onboard — then let AI and KYB’d solvers compete to fulfill it.
+      The chain still sizes the legs from your weights and reverts if the floors are missed.
     </p>
     <div class="actions">
       <a class="btn" href="/app">Declare an intent</a>
-      <a class="btn ghost" href="#loop">See the loop</a>
+      <a class="btn ghost" href="#use">See what it can do</a>
     </div>
-    <p class="fine">X Layer testnet · no new token · no proprietary liquidity</p>
+    <p class="fine">X Layer testnet · solver-sponsored gas · no new token · no proprietary liquidity</p>
   </div>
 
   <section class="rule" id="loop">
@@ -160,27 +167,75 @@
     </div>
   </section>
 
+  <section class="rule" id="use">
+    <h2 class="serif">What you can declare</h2>
+    <div class="grid2">
+      <div class="card">
+        <n>STABLECOINS · PAYMENTS</n>
+        <h3>Gasless 1:1 rails</h3>
+        <p>Pay an address in USDG, convert incoming stables, or run recurring payroll. Solvers sponsor settlement gas. The payment kind is a first-class outcome, not a disguised swap.</p>
+      </div>
+      <div class="card">
+        <n>RWA · XSTOCKS</n>
+        <h3>Tokenized markets, one intent</h3>
+        <p>Allocate, rebalance, or exit a basket of TSLA, NVDA, AAPL, META and SPY xStocks. Gate on 24h volume or volatility. Onboard an offchain asset and make it immediately usable.</p>
+      </div>
+      <div class="card">
+        <n>COMPLIANT · ENTERPRISE</n>
+        <h3>KYB’d solver lanes</h3>
+        <p>Pin an intent to attested, KYB-only solvers. Neobanks and fintechs building on X Layer keep execution inside a policy the chain will actually enforce.</p>
+      </div>
+      <div class="card">
+        <n>AGENTS</n>
+        <h3>Declare, or solve</h3>
+        <p>Agents submit the outcomes above through the SDK. They can also register as specialist solvers — an RWA agent, a stablecoin agent — and bid in the same auction.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="rule" id="rwa">
     <div class="cols">
       <div>
-        <h2 class="serif">Built for xStocks and RWA</h2>
+        <h2 class="serif">The best way to operate RWAs on X Layer</h2>
         <p class="sub" style="margin-bottom:0">
-          One intent can allocate across TSLA, NVDA, AAPL and SPY xStocks with equal weight,
+          One intent can allocate across TSLA, NVDA, AAPL, META and SPY xStocks with equal weight,
           a slippage cap, attested-only assets, and a fee ceiling. Rebalances exit and enter
-          in the same transaction, so the portfolio is never caught half-rotated.
+          in the same transaction. A PAYMENT lands as a cash sleeve. Solvers that win and walk lose reputation.
         </p>
         <div class="chips">
           <span class="chip">TSLAx</span>
           <span class="chip">NVDAx</span>
           <span class="chip">AAPLx</span>
+          <span class="chip">METAx</span>
           <span class="chip">SPYx</span>
           <span class="chip">GOOGLx</span>
+          <span class="chip">USDG</span>
           <span class="chip">RWA attested</span>
+          <span class="chip">KYB solvers</span>
+          <span class="chip">gasless</span>
         </div>
       </div>
       <div class="card">
         <p class="quote">Weights are not negotiable. Floors are doubled. The whole notional gets deployed, or settlement reverts.</p>
-        <p>Guardrails travel with the intent: spend cap, fee cap, solver reputation, token allowlist, live RWA attestation.</p>
+        <p>Guardrails travel with the intent: spend cap, fee cap, solver reputation, token allowlist, live RWA attestation, KYB-only execution, solver-sponsored gas.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rule" id="solvers">
+    <div class="cols">
+      <div>
+        <h2 class="serif">Modular solvers, not a single router.</h2>
+        <div class="list" style="margin-top:8px">
+          <div><i>AI</i><span>General solvers compete on fee, ETA, and guaranteed output.</span></div>
+          <div><i>KYB</i><span>Compliant solvers are owner-attested. Policy.requireCompliant reverts anyone else.</span></div>
+          <div><i>RWA</i><span>Specialists that only touch attested xStocks and tokenized funds.</span></div>
+          <div><i>GAS</i><span>Gasless solvers sponsor settlement. Humans and agents never need native OKB to finish.</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <n>ONE INTENT</n>
+        <pre class="intent">Using only compliant solvers, gaslessly convert stables into a diversified basket of 6 xStocks on X Layer, then rebalance monthly.</pre>
       </div>
     </div>
   </section>
@@ -193,14 +248,14 @@
           <div><i>01</i><span>They already speak in outcomes. Encoding four swaps is a bug farm.</span></div>
           <div><i>02</i><span>Policy is committed, so a budget handed to an agent cannot step outside it.</span></div>
           <div><i>03</i><span>The coordinator closes auctions so the agent does not have to stay online.</span></div>
-          <div><i>04</i><span>A solver that wins and walks loses reputation. The next intent can require a floor.</span></div>
+          <div><i>04</i><span>A solver that wins and walks loses reputation. The next intent can require a floor — or a KYB attestation.</span></div>
         </div>
       </div>
       <div class="card">
         <n>@intentos/sdk</n>
         <p style="font-family:var(--mono);font-size:12.5px;color:var(--ink);line-height:1.65">
           await agent.declare(<br>
-          &nbsp;&nbsp;"put 5,000 USDT into NVDA and AAPL, 60/40"<br>
+          &nbsp;&nbsp;"pay 500 USDG gaslessly to 0xcafe…"<br>
           );<br>
           await agent.track(intentId);
         </p>

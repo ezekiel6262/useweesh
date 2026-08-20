@@ -48,24 +48,24 @@
   </nav>
 </header>
 
-<p class="kicker">Intent Standard v0.1 · X Layer</p>
+<p class="kicker">Intent Standard v0.2 · X Layer</p>
 <h1>An intent is a commitment to an outcome.</h1>
-<p>Not a transaction. Not a route. The user or agent declares what should be true afterwards. Solvers compete on how. Settlement checks the result against the declaration before anything is final.</p>
+<p>Not a transaction. Not a route. Users and agents declare what should be true afterwards — a gasless USDG payment, an xStocks basket, an RWA onboard. AI and KYB’d solvers compete on how. Settlement checks the result against the declaration before anything is final.</p>
 
 <h2>Onchain addresses (testnet 1952)</h2>
 <table>
   <tr><th>Contract</th><th>Address</th></tr>
-  <tr><td>IntentRegistry</td><td><code>0x2E6Be30A537AA45f16BB47617481745198453382</code></td></tr>
-  <tr><td>IntentSettlement</td><td><code>0xFDd64293C369ea1bD93274a521dF430442FD0cA6</code></td></tr>
-  <tr><td>PolicyEngine</td><td><code>0xB0E513aF4c9fd7bD1Ea0f66e62c8edCcF2A09766</code></td></tr>
-  <tr><td>SolverRegistry</td><td><code>0x4129073bf0B0c9b612fA33F8687DbF555646D515</code></td></tr>
-  <tr><td>RWARegistry</td><td><code>0x44F2b8b18Acdc3c68fB419Fb4D6f413be9167DFd</code></td></tr>
+  <tr><td>IntentRegistry</td><td><code>0x84E27EcE3Bb37e97C51EbE5438E4937ABD1e67F3</code></td></tr>
+  <tr><td>IntentSettlement</td><td><code>0x0e20f8239A37Fe6E2231D834ea67305fcF294509</code></td></tr>
+  <tr><td>PolicyEngine</td><td><code>0xE320FB63BDda6c333B915E36B69d7968E91C6962</code></td></tr>
+  <tr><td>SolverRegistry</td><td><code>0xa0d75b2BBBBf711764e0F0F5B7423E0B879257a3</code></td></tr>
+  <tr><td>RWARegistry</td><td><code>0x807F1Dec94d3a648351E369A0b032C26BAC7493b</code></td></tr>
 </table>
 
 <h2>What is committed</h2>
 <p>Registry stores two hashes, not contents. Settlement reveals the outcome and policy and reverts if they do not hash-match.</p>
 <pre>outcomeHash  = keccak256(IntentOS.Outcome.v1, kind, token, amount, recipient, slippage, legs, exits)
-policyHash   = keccak256(IntentOS.Policy.v1, notional, validity, fee, reputation, rwa, allowlist)
+policyHash   = keccak256(IntentOS.Policy.v2, notional, validity, fee, reputation, rwa, kyb, gas, allowlist)
 intentId     = keccak256(IntentOS.Intent.v1, chainId, registry, owner, hashes, salt, auction, deadline)</pre>
 
 <h2>What settlement enforces</h2>
@@ -74,7 +74,7 @@ intentId     = keccak256(IntentOS.Intent.v1, chainId, registry, owner, hashes, s
   <li>Each leg must clear <code>max(user minOut, solver guarantee)</code>.</li>
   <li>Output is measured as a balance delta on the recipient, never taken from the router’s return.</li>
   <li>Spend must meet <code>spendable × (1 − maxSlippageBps)</code> or the tx reverts.</li>
-  <li>Fee cap, spend cap, reputation floor, allowlist, and RWA attestation are checked by PolicyEngine.</li>
+  <li>Fee cap, spend cap, reputation floor, allowlist, RWA attestation, KYB, and gas sponsorship are checked by PolicyEngine.</li>
 </ul>
 
 <h2>Lifecycle</h2>
@@ -86,8 +86,11 @@ intentId     = keccak256(IntentOS.Intent.v1, chainId, registry, owner, hashes, s
 <p>Bids are public and binding: fee, ETA, plan hash, and a guarantee vector — one per acquisition leg. A coordinator may select; anyone can challenge a dominated pick and cut its bond.</p>
 
 <h2>Kinds</h2>
-<p><code>SWAP</code> · <code>BASKET</code> · <code>REBALANCE</code> · <code>RWA_ONBOARD</code> · <code>BATCH</code></p>
-<p>A four-asset xStocks basket is one intent. A rebalance sells and buys in the same settlement, so the book is never left half-rotated.</p>
+<p><code>SWAP</code> · <code>BASKET</code> · <code>REBALANCE</code> · <code>RWA_ONBOARD</code> · <code>BATCH</code> · <code>PAYMENT</code></p>
+<p>A six-asset xStocks basket is one intent. A rebalance sells and buys in the same settlement. A <code>PAYMENT</code> is a 1:1 stablecoin cash sleeve — including gasless USDG sends — not a disguised swap.</p>
+
+<h2>Solver lanes</h2>
+<p>Solvers advertise capability bits: <code>AI</code> · <code>COMPLIANT</code> · <code>RWA</code> · <code>STABLE</code> · <code>AGENT</code> · <code>GASLESS</code>. The registry owner attests KYB separately. <code>Policy.requireCompliant</code> and <code>Policy.sponsorGas</code> are hashed into the commitment, so a non-KYB or non-gasless winner reverts at settlement.</p>
 
 <h2>Agent surface</h2>
 <p>Agents do not need a UI. <code>POST /api/declare</code> turns a sentence into calldata. The agent still signs. Open questions are not signed on anyone’s behalf.</p>

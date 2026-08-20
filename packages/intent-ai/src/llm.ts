@@ -54,11 +54,13 @@ Rules that matter:
 - Weights are percentages that add up to 100. If the user asked for an equal split, or did not
   weight the assets at all, set every weightPercent to null rather than dividing it out yourself.
 - action: "swap" for one target, "buy_basket" for several, "rebalance" when existing positions
-  are being sold to fund new ones, "onboard_rwa" when the point is bringing an asset onchain.
+  are being sold to fund new ones, "onboard_rwa" when the point is bringing an asset onchain,
+  "pay" for a stablecoin payment to an address.
 - exits are only for a rebalance: the positions being sold, with the quantity of each.
 - maxSlippagePercent defaults to 1 unless the user gave a tolerance.
 - Set requireRwaAttested when the user cares that the assets are genuine tokenized real-world
-  assets. Set restrictToDeclaredAssets when they want the intent pinned to exactly these assets.
+  assets. Set requireCompliant when they ask for KYB'd or compliant solvers. Set sponsorGas when
+  they ask for gasless fulfillment. Set payTo to the 0x address on a payment. Set restrictToDeclaredAssets when they want the intent pinned to exactly these assets.
 - Record anything you filled in yourself under assumptions. Use clarifications only for things a
   human really must answer — a missing amount, an unknown asset, a contradiction. Do not ask about
   details you were able to assume sensibly.

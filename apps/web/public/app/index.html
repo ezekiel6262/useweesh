@@ -273,11 +273,11 @@ const explorer = (path) => `https://web3.okx.com/explorer/xlayer-testnet/${path}
 
 const EXAMPLES = [
   "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%",
-  "Swap 2,500 USDT into NVDA with 0.3% max slippage",
-  "Rebalance: sell 3 TSLA and 4 NVDA, then buy AAPL and SPY equally",
-  "put 20,000 USDT into NVDA and AAPL, 60/40, only attested assets",
+  "Pay 500 USDG gaslessly to 0x000000000000000000000000000000000000cafe",
+  "Using only compliant solvers, allocate 25,000 USDT equally across TSLA, NVDA, AAPL, META and SPY xStocks with max 0.3% slippage",
+  "Rebalance my xStocks to 25% TSLA, 25% NVDA, 25% AAPL, 25% SPY every Monday",
 ];
-const CHIP_LABELS = ["4-asset basket", "NVDA swap", "rebalance", "60/40"];
+const CHIP_LABELS = ["xStocks basket", "gasless pay", "KYB basket", "Monday rebalance"];
 $("chips").innerHTML = CHIP_LABELS.map((label, i) =>
   `<button class="chip" data-i="${i}">${esc(label)}</button>`).join("");
 $("chips").addEventListener("click", (event) => {
@@ -403,7 +403,7 @@ async function runParse() {
         clarifications: result.clarifications ?? [],
         quotesAvailable: true,
         outcome: {
-          kindLabel: ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"][result.draft.outcome.kind],
+          kindLabel: ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH", "PAYMENT"][result.draft.outcome.kind],
           inputSymbol: symbolOf(result.draft.outcome.inputToken),
           inputAmount: result.draft.outcome.inputAmount.toString(),
           maxSlippageBps: result.draft.outcome.maxSlippageBps,
@@ -419,6 +419,8 @@ async function runParse() {
           maxFeeBps: result.draft.policy.maxFeeBps,
           minReputationBps: result.draft.policy.minReputationBps,
           requireRwaAttested: result.draft.policy.requireRwaAttested,
+          requireCompliant: result.draft.policy.requireCompliant,
+          sponsorGas: result.draft.policy.sponsorGas,
           allowlist: (result.draft.policy.tokenAllowlist ?? []).map(symbolOf),
         },
         timing: { auctionSeconds: 20 },
@@ -465,8 +467,10 @@ function renderParsed(result) {
     `slippage ≤ ${pct(result.outcome.maxSlippageBps)}`,
     policy.minReputationBps ? `reputation ≥ ${pct(policy.minReputationBps)}` : "",
     policy.requireRwaAttested ? "RWA attested" : "",
+    policy.requireCompliant ? "KYB solvers only" : "",
+    policy.sponsorGas ? "solver sponsors gas" : "",
     policy.allowlist.length ? `pinned to ${policy.allowlist.map(esc).join(", ")}` : "",
-  ].filter(Boolean).map((g) => `<span class="guard ${/attested|pinned|reputation/.test(g) ? "on" : ""}">${g}</span>`).join("");
+  ].filter(Boolean).map((g) => `<span class="guard ${/attested|pinned|reputation|KYB|sponsors/.test(g) ? "on" : ""}">${g}</span>`).join("");
   $("guardCard").classList.remove("hide");
   const outcomeHash = result.commitment?.outcomeHash;
   const policyHash = result.commitment?.policyHash;

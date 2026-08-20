@@ -71,6 +71,8 @@ export function draft(overrides = {}) {
       maxFeeBps: 30,
       minReputationBps: 0,
       requireRwaAttested: false,
+      requireCompliant: false,
+      sponsorGas: false,
       tokenAllowlist: [],
       ...policyOverrides,
     },

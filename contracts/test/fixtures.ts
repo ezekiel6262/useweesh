@@ -89,6 +89,18 @@ export async function deployIntentOS() {
 
   await solverRegistry.connect(solverA).register("ipfs://solver-a", { value: ethers.parseEther("1") });
   await solverRegistry.connect(solverB).register("ipfs://solver-b", { value: ethers.parseEther("1") });
+  const capGasless = await solverRegistry.CAP_GASLESS();
+  const capAi = await solverRegistry.CAP_AI();
+  const capRwa = await solverRegistry.CAP_RWA();
+  const capStable = await solverRegistry.CAP_STABLE();
+  const capCompliant = await solverRegistry.CAP_COMPLIANT();
+  const capAgent = await solverRegistry.CAP_AGENT();
+  await solverRegistry.attestCapabilities(solverA.address, capAi | capRwa | capStable | capGasless);
+  await solverRegistry.attestCapabilities(
+    solverB.address,
+    capCompliant | capRwa | capStable | capAgent | capGasless,
+  );
+  await solverRegistry.attestKyb(solverB.address, true);
 
   return {
     signers: { deployer, treasury, coordinator, user, solverA, solverB, challenger },
@@ -119,6 +131,8 @@ export const ZERO_POLICY = {
   maxFeeBps: 50,
   minReputationBps: 0,
   requireRwaAttested: false,
+  requireCompliant: false,
+  sponsorGas: false,
   tokenAllowlist: [] as string[],
 };
 

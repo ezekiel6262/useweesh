@@ -6,6 +6,7 @@ import {
   catalogFromDeployment,
   type DeploymentFile,
 } from "@intentos/sdk";
+import { SolverCapability } from "@intentos/intent-schema";
 import { AGGRESSIVE, CONSERVATIVE, Coordinator, Solver, StaticIntentFeed } from "@intentos/solver-core";
 import { XLAYER_TESTNET_DEPLOYMENT } from "./xlayerTestnet.js";
 
@@ -45,15 +46,25 @@ export function operatorClient(envName: string): IntentOSClient {
 }
 
 export function makeSolvers(feed: StaticIntentFeed) {
+  const gaslessRwa = SolverCapability.AI | SolverCapability.RWA | SolverCapability.STABLE | SolverCapability.GASLESS;
   const a = new Solver({
     client: operatorClient("SOLVER_A_PRIVATE_KEY"),
     feed,
     strategy: AGGRESSIVE,
+    kyb: false,
+    capabilities: gaslessRwa,
   });
   const b = new Solver({
     client: operatorClient("SOLVER_B_PRIVATE_KEY"),
     feed,
     strategy: CONSERVATIVE,
+    kyb: true,
+    capabilities:
+      SolverCapability.COMPLIANT |
+      SolverCapability.RWA |
+      SolverCapability.STABLE |
+      SolverCapability.AGENT |
+      SolverCapability.GASLESS,
   });
   return [a, b];
 }

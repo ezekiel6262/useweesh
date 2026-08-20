@@ -76,6 +76,8 @@ export function explainOutcome(outcome: Outcome, catalog: AssetCatalog): string 
     }
     case IntentKind.RWA_ONBOARD:
       return `Bring ${formatAmount(outcome.inputAmount, inputDecimals)} ${inputSymbol} into ${legs}, an attested tokenized real-world asset, with at most ${bps(outcome.maxSlippageBps)} slippage.`;
+    case IntentKind.PAYMENT:
+      return `Pay ${formatAmount(outcome.inputAmount, inputDecimals)} ${inputSymbol} to ${outcome.recipient.slice(0, 6)}…${outcome.recipient.slice(-4)}${outcome.maxSlippageBps ? `, with at most ${bps(outcome.maxSlippageBps)} slippage` : ""}.`;
     case IntentKind.SWAP:
       return `Swap ${formatAmount(outcome.inputAmount, inputDecimals)} ${inputSymbol} into ${legs}, with at most ${bps(outcome.maxSlippageBps)} slippage.`;
     default:
@@ -97,6 +99,12 @@ function explainPolicy(draft: IntentDraft, catalog: AssetCatalog): string[] {
   }
   if (policy.requireRwaAttested) {
     lines.push("Every asset acquired must carry a live RWA attestation onchain.");
+  }
+  if (policy.requireCompliant) {
+    lines.push("Only KYB-attested solvers may serve this.");
+  }
+  if (policy.sponsorGas) {
+    lines.push("The winning solver sponsors settlement gas.");
   }
   if (policy.tokenAllowlist.length > 0) {
     lines.push(`The intent is pinned to ${policy.tokenAllowlist.map((t) => symbolFor(catalog, t)).join(", ")} and cannot touch anything else.`);

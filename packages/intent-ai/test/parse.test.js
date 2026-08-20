@@ -14,6 +14,7 @@ const deployment = {
     AAPLx: "0x0000000000000000000000000000000000000023",
     SPYx: "0x0000000000000000000000000000000000000024",
     GOOGLx: "0x0000000000000000000000000000000000000025",
+    METAx: "0x0000000000000000000000000000000000000026",
   },
   routers: [],
 };
@@ -210,6 +211,9 @@ test("parseIntent uses Claude when a client is supplied, and validates what it r
             maxSlippagePercent: 0.75,
             maxFeePercent: 0.25,
             requireRwaAttested: true,
+            requireCompliant: false,
+            sponsorGas: false,
+            payTo: null,
             restrictToDeclaredAssets: false,
             minSolverReputationPercent: null,
             ttlMinutes: 15,
@@ -253,6 +257,9 @@ test("a model that names an unknown asset fails resolution instead of trading", 
           maxSlippagePercent: 1,
           maxFeePercent: null,
           requireRwaAttested: false,
+          requireCompliant: false,
+          sponsorGas: false,
+          payTo: null,
           restrictToDeclaredAssets: false,
           minSolverReputationPercent: null,
           ttlMinutes: null,
@@ -312,4 +319,42 @@ test("a three-way ratio works, and a mismatched one is ignored", () => {
   assert.ok(
     parse("sell 1/2 of my TSLA and buy NVDA and AAPL").targets.every((t) => t.weightPercent === null),
   );
+});
+
+test("a gasless stablecoin payment compiles as a PAYMENT with a cash sleeve", async () => {
+  const spec = parse("Pay 500 USDG gaslessly to 0x000000000000000000000000000000000000cafe");
+  assert.equal(spec.action, "pay");
+  assert.equal(spec.inputSymbol, "USDT");
+  assert.equal(spec.inputAmount, "500");
+  assert.equal(spec.payTo, "0x000000000000000000000000000000000000cafe");
+  assert.equal(spec.sponsorGas, true);
+
+  const draft = await compile(spec);
+  assert.equal(draft.outcome.kind, IntentKind.PAYMENT);
+  assert.equal(draft.outcome.recipient, "0x000000000000000000000000000000000000cafe");
+  assert.equal(draft.outcome.legs.length, 1);
+  assert.equal(draft.outcome.legs[0].token, deployment.tokens.USDT);
+  assert.equal(draft.policy.sponsorGas, true);
+  assert.equal(draft.policy.maxFeeBps, 0);
+});
+
+test("KYB language pins the intent to compliant solvers, not to RWA attestation", async () => {
+  const spec = parse("Using only compliant solvers, allocate 25,000 USDT equally across TSLA, NVDA, AAPL, META and SPY");
+  assert.equal(spec.action, "buy_basket");
+  assert.equal(spec.requireCompliant, true);
+  assert.equal(spec.requireRwaAttested, false);
+  assert.deepEqual(spec.targets.map((t) => t.symbol), ["TSLAx", "NVDAx", "AAPLx", "METAx", "SPYx"]);
+
+  const draft = await compile(spec);
+  assert.equal(draft.policy.requireCompliant, true);
+  assert.equal(draft.outcome.legs.length, 5);
+});
+
+test("Monday recurrence and a volume gate survive as metadata", () => {
+  const spec = parse(
+    "Rebalance my xStocks portfolio to these target weights every Monday: 25% TSLA, 25% NVDA, 25% AAPL, 25% SPY, only if 24h volume exceeds 1000000",
+  );
+  assert.equal(spec.action, "rebalance");
+  assert.equal(spec.recurrence?.everySeconds, 604_800);
+  assert.ok(spec.conditions.some((c) => c.kind === "volume" && c.value === 1_000_000));
 });

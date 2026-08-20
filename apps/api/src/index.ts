@@ -252,6 +252,8 @@ async function describe(reader: IntentOSClient, pooled: PooledIntent) {
       maxFeeBps: pooled.draft.policy.maxFeeBps,
       minReputationBps: pooled.draft.policy.minReputationBps,
       requireRwaAttested: pooled.draft.policy.requireRwaAttested,
+      requireCompliant: pooled.draft.policy.requireCompliant,
+      sponsorGas: pooled.draft.policy.sponsorGas,
       allowlisted: pooled.draft.policy.tokenAllowlist.length > 0,
     },
     bids: bids.map((bid) => ({

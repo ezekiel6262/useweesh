@@ -3,7 +3,7 @@ import { statusLabel } from "@intentos/sdk";
 import { send } from "./_lib/json.js";
 import { loadLiveDeployment, reader } from "./_lib/runtime.js";
 
-const KINDS = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"];
+const KINDS = ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH", "PAYMENT"];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") return send(res, 204, {});

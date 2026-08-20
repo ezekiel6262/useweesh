@@ -1,7 +1,8 @@
 # IntentOS
 
-**An Intent Operating System for X Layer.** You state an outcome; competing AI solvers work out
-how to reach it; the chain enforces that they did.
+**The X Layer-native Intent Operating System for agents, stablecoins, and Real World Assets.**
+You state an outcome — a gasless USDG payment, an xStocks basket, an RWA onboard — competing
+AI and KYB’d solvers work out how to reach it; the chain enforces that they did.
 
 ```
 "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight,

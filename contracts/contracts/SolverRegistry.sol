@@ -26,6 +26,17 @@ contract SolverRegistry is Ownable, ReentrancyGuard {
     /// @notice Weight of the newest outcome in the EMA, in bps. 2000 => ~5 intent half-life.
     uint16 public constant EMA_ALPHA_BPS = 2_000;
 
+    /// @notice Capability bits a solver may advertise, and that the owner may attest.
+    uint32 public constant CAP_AI = 1;
+    uint32 public constant CAP_COMPLIANT = 2;
+    uint32 public constant CAP_RWA = 4;
+    uint32 public constant CAP_STABLE = 8;
+    uint32 public constant CAP_AGENT = 16;
+    uint32 public constant CAP_GASLESS = 32;
+
+    mapping(address => uint32) public capabilities;
+    mapping(address => bool) public kybAttested;
+
     uint256 public minBond;
     /// @notice Cool-down between requesting an unbond and being able to withdraw it.
     uint256 public unbondDelay = 3 days;
@@ -43,6 +54,8 @@ contract SolverRegistry is Ownable, ReentrancyGuard {
     event SolverSlashed(address indexed solver, uint256 amount, address indexed recipient, string reason);
     event ReporterSet(address indexed reporter, bool allowed);
     event MetadataUpdated(address indexed solver, string metadataURI);
+    event CapabilitiesSet(address indexed solver, uint32 capabilities);
+    event KybAttested(address indexed solver, bool attested);
 
     error NotRegistered();
     error AlreadyRegistered();
@@ -90,6 +103,18 @@ contract SolverRegistry is Ownable, ReentrancyGuard {
         if (!s.registered) revert NotRegistered();
         s.metadataURI = metadataURI;
         emit MetadataUpdated(msg.sender, metadataURI);
+    }
+
+    /// @notice Solver self-declares the lanes it can serve. KYB is owner-attested separately.
+    function setCapabilities(uint32 caps) external {
+        if (!_solvers[msg.sender].registered) revert NotRegistered();
+        capabilities[msg.sender] = caps;
+        emit CapabilitiesSet(msg.sender, caps);
+    }
+
+    function hasCapabilities(address solver, uint32 required) public view returns (bool) {
+        if (required == 0) return true;
+        return (capabilities[solver] & required) == required;
     }
 
     /// @notice Start the unbonding cool-down. The bond stays slashable until withdrawn.
@@ -186,6 +211,20 @@ contract SolverRegistry is Ownable, ReentrancyGuard {
     function setReporter(address reporter, bool allowed) external onlyOwner {
         isReporter[reporter] = allowed;
         emit ReporterSet(reporter, allowed);
+    }
+
+    /// @notice Owner-attested KYB. This is what `Policy.requireCompliant` checks at settlement.
+    function attestKyb(address solver, bool attested) external onlyOwner {
+        if (!_solvers[solver].registered) revert NotRegistered();
+        kybAttested[solver] = attested;
+        emit KybAttested(solver, attested);
+    }
+
+    /// @notice Owner may pin a solver's capability bits (used for the compliant / RWA / gasless lanes).
+    function attestCapabilities(address solver, uint32 caps) external onlyOwner {
+        if (!_solvers[solver].registered) revert NotRegistered();
+        capabilities[solver] = caps;
+        emit CapabilitiesSet(solver, caps);
     }
 
     function setMinBond(uint256 newMinBond) external onlyOwner {

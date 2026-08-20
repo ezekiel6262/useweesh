@@ -883,6 +883,16 @@ export const INTENT_REGISTRY_ABI = [
             "type": "bool"
           },
           {
+            "internalType": "bool",
+            "name": "requireCompliant",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sponsorGas",
+            "type": "bool"
+          },
+          {
             "internalType": "address[]",
             "name": "tokenAllowlist",
             "type": "address[]"
@@ -1871,6 +1881,16 @@ export const SETTLEMENT_ABI = [
             "type": "bool"
           },
           {
+            "internalType": "bool",
+            "name": "requireCompliant",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sponsorGas",
+            "type": "bool"
+          },
+          {
             "internalType": "address[]",
             "name": "tokenAllowlist",
             "type": "address[]"
@@ -2032,6 +2052,44 @@ export const SOLVER_REGISTRY_ABI = [
     "inputs": [],
     "name": "UnbondNotReady",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "capabilities",
+        "type": "uint32"
+      }
+    ],
+    "name": "CapabilitiesSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "attested",
+        "type": "bool"
+      }
+    ],
+    "name": "KybAttested",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -2255,6 +2313,84 @@ export const SOLVER_REGISTRY_ABI = [
   },
   {
     "inputs": [],
+    "name": "CAP_AGENT",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_AI",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_COMPLIANT",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_GASLESS",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_RWA",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_STABLE",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "EMA_ALPHA_BPS",
     "outputs": [
       {
@@ -2284,6 +2420,61 @@ export const SOLVER_REGISTRY_ABI = [
     "name": "addBond",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "caps",
+        "type": "uint32"
+      }
+    ],
+    "name": "attestCapabilities",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "attested",
+        "type": "bool"
+      }
+    ],
+    "name": "attestKyb",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "capabilities",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2353,6 +2544,30 @@ export const SOLVER_REGISTRY_ABI = [
         "internalType": "address",
         "name": "solver",
         "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "required",
+        "type": "uint32"
+      }
+    ],
+    "name": "hasCapabilities",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
       }
     ],
     "name": "isActive",
@@ -2375,6 +2590,25 @@ export const SOLVER_REGISTRY_ABI = [
       }
     ],
     "name": "isReporter",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "kybAttested",
     "outputs": [
       {
         "internalType": "bool",
@@ -2476,6 +2710,19 @@ export const SOLVER_REGISTRY_ABI = [
   {
     "inputs": [],
     "name": "requestUnbond",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "caps",
+        "type": "uint32"
+      }
+    ],
+    "name": "setCapabilities",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -3277,6 +3524,16 @@ export const POLICY_ENGINE_ABI = [
   },
   {
     "inputs": [],
+    "name": "SolverCannotSponsorGas",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SolverNotCompliant",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SolverReputationTooLow",
     "type": "error"
   },
@@ -3304,6 +3561,19 @@ export const POLICY_ENGINE_ABI = [
         "internalType": "uint16",
         "name": "",
         "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CAP_GASLESS",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
       }
     ],
     "stateMutability": "view",
@@ -3430,6 +3700,16 @@ export const POLICY_ENGINE_ABI = [
           {
             "internalType": "bool",
             "name": "requireRwaAttested",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireCompliant",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sponsorGas",
             "type": "bool"
           },
           {

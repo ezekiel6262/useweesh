@@ -76,4 +76,10 @@ test("policy hash commits to the allowlist contents and order", () => {
 
   const relaxed = { ...policy, requireRwaAttested: false };
   assert.notEqual(hashPolicy(relaxed), original, "dropping the attestation requirement must be visible");
+
+  const openSolvers = { ...policy, requireCompliant: false };
+  assert.notEqual(hashPolicy(openSolvers), original, "dropping the KYB requirement must be visible");
+
+  const userPaysGas = { ...policy, sponsorGas: false };
+  assert.notEqual(hashPolicy(userPaysGas), original, "dropping gas sponsorship must be visible");
 });

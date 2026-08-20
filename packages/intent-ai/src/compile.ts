@@ -48,13 +48,22 @@ export class CompileError extends Error {
 
 const PERCENT_TO_BPS = 100;
 
+function resolveRecipient(spec: IntentSpec, fallback: Address): Address {
+  if (!spec.payTo) return fallback;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(spec.payTo)) {
+    throw new CompileError("pay-to is not a 20-byte address", spec.clarifications);
+  }
+  return spec.payTo as Address;
+}
+
 export async function compileSpec(spec: IntentSpec, options: CompileOptions): Promise<IntentDraft> {
-  const { catalog, recipient } = options;
+  const { catalog } = options;
 
   if (spec.targets.length === 0) {
     throw new CompileError("the intent names no assets to acquire", spec.clarifications);
   }
 
+  const recipient = resolveRecipient(spec, options.recipient);
   const input = catalog.resolve(spec.inputSymbol);
   const targets = spec.targets.map((target) => ({ ...target, asset: catalog.resolve(target.symbol) }));
   const exits: (ExitLeg & { symbol: string })[] = spec.exits.map((exit) => {
@@ -85,7 +94,7 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
   // Floors are derived from what will actually be spent, not from the gross notional: the
   // solver's fee comes off the top before any leg is bought, so quoting the gross amount would
   // set a floor no honest solver could clear.
-  const maxFeeBps = clampBps(Math.round((spec.maxFeePercent ?? 0.3) * PERCENT_TO_BPS), 0, 1_000);
+  const maxFeeBps = clampBps(Math.round((spec.maxFeePercent ?? (spec.action === "pay" ? 0 : 0.3)) * PERCENT_TO_BPS), 0, 1_000);
   const spendable = (notional * BigInt(10_000 - maxFeeBps)) / 10_000n;
 
   const quoted = await Promise.all(
@@ -124,7 +133,12 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
         recipient,
         targets: legTargets,
         maxSlippageBps,
-        kind: spec.action === "onboard_rwa" ? IntentKind.RWA_ONBOARD : undefined,
+        kind:
+          spec.action === "onboard_rwa"
+            ? IntentKind.RWA_ONBOARD
+            : spec.action === "pay"
+              ? IntentKind.PAYMENT
+              : undefined,
       });
 
   const ttlSeconds = Math.max(
@@ -142,6 +156,8 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
     maxFeeBps,
     minReputationBps: clampBps(Math.round((spec.minSolverReputationPercent ?? 0) * PERCENT_TO_BPS), 0, 10_000),
     requireRwaAttested: spec.requireRwaAttested,
+    requireCompliant: spec.requireCompliant,
+    sponsorGas: spec.sponsorGas,
     tokenAllowlist: spec.restrictToDeclaredAssets
       ? ([...new Set([...targets.map((t) => t.asset.address), ...exits.map((e) => e.token)])] as Address[])
       : [],

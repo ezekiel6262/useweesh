@@ -109,7 +109,7 @@ test("parseIntentDraft rejects a draft whose policy expires before its deadline"
       targets: [{ token: TSLA }],
       maxSlippageBps: 50,
     }),
-    policy: { maxNotional: 0n, validAfter: 0n, validUntil: BigInt(now + 30), maxFeeBps: 30, minReputationBps: 0, requireRwaAttested: false, tokenAllowlist: [] },
+    policy: { maxNotional: 0n, validAfter: 0n, validUntil: BigInt(now + 30), maxFeeBps: 30, minReputationBps: 0, requireRwaAttested: false, requireCompliant: false, sponsorGas: false, tokenAllowlist: [] },
   });
 
   assert.throws(() => parseIntentDraft(draft), IntentValidationError);

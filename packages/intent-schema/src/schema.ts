@@ -45,11 +45,13 @@ export const policySchema = z.object({
   maxFeeBps: z.number().int().min(0).max(1_000),
   minReputationBps: z.number().int().min(0).max(10_000).default(0),
   requireRwaAttested: z.boolean().default(false),
+  requireCompliant: z.boolean().default(false),
+  sponsorGas: z.boolean().default(false),
   tokenAllowlist: z.array(address).max(32).default([]),
 });
 
 export const conditionSchema = z.object({
-  kind: z.enum(["price", "drawdown", "volatility", "time", "portfolio-drift"]),
+  kind: z.enum(["price", "drawdown", "volatility", "time", "portfolio-drift", "volume", "funding"]),
   subject: z.string().max(32).optional(),
   operator: z.enum(["lt", "lte", "gt", "gte"]),
   value: z.number(),
@@ -117,7 +119,11 @@ export function checkOutcomeInvariants(outcome: Outcome): string[] {
     if (outcome.inputAmount <= 0n) issues.push("inputAmount must be positive");
   }
 
-  if (outcome.kind === IntentKind.SWAP || outcome.kind === IntentKind.RWA_ONBOARD) {
+  if (
+    outcome.kind === IntentKind.SWAP ||
+    outcome.kind === IntentKind.RWA_ONBOARD ||
+    outcome.kind === IntentKind.PAYMENT
+  ) {
     if (outcome.legs.length !== 1) {
       issues.push(`${IntentKind[outcome.kind]} takes exactly one leg, got ${outcome.legs.length}`);
     }

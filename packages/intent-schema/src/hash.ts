@@ -11,7 +11,7 @@ import type { Outcome, Policy } from "./types.js";
  */
 
 const OUTCOME_TYPEHASH = keccak256(toHex("IntentOS.Outcome.v1"));
-const POLICY_TYPEHASH = keccak256(toHex("IntentOS.Policy.v1"));
+const POLICY_TYPEHASH = keccak256(toHex("IntentOS.Policy.v2"));
 const INTENT_TYPEHASH = keccak256(toHex("IntentOS.Intent.v1"));
 
 export function hashLegs(legs: Outcome["legs"]): Hex {
@@ -76,6 +76,8 @@ export function hashPolicy(policy: Policy): Hex {
         { type: "uint16" },
         { type: "uint16" },
         { type: "bool" },
+        { type: "bool" },
+        { type: "bool" },
         { type: "bytes32" },
       ],
       [
@@ -86,6 +88,8 @@ export function hashPolicy(policy: Policy): Hex {
         policy.maxFeeBps,
         policy.minReputationBps,
         policy.requireRwaAttested,
+        policy.requireCompliant,
+        policy.sponsorGas,
         keccak256(encodePacked(["address[]"], [policy.tokenAllowlist])),
       ],
     ),

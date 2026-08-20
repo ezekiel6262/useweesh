@@ -84,7 +84,7 @@ export interface DeploymentFile {
   routers: { name: string; address: Address }[];
 }
 
-const BASE_SYMBOLS = new Set(["USDT", "USDC", "DAI"]);
+const BASE_SYMBOLS = new Set(["USDT", "USDC", "DAI", "USDG"]);
 
 /** Common ways people refer to an xStock: TSLAx is "TSLA", "Tesla", "$TSLA". */
 const COMPANY_NAMES: Record<string, string[]> = {
@@ -110,6 +110,9 @@ export function catalogFromDeployment(deployment: DeploymentFile): AssetCatalog 
     if (isXStock) {
       aliases.push(symbol.slice(0, -1)); // TSLAx -> TSLA
       aliases.push(...(COMPANY_NAMES[symbol] ?? []));
+    }
+    if (symbol.toUpperCase() === "USDT") {
+      aliases.push("usdg", "usdc", "dai", "usd", "stable", "stablecoin", "stables");
     }
 
     catalog.add({
