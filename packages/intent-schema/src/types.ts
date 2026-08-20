@@ -1,5 +1,8 @@
 import type { Address, Hex } from "viem";
 
+/** Re-exported so downstream packages get the address/hex types from one place. */
+export type { Address, Hex } from "viem";
+
 /**
  * IntentOS Intent Standard v0.1.
  *

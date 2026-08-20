@@ -1,5 +1,5 @@
 {
-  "name": "@intentos/intent-schema",
+  "name": "@intentos/intent-ai",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,6 +16,8 @@
     "test": "npm run build && node --test test/*.test.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
+    "@intentos/intent-schema": "*",
     "viem": "^2.21.0",
     "zod": "^4.1.0"
   }
