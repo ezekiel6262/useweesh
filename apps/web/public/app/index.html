@@ -200,7 +200,7 @@
 <body>
 
 <div class="banner"><div class="wrap">
-  <b>Live on X Layer Testnet (1952).</b> Gemini parses the intent. Your wallet submits it. Bonded solvers bid and settle onchain.
+  <b>Live on X Layer Testnet.</b> You declare an outcome. Your wallet submits it. Bonded solvers bid and settle onchain.
 </div></div>
 
 <header><div class="wrap bar">
@@ -221,12 +221,12 @@
 <main class="wrap">
   <div id="compose" class="view on">
     <div class="hero">
-      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet · Gemini · live solvers</p>
+      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet</p>
       <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
-      <p class="sub">Gemini compiles the sentence. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
-      <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%</textarea>
+      <p class="sub">Write the outcome. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
+      <textarea id="prompt" spellcheck="false" placeholder="e.g. allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets"></textarea>
       <div class="actions">
-        <button class="btn" id="parse">Parse with Gemini</button>
+        <button class="btn" id="parse">Parse intent</button>
         <button class="btn ghost" id="faucet">Get test USDT</button>
         <button class="btn" id="fulfill">Submit &amp; settle onchain</button>
         <span class="note" id="parserNote"></span>
@@ -433,8 +433,8 @@ try {
 }
 
 $("mode").textContent = health.live
-  ? `X Layer testnet · ${health.parser} · chain ${deployment?.chainId ?? 1952}`
-  : `offline grammar · ${assets.length} assets`;
+  ? `X Layer testnet · ${deployment?.chainId ?? 1952}`
+  : `offline · ${assets.length} assets`;
 
 function setStep(n) {
   for (let i = 1; i <= 4; i++) {
@@ -487,7 +487,7 @@ async function runParse() {
   if (!prompt) return;
   const button = $("parse");
   button.disabled = true;
-  button.textContent = health.live ? "Gemini is reading…" : "Parsing…";
+  button.textContent = "Parsing…";
   $("error").classList.add("hide");
   $("auctionCard").classList.add("hide");
   lastDraft = null;
@@ -548,7 +548,7 @@ async function runParse() {
     $("error").classList.remove("hide");
   } finally {
     button.disabled = false;
-    button.textContent = "Parse with Gemini";
+    button.textContent = "Parse intent";
   }
 }
 
@@ -559,7 +559,9 @@ function symbolOf(token) {
 
 function renderParsed(result) {
   $("explanation").textContent = result.explanation;
-  $("parserNote").textContent = `parsed by ${result.parser}`;
+  $("parserNote").textContent = result.clarifications?.length
+    ? "needs an answer before it can be submitted"
+    : "ready to submit";
   $("kindBadge").textContent = result.outcome.kindLabel;
 
   const rows = [
@@ -606,8 +608,7 @@ function renderParsed(result) {
     ...(result.metadata.conditions ?? []).map((c) =>
       `<div class="note">Precondition — serve only while ${esc(c.subject ?? c.kind)} is ${
         c.operator.startsWith("l") ? "below" : "above"} ${c.value}.</div>`),
-    result.fallbackReason ? `<div class="note">Fell back from the model — ${esc(result.fallbackReason)}</div>` : "",
-    result.model ? `<div class="note">Model — ${esc(result.model)}</div>` : "",
+
     !result.quotesAvailable
       ? `<div class="note">Floors read “open” because live quotes were unavailable.</div>`
       : "",
@@ -748,7 +749,6 @@ $("fulfill").addEventListener("click", runFulfill);
 $("prompt").addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runParse();
 });
-await runParse();
 </script>
 </body>
 </html>
