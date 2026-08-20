@@ -9,7 +9,7 @@ import { LlmUnavailableError } from "./llm.js";
  * The compiler still resolves symbols, so a hallucinated ticker cannot become a transaction.
  */
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
 export function hasGeminiCredentials(apiKey?: string): boolean {
   return Boolean(
