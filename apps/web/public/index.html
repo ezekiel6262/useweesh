@@ -200,7 +200,7 @@
 <body>
 
 <div class="banner"><div class="wrap">
-  <b>Playground.</b> Parsing and the solver auction run in your browser against a demo venue book — nothing is signed or settled. The live loop is <code>npm run demo</code>.
+  <b>Live on X Layer Testnet (1952).</b> Grok parses the intent. Your wallet submits it. Bonded solvers bid and settle onchain.
 </div></div>
 
 <header><div class="wrap bar">
@@ -216,19 +216,21 @@
     <a href="#network" data-view="network">Network</a>
     <a href="#agents" data-view="agents">Agents</a>
   </nav>
+  <button class="btn ghost" id="connect" type="button">Connect wallet</button>
   <div class="mode" id="mode">connecting…</div>
 </div></header>
 
 <main class="wrap">
   <div id="compose" class="view on">
     <div class="hero">
-      <p class="kicker">01 · DECLARE &nbsp; X Layer · single chain · RWA / xStocks</p>
+      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet · Grok · live solvers</p>
       <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
-      <p class="sub">AI solvers compete over how. The settlement contract checks the result against what you declared before anything is final.</p>
+      <p class="sub">Grok compiles the sentence. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
       <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%</textarea>
       <div class="actions">
-        <button class="btn" id="parse">Parse into an intent</button>
-        <button class="btn ghost" id="auction">Preview solver auction</button>
+        <button class="btn" id="parse">Parse with Grok</button>
+        <button class="btn ghost" id="faucet">Get test USDT</button>
+        <button class="btn" id="fulfill">Submit &amp; settle onchain</button>
         <span class="note" id="parserNote"></span>
       </div>
       <div class="chips" id="chips"></div>
@@ -267,10 +269,10 @@
         <div class="card">
           <h2 class="lab">Where this fits</h2>
           <div class="flow">
-            <div><i>01</i><span>Declare an outcome — <b>running here</b></span></div>
-            <div><i>02</i><span class="off">Commit hashes to IntentRegistry</span></div>
-            <div><i>03</i><span class="off">Solvers bid what they will guarantee</span></div>
-            <div><i>04</i><span class="off">Settlement executes and verifies</span></div>
+            <div><i>01</i><span id="step1">Declare an outcome</span></div>
+            <div><i>02</i><span id="step2" class="off">Commit hashes to IntentRegistry</span></div>
+            <div><i>03</i><span id="step3" class="off">Solvers bid what they will guarantee</span></div>
+            <div><i>04</i><span id="step4" class="off">Settlement executes and verifies</span></div>
           </div>
         </div>
       </div>
@@ -370,7 +372,7 @@ await agent.track(intentId);</pre></div>
 
 <div class="wrap">
   <footer>
-    <span>© 2026 IntentOS · OKX Build X AI Season · playground is static; full loop is <code>npm run demo</code></span>
+    <span>© 2026 IntentOS · OKX Build X AI Season · live on X Layer testnet</span>
     <a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>
   </footer>
 </div>
@@ -378,6 +380,17 @@ await agent.track(intentId);</pre></div>
 <script type="module" src="./app.js"></script>
 <script type="module">
 const $ = (id) => document.getElementById(id);
+const TAG = "n:";
+const encode = (value) => JSON.stringify(value, (_k, v) => (typeof v === "bigint" ? TAG + v : v));
+const decode = (text) => JSON.parse(text, (_k, v) => (typeof v === "string" && v.startsWith(TAG) ? BigInt(v.slice(2)) : v));
+const api = async (path, options) => {
+  const response = await fetch(path, options);
+  const text = await response.text();
+  const data = text ? decode(text) : {};
+  if (!response.ok) throw new Error(data.error ?? response.statusText);
+  return data;
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 const pct = (bps) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
 const dp = (symbol) => (symbol === "USDT" ? 6 : 18);
@@ -406,10 +419,38 @@ $("chips").addEventListener("click", (event) => {
   runParse();
 });
 
-const { parse, previewAuction, assets, solvers, venues } = window.IntentOS;
-$("mode").textContent = `X Layer · playground · ${assets.length} assets`;
+const { parse, previewAuction, assets, solvers, venues, connectWallet, mintTestUsdt, submitDraft } = window.IntentOS;
 
 let lastParsed = null;
+let lastDraft = null;
+let account = null;
+let deployment = null;
+let health = { live: false, parser: "grammar" };
+
+try {
+  health = await api("/api/health");
+  if (health.ok) deployment = await api("/api/deployment");
+} catch {
+  health = { live: false, parser: "grammar" };
+}
+
+$("mode").textContent = health.live
+  ? `X Layer testnet · ${health.parser} · chain ${deployment?.chainId ?? 1952}`
+  : `offline grammar · ${assets.length} assets`;
+
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = $("step" + i);
+    if (!el) continue;
+    el.classList.toggle("off", i !== n);
+  }
+}
+
+async function ensureWallet() {
+  account = await connectWallet();
+  $("connect").textContent = `${account.slice(0, 6)}…${account.slice(-4)}`;
+  return account;
+}
 
 function showView() {
   const name = (location.hash.replace("#", "") || "compose");
@@ -448,12 +489,60 @@ async function runParse() {
   if (!prompt) return;
   const button = $("parse");
   button.disabled = true;
-  button.textContent = "Parsing…";
+  button.textContent = health.live ? "Grok is reading…" : "Parsing…";
   $("error").classList.add("hide");
   $("auctionCard").classList.add("hide");
+  lastDraft = null;
   try {
-    lastParsed = await parse(prompt);
+    if (health.live) {
+      const recipient = account ?? "0x0000000000000000000000000000000000000001";
+      const result = await api("/api/parse", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: encode({ prompt, recipient }),
+      });
+      lastDraft = result.draft;
+      lastParsed = {
+        parser: result.parser,
+        model: result.model,
+        explanation: result.explanation,
+        spec: result.spec,
+        assumptions: result.assumptions ?? [],
+        clarifications: result.clarifications ?? [],
+        quotesAvailable: true,
+        outcome: {
+          kind: result.draft.outcome.kind,
+          kindLabel: ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"][result.draft.outcome.kind],
+          inputSymbol: symbolOf(result.draft.outcome.inputToken),
+          inputAmount: result.draft.outcome.inputAmount.toString(),
+          maxSlippageBps: result.draft.outcome.maxSlippageBps,
+          legs: result.draft.outcome.legs.map((leg) => ({
+            symbol: symbolOf(leg.token),
+            weightBps: leg.weightBps,
+            minOut: leg.minOut.toString(),
+          })),
+          exits: (result.draft.outcome.exits ?? []).map((exit) => ({
+            symbol: symbolOf(exit.token),
+            amountIn: exit.amountIn.toString(),
+          })),
+        },
+        policy: {
+          maxNotional: result.draft.policy.maxNotional.toString(),
+          maxFeeBps: result.draft.policy.maxFeeBps,
+          minReputationBps: result.draft.policy.minReputationBps,
+          requireRwaAttested: result.draft.policy.requireRwaAttested,
+          allowlist: (result.draft.policy.tokenAllowlist ?? []).map(symbolOf),
+        },
+        timing: { auctionSeconds: 20, settleSeconds: 160 },
+        metadata: result.draft.metadata ?? { schedule: null, conditions: [] },
+        commitment: { outcomeHash: result.outcomeHash, policyHash: result.policyHash },
+        fallbackReason: result.fallbackReason,
+      };
+    } else {
+      lastParsed = await parse(prompt);
+    }
     renderParsed(lastParsed);
+    setStep(1);
   } catch (error) {
     lastParsed = null;
     for (const id of ["outcomeCard", "guardCard", "hashCard", "noticeCard", "auctionCard"]) $(id).classList.add("hide");
@@ -461,8 +550,13 @@ async function runParse() {
     $("error").classList.remove("hide");
   } finally {
     button.disabled = false;
-    button.textContent = "Parse into an intent";
+    button.textContent = "Parse with Grok";
   }
+}
+
+function symbolOf(token) {
+  const hit = (deployment?.assets ?? assets).find((a) => (a.address ?? "").toLowerCase() === String(token).toLowerCase());
+  return hit?.symbol ?? `${String(token).slice(0, 6)}…`;
 }
 
 function renderParsed(result) {
@@ -514,8 +608,10 @@ function renderParsed(result) {
     ...(result.metadata.conditions ?? []).map((c) =>
       `<div class="note">Precondition — serve only while ${esc(c.subject ?? c.kind)} is ${
         c.operator.startsWith("l") ? "below" : "above"} ${c.value}.</div>`),
+    result.fallbackReason ? `<div class="note">Fell back from the model — ${esc(result.fallbackReason)}</div>` : "",
+    result.model ? `<div class="note">Model — ${esc(result.model)}</div>` : "",
     !result.quotesAvailable
-      ? `<div class="note">Floors read “open” because this page has no venue to quote against. The winning solver's own auction guarantee still binds every leg onchain.</div>`
+      ? `<div class="note">Floors read “open” because live quotes were unavailable.</div>`
       : "",
   ].filter(Boolean).join("");
   $("notices").innerHTML = notices;
@@ -562,26 +658,95 @@ function renderAuction(preview) {
   $("auctionCard").classList.remove("hide");
 }
 
-async function runAuction() {
-  if (!lastParsed) await runParse();
-  if (!lastParsed) return;
-  const button = $("auction");
+async function runFulfill() {
+  if (!health.live || !deployment) throw new Error("live deployment is not available yet");
+  if (!lastDraft) await runParse();
+  if (!lastDraft) return;
+  const button = $("fulfill");
   button.disabled = true;
-  button.textContent = "Quoting venues…";
+  $("error").classList.add("hide");
   try {
-    renderAuction(previewAuction(lastParsed));
-    $("auctionCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    button.textContent = "Connecting wallet…";
+    await ensureWallet();
+    button.textContent = "Submitting onchain…";
+    setStep(2);
+    const submitted = await submitDraft(deployment, account, lastDraft);
+    lastDraft = submitted.draft;
+    $("parserNote").textContent = `intent ${submitted.intentId.slice(0, 10)}…`;
+    button.textContent = "Solvers bidding…";
+    setStep(3);
+    const bid = await api("/api/bid", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: encode({ intentId: submitted.intentId, draft: lastDraft }),
+    });
+    renderLiveActivity(bid.activity ?? [], "bidding");
+    const waitMs = Math.max(2_000, Number(lastDraft.auctionEndsAt) * 1000 - Date.now() + 3_000);
+    button.textContent = `Auction window (${Math.ceil(waitMs / 1000)}s)…`;
+    await sleep(Math.min(waitMs, 25_000));
+    button.textContent = "Closing auction…";
+    let closed;
+    for (let i = 0; i < 6; i++) {
+      closed = await api("/api/close", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: encode({ intentId: submitted.intentId, draft: lastDraft }),
+      });
+      if (closed.selected || (closed.skipped && !/still open/i.test(closed.skipped))) break;
+      await sleep(3_000);
+    }
+    button.textContent = "Settling…";
+    setStep(4);
+    const settled = await api("/api/settle", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: encode({ intentId: submitted.intentId, draft: lastDraft }),
+    });
+    renderLiveActivity([...(bid.activity ?? []), ...(settled.activity ?? [])], closed?.selected?.solver);
+    $("parserNote").textContent = `settled ${submitted.intentId.slice(0, 10)}…`;
   } catch (error) {
     $("error").textContent = error.message;
     $("error").classList.remove("hide");
   } finally {
     button.disabled = false;
-    button.textContent = "Preview solver auction";
+    button.textContent = "Submit & settle onchain";
   }
 }
 
+function renderLiveActivity(activity, winner) {
+  const rows = (activity ?? []).map((item) => {
+    const pill = item.action === "declined" || item.action === "failed" ? "no" : item.action === "settled" || item.action === "bid" ? "win" : "bid";
+    return `<div class="solver">
+      <div class="solver.head"><b>${esc(item.action)}</b><span class="pill ${pill}">${esc(item.action)}</span></div>
+      <div class="note" style="margin-top:8px">${esc(item.detail)}</div>
+    </div>`;
+  }).join("");
+  $("auctionBody").innerHTML = `<div class="note">${winner && winner !== "bidding" ? `winner ${esc(String(winner))}` : "onchain solver activity"}</div>${rows || "<div class='note'>waiting for bids</div>"}`;
+  $("auctionCard").classList.remove("hide");
+}
+
 $("parse").addEventListener("click", runParse);
-$("auction").addEventListener("click", runAuction);
+$("connect").addEventListener("click", () => ensureWallet().catch((error) => {
+  $("error").textContent = error.message;
+  $("error").classList.remove("hide");
+}));
+$("faucet").addEventListener("click", async () => {
+  try {
+    if (!deployment) throw new Error("live deployment is not available yet");
+    await ensureWallet();
+    $("faucet").disabled = true;
+    $("faucet").textContent = "Minting…";
+    await mintTestUsdt(deployment, account);
+    $("parserNote").textContent = "minted 100,000 test USDT";
+  } catch (error) {
+    $("error").textContent = error.message;
+    $("error").classList.remove("hide");
+  } finally {
+    $("faucet").disabled = false;
+    $("faucet").textContent = "Get test USDT";
+  }
+});
+$("fulfill").addEventListener("click", runFulfill);
 $("prompt").addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runParse();
 });

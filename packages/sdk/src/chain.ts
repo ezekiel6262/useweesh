@@ -17,8 +17,18 @@ export const xLayerMainnet: Chain = defineChain({
 });
 
 export const xLayerTestnet: Chain = defineChain({
-  id: 195,
+  id: 1952,
   name: "X Layer Testnet",
+  nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
+  rpcUrls: { default: { http: ["https://testrpc.xlayer.tech"] } },
+  blockExplorers: { default: { name: "OKX Explorer", url: "https://web3.okx.com/explorer/xlayer-testnet" } },
+  testnet: true,
+});
+
+/** Pre-OP-Stack X Layer testnet. Kept so old deployment files still load. */
+export const xLayerTestnetLegacy: Chain = defineChain({
+  id: 195,
+  name: "X Layer Testnet (legacy)",
   nativeCurrency: { name: "OKB", symbol: "OKB", decimals: 18 },
   rpcUrls: { default: { http: ["https://testrpc.xlayer.tech"] } },
   blockExplorers: { default: { name: "OKLink", url: "https://www.oklink.com/x-layer-testnet" } },
@@ -34,7 +44,7 @@ export const hardhatLocal: Chain = defineChain({
   testnet: true,
 });
 
-const CHAINS = [xLayerMainnet, xLayerTestnet, hardhatLocal];
+const CHAINS = [xLayerMainnet, xLayerTestnet, xLayerTestnetLegacy, hardhatLocal];
 
 export function chainById(chainId: number): Chain {
   const chain = CHAINS.find((c) => c.id === chainId);

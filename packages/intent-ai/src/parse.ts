@@ -3,6 +3,7 @@ import type { AssetCatalog } from "./catalog.js";
 import { compileSpec, type CompileOptions } from "./compile.js";
 import { parseWithGrammar } from "./grammar.js";
 import { LlmUnavailableError, hasAnthropicCredentials, parseWithLlm, type LlmParserOptions } from "./llm.js";
+import { hasGrokCredentials, parseWithGrok } from "./grok.js";
 import type { IntentSpec } from "./spec.js";
 
 /**
@@ -25,7 +26,7 @@ export interface ParsedIntent {
   draft: IntentDraft;
   spec: IntentSpec;
   /** Which parser produced the spec, and the model when one was used. */
-  parser: "claude" | "grammar";
+  parser: "grok" | "claude" | "grammar";
   model?: string;
   /** Set when the model was meant to run but could not. */
   fallbackReason?: string;
@@ -39,7 +40,8 @@ export async function parseIntent(prompt: string, options: ParseOptions): Promis
 
   const wantsLlm =
     options.prefer === "llm" ||
-    (options.prefer !== "grammar" && (Boolean(options.client) || hasAnthropicCredentials(options.apiKey)));
+    (options.prefer !== "grammar" &&
+      (Boolean(options.client) || hasGrokCredentials() || hasAnthropicCredentials(options.apiKey)));
 
   let spec: IntentSpec | undefined;
   let parser: ParsedIntent["parser"] = "grammar";
@@ -48,10 +50,17 @@ export async function parseIntent(prompt: string, options: ParseOptions): Promis
 
   if (wantsLlm) {
     try {
-      const result = await parseWithLlm(trimmed, options.catalog, options);
-      spec = result.spec;
-      model = result.model;
-      parser = "claude";
+      if (hasGrokCredentials() && !options.client) {
+        const result = await parseWithGrok(trimmed, options.catalog);
+        spec = result.spec;
+        model = result.model;
+        parser = "grok";
+      } else {
+        const result = await parseWithLlm(trimmed, options.catalog, options);
+        spec = result.spec;
+        model = result.model;
+        parser = "claude";
+      }
     } catch (error) {
       if (options.prefer === "llm") throw error;
       fallbackReason =
@@ -66,7 +75,7 @@ export async function parseIntent(prompt: string, options: ParseOptions): Promis
   const draft = await compileSpec(spec, {
     ...options,
     prompt: trimmed,
-    source: parser === "claude" ? `claude:${model}` : "grammar",
+    source: parser === "grammar" ? "grammar" : `${parser}:${model}`,
   });
 
   return {

@@ -5,7 +5,7 @@ X Layer is OKX's zkEVM L2. Gas is paid in OKB.
 | | Chain ID | RPC | Explorer |
 |---|---|---|---|
 | Mainnet | 196 | `https://rpc.xlayer.tech` | `https://www.oklink.com/x-layer` |
-| Testnet | 195 | `https://testrpc.xlayer.tech` | `https://www.oklink.com/x-layer-testnet` |
+| Testnet | 1952 | `https://testrpc.xlayer.tech` | `https://web3.okx.com/explorer/xlayer-testnet` |
 
 Both are defined in `packages/sdk/src/chain.ts`; the local Hardhat node (31337) stands in for
 development.

@@ -1,7 +1,8 @@
 import { ethers, network } from "hardhat";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BASE_ASSET, ETF_SYMBOLS, VENUES, XSTOCKS } from "../config/assets";
+import { keccak256, toUtf8Bytes, Wallet, type Signer } from "ethers";
 
 const WAD = 10n ** 18n;
 const BPS = 10_000n;
@@ -12,17 +13,68 @@ function usdtToAssetPriceE18(usdPrice: number, skewBps: number): bigint {
   return (price * (BPS + BigInt(skewBps))) / BPS;
 }
 
+function deriveWallet(seedKey: string, label: string): Wallet {
+  const material = keccak256(toUtf8Bytes(`intentos.role.${label}:${seedKey}`));
+  return new Wallet(material, ethers.provider);
+}
+
+function upsertEnv(path: string, updates: Record<string, string>): void {
+  let existing = existsSync(path) ? readFileSync(path, "utf8") : "";
+  for (const [key, value] of Object.entries(updates)) {
+    const line = `${key}=${value}`;
+    const pattern = new RegExp(`^${key}=.*$`, "m");
+    existing = pattern.test(existing) ? existing.replace(pattern, line) : `${existing.trimEnd()}\n${line}\n`;
+  }
+  writeFileSync(path, existing.startsWith("\n") ? existing.slice(1) : existing);
+}
+
 async function main() {
-  const [deployer, treasury, coordinator] = await ethers.getSigners();
-  if (!treasury || !coordinator) throw new Error("need at least 3 signers");
-  // Ask the node rather than the config: `localhost` inherits its id from whatever is running.
+  const signers = await ethers.getSigners();
+  const deployer = signers[0];
+  if (!deployer) throw new Error("no deployer signer — set PRIVATE_KEY");
+
+  const seedKey = process.env.PRIVATE_KEY;
   const chainId = Number((await ethers.provider.getNetwork()).chainId);
+  const testnet = chainId === 1952 || chainId === 195;
+
+  let treasury: Signer = signers[1] ?? deployer;
+  let coordinator: Signer = signers[2] ?? deployer;
+  let solverA: Signer | undefined = signers[3];
+  let solverB: Signer | undefined = signers[4];
+  const derivedKeys: Record<string, string> = {};
+
+  if (testnet && seedKey && signers.length < 3) {
+    coordinator = deriveWallet(seedKey, "coordinator");
+    solverA = deriveWallet(seedKey, "solver-a");
+    solverB = deriveWallet(seedKey, "solver-b");
+    treasury = deployer;
+    derivedKeys.COORDINATOR_PRIVATE_KEY = (coordinator as Wallet).privateKey;
+    derivedKeys.SOLVER_A_PRIVATE_KEY = (solverA as Wallet).privateKey;
+    derivedKeys.SOLVER_B_PRIVATE_KEY = (solverB as Wallet).privateKey;
+
+    const gasDrop = ethers.parseEther("0.002");
+    for (const wallet of [coordinator, solverA, solverB]) {
+      const addr = await wallet.getAddress();
+      const bal = await ethers.provider.getBalance(addr);
+      if (bal < gasDrop / 2n) {
+        const tx = await deployer.sendTransaction({ to: addr, value: gasDrop });
+        await tx.wait();
+      }
+    }
+  }
+
+  if (!treasury || !coordinator) throw new Error("need a treasury and a coordinator");
+
   console.log(`\nIntentOS deploy -> ${network.name} (chainId ${chainId})`);
-  console.log(`deployer    ${deployer.address}`);
+  console.log(`deployer     ${deployer.address}`);
+  console.log(`coordinator  ${await coordinator.getAddress()}`);
 
   // ---------------------------------------------------------------- core stack
+  const minBond = testnet ? ethers.parseEther("0.0001") : ethers.parseEther("0.01");
+  const auctioneerBond = testnet ? ethers.parseEther("0.0005") : ethers.parseEther("1");
+
   const solverRegistry = await (await ethers.getContractFactory("SolverRegistry"))
-    .deploy(deployer.address, ethers.parseEther("0.01"));
+    .deploy(deployer.address, minBond);
   await solverRegistry.waitForDeployment();
 
   const rwaRegistry = await (await ethers.getContractFactory("RWARegistry")).deploy(deployer.address);
@@ -40,14 +92,14 @@ async function main() {
     deployer.address,
     await intentRegistry.getAddress(),
     await policyEngine.getAddress(),
-    treasury.address,
+    await treasury.getAddress(),
   );
   await settlement.waitForDeployment();
 
   // ------------------------------------------------------------------- wiring
   await (await intentRegistry.setSettlement(await settlement.getAddress())).wait();
-  await (await intentRegistry.setAuctioneer(coordinator.address)).wait();
-  await (await intentRegistry.fundAuctioneerBond({ value: ethers.parseEther("1") })).wait();
+  await (await intentRegistry.setAuctioneer(await coordinator.getAddress())).wait();
+  await (await intentRegistry.connect(coordinator).fundAuctioneerBond({ value: auctioneerBond })).wait();
   await (await solverRegistry.setReporter(await intentRegistry.getAddress(), true)).wait();
   await (await rwaRegistry.setAttestor(deployer.address, true)).wait();
 
@@ -99,9 +151,22 @@ async function main() {
     routers.push({ name: venue.name, address: routerAddress });
   }
 
-  // Fund the first few signers so the demos and the dashboard have something to spend.
-  for (const signer of (await ethers.getSigners()).slice(0, 6)) {
-    await (await usdt.mint(signer.address, ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
+  // Fund operator accounts so solvers and the dashboard have something to spend.
+  const funded = [deployer, coordinator, solverA, solverB].filter(Boolean) as Signer[];
+  for (const signer of funded) {
+    await (await usdt.mint(await signer.getAddress(), ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
+  }
+
+  if (solverA && solverB) {
+    const bond = minBond;
+    for (const [solver, name] of [
+      [solverA, "aggressive"],
+      [solverB, "conservative"],
+    ] as const) {
+      const registry = solverRegistry.connect(solver);
+      await (await registry.register(`intentos://solver/${name}`, { value: bond })).wait();
+      console.log(`registered ${name} solver ${await solver.getAddress()}`);
+    }
   }
 
   const deployment = {
@@ -115,7 +180,12 @@ async function main() {
       intentRegistry: await intentRegistry.getAddress(),
       settlement: await settlement.getAddress(),
     },
-    roles: { treasury: treasury.address, coordinator: coordinator.address },
+    roles: {
+      treasury: await treasury.getAddress(),
+      coordinator: await coordinator.getAddress(),
+      solverA: solverA ? await solverA.getAddress() : undefined,
+      solverB: solverB ? await solverB.getAddress() : undefined,
+    },
     tokens,
     routers,
   };
@@ -124,6 +194,16 @@ async function main() {
   mkdirSync(dir, { recursive: true });
   const file = join(dir, `${network.name}.json`);
   writeFileSync(file, JSON.stringify(deployment, null, 2) + "\n");
+
+  if (Object.keys(derivedKeys).length > 0) {
+    const envPath = join(__dirname, "..", "..", ".env");
+    upsertEnv(envPath, {
+      INTENTOS_NETWORK: "xlayerTestnet",
+      INTENTOS_RPC: process.env.XLAYER_TESTNET_RPC ?? "https://testrpc.xlayer.tech",
+      ...derivedKeys,
+    });
+    console.log(`wrote operator keys to ${envPath} (gitignored)`);
+  }
 
   console.log(JSON.stringify(deployment.contracts, null, 2));
   console.log(`\nwrote ${file}\n`);

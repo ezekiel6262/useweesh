@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
     // X Layer — OKX's zkEVM L2. Gas is paid in OKB.
     xlayerTestnet: {
       url: process.env.XLAYER_TESTNET_RPC ?? "https://testrpc.xlayer.tech",
-      chainId: 195,
+      chainId: 1952,
       accounts,
     },
     xlayerMainnet: {
