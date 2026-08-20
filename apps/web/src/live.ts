@@ -228,3 +228,14 @@ export async function balanceOf(rpc: string, token: Address, account: Address): 
     args: [account],
   }) as Promise<bigint>;
 }
+
+export async function readBalances(
+  deployment: DeploymentInfo,
+  account: Address,
+): Promise<{ symbol: string; token: Address; balance: bigint }[]> {
+  const rows = [];
+  for (const [symbol, token] of Object.entries(deployment.tokens)) {
+    rows.push({ symbol, token, balance: await balanceOf(deployment.rpc, token, account) });
+  }
+  return rows;
+}

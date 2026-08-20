@@ -6,7 +6,7 @@ import {
 } from "@intentos/intent-ai";
 import { hashOutcome, hashPolicy, type Address } from "@intentos/intent-schema";
 import { previewAuction } from "./auction.js";
-import { connectWallet, mintTestUsdt, submitDraft, type DeploymentInfo } from "./live.js";
+import { connectWallet, mintTestUsdt, readBalances, submitDraft } from "./live.js";
 import { PREVIEW_ASSETS, PREVIEW_SOLVERS, PREVIEW_UNIVERSE, PREVIEW_VENUES } from "./universe.js";
 
 /**
@@ -135,6 +135,7 @@ declare global {
       venues: typeof venues;
       connectWallet: typeof connectWallet;
       mintTestUsdt: typeof mintTestUsdt;
+      readBalances: typeof readBalances;
       submitDraft: typeof submitDraft;
     };
   }
@@ -148,5 +149,6 @@ window.IntentOS = {
   venues,
   connectWallet,
   mintTestUsdt,
+  readBalances,
   submitDraft,
 };
