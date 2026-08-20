@@ -214,25 +214,26 @@ Notes: clarifications hold the intent (nothing is signed). Recurrence is offchai
 
 ## 6. Visual system
 
-**Mood:** a precise instrument. Dark terminal meeting a trading desk. Quiet confidence. No gradients-on-gradients, no glassmorphism stacks, no mascot, no “Web3” purple.
+**Mood:** Weesh’s paper handoff, applied to IntentOS. Light-mode only — the cream palette is the identity. Editorial, not a terminal. Quiet confidence. No dark theme, no glassmorphism, no mascot, no “Web3” purple.
 
-**Color (keep these tokens — they are already in the product):**
+**Color (ported from the Weesh design handoff):**
 
 | Token | Hex | Use |
 |---|---|---|
-| `--bg` | `#0b0d10` | page |
-| `--panel` | `#12161b` | cards |
-| `--line` | `#1e252d` | borders |
-| `--ink` | `#e6edf3` | text |
-| `--muted` | `#8b98a5` | labels |
-| `--accent` | `#4da3ff` | primary actions, live step |
-| `--good` | `#3fb950` | attested, fulfilled, winner |
-| `--warn` | `#d29922` | selected / bidding |
-| `--bad` | `#f85149` | declined, exits, errors |
+| `--bg` | `#f7f4ee` | page |
+| `--surface` | `#fffdf9` | cards |
+| `--ink` | `#241f1a` | text |
+| `--ink-muted` | `#59524a` | secondary |
+| `--ink-faint` | `#8a8177` | labels |
+| `--accent` | `#7a3b2e` | terracotta — primary actions, live step |
+| `--accent-soft` | `#f1e2d8` | chips, banner |
+| `--divider` | `#e5ddd1` | rules |
+| `--yes` | `#3f7a5c` | attested, fulfilled, winner |
+| `--no` | `#a4463a` | declined, exits, errors |
 
-**Type:** system sans for prose (`-apple-system, Segoe UI, Inter`). `ui-monospace` for hashes, amounts, addresses, chips, status. Tabular numbers for weights and fills.
+**Type:** Newsreader (serif) for the logo and headlines, including italic accent words. Work Sans for body. IBM Plex Mono for hashes, amounts, chips, status. Tabular numbers for weights and fills.
 
-**Radius:** 8–11px panels, 999px pills. Not 24px squishy cards.
+**Radius:** 14px cards, 999px pills, 12px badges. Soft card shadow `0 4px 20px rgba(36, 31, 26, 0.06)`.
 
 **Density:** information-dense. Judges should not scroll past two viewports to see the basket. Mobile: single column, chips wrap, hashes wrap, auction cards stack.
 
