@@ -1,8 +1,7 @@
 import {
   createPublicClient,
-  createWalletClient,
-  custom,
   defineChain,
+  encodeFunctionData,
   http,
   type Address,
   type Hex,
@@ -74,7 +73,7 @@ const REGISTRY = [
       { name: "kind", type: "uint8" },
       { name: "outcomeHash", type: "bytes32" },
       { name: "policyHash", type: "bytes32" },
-      { name: "legCount", type: "uint8" },
+      { name: "legCount", type: "uint16" },
       { name: "auctionEndsAt", type: "uint64" },
       { name: "deadline", type: "uint64" },
       { name: "metadataURI", type: "string" },
@@ -92,9 +91,66 @@ export interface DeploymentInfo {
 }
 
 function ethereum(): any {
-  const eth = (window as any).ethereum;
-  if (!eth) throw new Error("No injected wallet. Install OKX Wallet or MetaMask.");
+  const w = window as any;
+  const listed: any[] = w.ethereum?.providers ?? [];
+  const okx =
+    w.okxwallet ??
+    listed.find((p) => p?.isOkxWallet || p?.isOKXWallet) ??
+    (w.ethereum?.isOkxWallet || w.ethereum?.isOKXWallet ? w.ethereum : null);
+  const eth = okx ?? w.ethereum;
+  if (!eth) throw new Error("No injected wallet. Open this page in OKX Wallet or MetaMask.");
   return eth;
+}
+
+/** Send via eth_sendTransaction so OKX Wallet does not wrap the call as a third-party executor. */
+async function sendTx(args: {
+  account: Address;
+  to: Address;
+  data: Hex;
+  rpc: string;
+}): Promise<Hex> {
+  const pub = publicClient(args.rpc);
+  const from = args.account;
+  try {
+    await pub.call({ to: args.to, data: args.data, account: from });
+  } catch (error) {
+    const message = (error as Error).message ?? String(error);
+    if (/insufficient funds|gas/i.test(message)) {
+      throw new Error("Not enough testnet OKB for gas. Fund this wallet from the X Layer faucet, then retry.");
+    }
+    throw new Error(humanRevert(message));
+  }
+
+  let gas: Hex | undefined;
+  try {
+    const estimate = await pub.estimateGas({ to: args.to, data: args.data, account: from });
+    gas = `0x${(estimate * 12n / 10n).toString(16)}` as Hex;
+  } catch {
+    gas = "0x7a120" as Hex;
+  }
+
+  try {
+    const hash = (await ethereum().request({
+      method: "eth_sendTransaction",
+      params: [{ from, to: args.to, data: args.data, value: "0x0", ...(gas ? { gas } : {}) }],
+    })) as Hex;
+    await pub.waitForTransactionReceipt({ hash });
+    return hash;
+  } catch (error) {
+    throw new Error(humanRevert((error as Error).message ?? String(error)));
+  }
+}
+
+function humanRevert(message: string): string {
+  if (/BadTiming/i.test(message)) return "The auction window was already closed against chain time. Parse again and submit immediately.";
+  if (/IntentExists/i.test(message)) return "That intent was already submitted. Parse again to get a new salt.";
+  if (/BadLegCount/i.test(message)) return "The intent has no acquisition legs.";
+  if (/execution reverted/i.test(message) && /0x/i.test(message)) return `Contract reverted. ${message.slice(0, 180)}`;
+  if (/user rejected|denied/i.test(message)) return "Signature rejected in the wallet.";
+  if (/Third party execution/i.test(message)) {
+    return "The wallet blocked this as a third-party execution. Use OKX Wallet’s in-app browser, switch to X Layer Testnet (1952), and keep a little OKB for gas.";
+  }
+  return message;
 }
 
 export async function connectWallet(): Promise<Address> {
@@ -132,27 +188,15 @@ function publicClient(rpc: string) {
   });
 }
 
-function walletClient() {
-  return createWalletClient({
-    chain: XLAYER_TESTNET,
-    transport: custom(ethereum()),
-  });
-}
-
 export async function mintTestUsdt(deployment: DeploymentInfo, account: Address, amount = 100_000_000_000n) {
   const usdt = deployment.tokens.USDT;
   if (!usdt) throw new Error("USDT is not on this deployment");
-  const wallet = walletClient();
-  const hash = await wallet.writeContract({
+  return sendTx({
     account,
-    chain: XLAYER_TESTNET,
-    address: usdt,
-    abi: ERC20,
-    functionName: "mint",
-    args: [account, amount],
+    rpc: deployment.rpc,
+    to: usdt,
+    data: encodeFunctionData({ abi: ERC20, functionName: "mint", args: [account, amount] }),
   });
-  await publicClient(deployment.rpc).waitForTransactionReceipt({ hash });
-  return hash;
 }
 
 export async function submitDraft(
@@ -160,10 +204,19 @@ export async function submitDraft(
   account: Address,
   draft: IntentDraft,
 ): Promise<{ intentId: Hex; hash: Hex; draft: IntentDraft }> {
+  await ensureChain();
   const pub = publicClient(deployment.rpc);
-  const wallet = walletClient();
+  const chainId = Number(await pub.getChainId());
+  if (chainId !== 1952) {
+    throw new Error(`Wallet is on chain ${chainId}, not X Layer Testnet (1952). Switch networks and retry.`);
+  }
+  const okb = await pub.getBalance({ address: account });
+  if (okb === 0n) {
+    throw new Error("This wallet has 0 OKB. The faucet must fund YOUR connected address, not the deployer, or submit cannot pay gas.");
+  }
+
   const now = Math.max(Math.floor(Date.now() / 1000), Number((await pub.getBlock()).timestamp));
-  const stamped = retimeDraft(draft, { now: now + 2, auctionSeconds: 20, ttlSeconds: 180 });
+  const stamped = retimeDraft(draft, { now: now + 8, auctionSeconds: 30, ttlSeconds: 180 });
   stamped.outcome = { ...stamped.outcome, recipient: account };
 
   const settlement = deployment.contracts.settlement;
@@ -175,36 +228,39 @@ export async function submitDraft(
       args: [account, settlement],
     })) as bigint;
     if (allowance < stamped.outcome.inputAmount) {
-      const approveHash = await wallet.writeContract({
+      await sendTx({
         account,
-        chain: XLAYER_TESTNET,
-        address: stamped.outcome.inputToken,
-        abi: ERC20,
-        functionName: "approve",
-        args: [settlement, stamped.outcome.inputAmount],
+        rpc: deployment.rpc,
+        to: stamped.outcome.inputToken,
+        data: encodeFunctionData({
+          abi: ERC20,
+          functionName: "approve",
+          args: [settlement, stamped.outcome.inputAmount],
+        }),
       });
-      await pub.waitForTransactionReceipt({ hash: approveHash });
     }
   }
 
-  const hash = await wallet.writeContract({
+  const metadata = (stamped.metadata.prompt ?? "").slice(0, 500);
+  const hash = await sendTx({
     account,
-    chain: XLAYER_TESTNET,
-    address: deployment.contracts.intentRegistry,
-    abi: REGISTRY,
-    functionName: "submit",
-    args: [
-      stamped.salt,
-      stamped.outcome.kind,
-      hashOutcome(stamped.outcome),
-      hashPolicy(stamped.policy),
-      stamped.outcome.legs.length,
-      stamped.auctionEndsAt,
-      stamped.deadline,
-      stamped.metadata.prompt ?? "",
-    ],
+    rpc: deployment.rpc,
+    to: deployment.contracts.intentRegistry,
+    data: encodeFunctionData({
+      abi: REGISTRY,
+      functionName: "submit",
+      args: [
+        stamped.salt,
+        stamped.outcome.kind,
+        hashOutcome(stamped.outcome),
+        hashPolicy(stamped.policy),
+        stamped.outcome.legs.length,
+        stamped.auctionEndsAt,
+        stamped.deadline,
+        metadata,
+      ],
+    }),
   });
-  await pub.waitForTransactionReceipt({ hash });
 
   const intentId = computeIntentId({
     chainId: deployment.chainId,
