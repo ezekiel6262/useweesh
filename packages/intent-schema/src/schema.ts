@@ -70,6 +70,7 @@ export const intentMetadataSchema = z
     schedule: recurrenceSchema.optional(),
     conditions: z.array(conditionSchema).max(8).optional(),
     batch: z.array(hex32).max(16).optional(),
+    createdAt: z.number().int().optional(),
   })
   .passthrough();
 

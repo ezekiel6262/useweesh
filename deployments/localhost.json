@@ -1,0 +1,34 @@
+{
+  "network": "localhost",
+  "chainId": 31337,
+  "deployedAt": "2026-08-20T14:32:21.065Z",
+  "contracts": {
+    "solverRegistry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "rwaRegistry": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "policyEngine": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "intentRegistry": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "settlement": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+  },
+  "roles": {
+    "treasury": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "coordinator": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+  },
+  "tokens": {
+    "USDT": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+    "TSLAx": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+    "NVDAx": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+    "AAPLx": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "SPYx": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+    "GOOGLx": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
+  },
+  "routers": [
+    {
+      "name": "OKX-DEX-sim",
+      "address": "0x59b670e9fA9D0A427751Af201D676719a970857b"
+    },
+    {
+      "name": "XSwap-sim",
+      "address": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9"
+    }
+  ]
+}

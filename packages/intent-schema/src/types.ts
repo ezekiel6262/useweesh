@@ -97,6 +97,8 @@ export interface IntentMetadata {
   conditions?: Condition[];
   /** Ids of the sibling intents when this one is part of a BATCH. */
   batch?: Hex[];
+  /** Chain time the intent was stamped at, so the auction window can be described. */
+  createdAt?: number;
   [key: string]: unknown;
 }
 

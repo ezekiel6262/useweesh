@@ -35,14 +35,23 @@ contract MockDexRouter is IDexRouter {
         feeBps = feeBps_;
     }
 
+    /// @param depth_ Notional in `tokenIn` base units that costs one bp of price impact.
     function setPrice(address tokenIn, address tokenOut, uint256 priceE18_, uint256 depth_) external {
         priceE18[tokenIn][tokenOut] = priceE18_;
         depth[tokenIn][tokenOut] = depth_;
-        // Quote the inverse leg too, so exits work without a second call.
-        if (priceE18_ != 0) {
-            priceE18[tokenOut][tokenIn] = (WAD * WAD) / priceE18_;
-            depth[tokenOut][tokenIn] = depth_ == 0 ? 0 : (depth_ * priceE18_) / WAD;
+        if (priceE18_ == 0) return;
+
+        // Quote the inverse leg too, so exits work without a second call. Depth has to cross
+        // decimals as well as price — USDT is 6dp and the xStocks are 18dp, and an inverse depth
+        // that skips the conversion makes every sell look like it moves the market 15%.
+        priceE18[tokenOut][tokenIn] = (WAD * WAD) / priceE18_;
+        if (depth_ == 0) {
+            depth[tokenOut][tokenIn] = 0;
+            return;
         }
+        uint256 inverse = (depth_ * priceE18_) / WAD;
+        inverse = (inverse * (10 ** IERC20Metadata(tokenOut).decimals())) / (10 ** IERC20Metadata(tokenIn).decimals());
+        depth[tokenOut][tokenIn] = inverse;
     }
 
     function setFeeBps(uint16 feeBps_) external {

@@ -15,7 +15,9 @@ function usdtToAssetPriceE18(usdPrice: number, skewBps: number): bigint {
 async function main() {
   const [deployer, treasury, coordinator] = await ethers.getSigners();
   if (!treasury || !coordinator) throw new Error("need at least 3 signers");
-  console.log(`\nIntentOS deploy -> ${network.name} (chainId ${network.config.chainId ?? "?"})`);
+  // Ask the node rather than the config: `localhost` inherits its id from whatever is running.
+  const chainId = Number((await ethers.provider.getNetwork()).chainId);
+  console.log(`\nIntentOS deploy -> ${network.name} (chainId ${chainId})`);
   console.log(`deployer    ${deployer.address}`);
 
   // ---------------------------------------------------------------- core stack
@@ -83,8 +85,9 @@ async function main() {
 
     for (const asset of XSTOCKS) {
       const priceE18 = usdtToAssetPriceE18(asset.usdPrice, venue.priceSkewBps[asset.symbol] ?? 0);
-      // Depth is quoted in USDT units: this much notional costs one bp of impact.
-      const depth = BigInt(Math.round(500_000 * (venue.depthMultiplier[asset.symbol] ?? 1)));
+      // Depth in USDT base units: this much notional costs one bp of price impact. 5,000 USDT
+      // per bp puts a 10,000 USDT leg at ~2 bps, which is the right order for X Layer liquidity.
+      const depth = BigInt(Math.round(5_000 * (venue.depthMultiplier[asset.symbol] ?? 1))) * 10n ** 6n;
       await (await router.setPrice(tokens.USDT!, tokens[asset.symbol]!, priceE18, depth)).wait();
 
       // Seed both sides of the book.
@@ -103,7 +106,7 @@ async function main() {
 
   const deployment = {
     network: network.name,
-    chainId: Number(network.config.chainId ?? 0),
+    chainId,
     deployedAt: new Date().toISOString(),
     contracts: {
       solverRegistry: await solverRegistry.getAddress(),

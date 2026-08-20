@@ -73,7 +73,7 @@ export async function deployIntentOS() {
     for (const stock of DEMO_STOCKS) {
       const token = stocks[stock.symbol];
       const price = (priceOf(stock.usd) * BigInt(10_000 + skew[stock.symbol]!)) / BPS;
-      await router.setPrice(await base.getAddress(), await token.getAddress(), price, 500_000);
+      await router.setPrice(await base.getAddress(), await token.getAddress(), price, usdt(5_000));
       await token.mint(await router.getAddress(), shares(500_000));
     }
     await base.mint(await router.getAddress(), usdt(100_000_000));

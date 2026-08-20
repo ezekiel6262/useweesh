@@ -149,6 +149,30 @@ export function draftIntent(args: DraftArgs): IntentDraft {
     salt: randomSalt(),
     auctionEndsAt: BigInt(now + auctionSeconds),
     deadline: BigInt(now + ttlSeconds),
-    metadata: args.metadata ?? {},
+    metadata: { ...(args.metadata ?? {}), createdAt: now },
+  };
+}
+
+/**
+ * Re-stamp a draft's timing against a fresh clock, keeping the windows it was built with.
+ *
+ * An intent commits to its auction window and deadline, so a draft that sat around while
+ * approvals were mined can arrive already expired. Re-timing just before submission keeps a
+ * short auction window usable without widening it "just in case".
+ */
+export function retimeDraft(
+  draft: IntentDraft,
+  args: { now: number; auctionSeconds?: number; ttlSeconds?: number },
+): IntentDraft {
+  const originalAuction = Number(draft.deadline - draft.auctionEndsAt);
+  const auctionSeconds = args.auctionSeconds ?? 20;
+  const ttlSeconds = args.ttlSeconds ?? auctionSeconds + originalAuction;
+  if (ttlSeconds <= auctionSeconds) throw new Error("ttlSeconds must exceed auctionSeconds");
+
+  return {
+    ...draft,
+    auctionEndsAt: BigInt(args.now + auctionSeconds),
+    deadline: BigInt(args.now + ttlSeconds),
+    metadata: { ...draft.metadata, createdAt: args.now },
   };
 }

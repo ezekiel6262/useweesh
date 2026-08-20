@@ -16,7 +16,7 @@
     "test": "npm run test --workspaces --if-present",
     "chain": "npm run chain -w @intentos/contracts",
     "deploy:local": "npm run deploy:local -w @intentos/contracts",
-    "demo": "npm run demo -w @intentos/solver-core",
+    "demo": "npm run dev -w @intentos/demo",
     "api": "npm run dev -w @intentos/api",
     "solvers": "npm run dev -w @intentos/solver-agent",
     "web": "npm run dev -w @intentos/web",

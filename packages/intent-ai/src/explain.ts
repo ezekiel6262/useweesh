@@ -18,10 +18,15 @@ export interface ExplainOptions {
 export function explainDraft(draft: IntentDraft, options: ExplainOptions): string {
   const lines = [explainOutcome(draft.outcome, options.catalog)];
 
-  const seconds = Number(draft.deadline - BigInt(Math.floor(Date.now() / 1000)));
-  if (seconds > 0) {
-    lines.push(`Solvers have ${humanDuration(Number(draft.auctionEndsAt - draft.deadline) + seconds)} to bid; the intent stops being servable in ${humanDuration(seconds)}.`);
-  }
+  // Windows, not wall-clock offsets: the reader wants "how long do solvers get", and the
+  // chain's clock is not necessarily the reader's.
+  const auctionWindow = draft.metadata.createdAt ? Number(draft.auctionEndsAt) - draft.metadata.createdAt : 0;
+  const settleWindow = Number(draft.deadline - draft.auctionEndsAt);
+  lines.push(
+    auctionWindow > 0
+      ? `Solvers get ${humanDuration(auctionWindow)} to bid, then ${humanDuration(settleWindow)} to settle.`
+      : `The winning solver gets ${humanDuration(settleWindow)} to settle once the auction closes.`,
+  );
 
   if (options.includePolicy !== false) {
     lines.push(...explainPolicy(draft, options.catalog));

@@ -29,6 +29,8 @@ export interface CompileOptions {
   /** Optional live quoting, used to turn the slippage tolerance into binding per-leg floors. */
   quote?: QuoteFn;
   auctionSeconds?: number;
+  /** Fallback lifetime when the request itself did not say how long the intent should live. */
+  ttlSeconds?: number;
   /** Provenance recorded on the intent. */
   source?: string;
   prompt?: string;
@@ -80,10 +82,16 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
   const weights = resolveWeightsPercent(targets.map((t) => t.weightPercent));
   const notional = isRebalance ? await estimateRebalanceNotional(exits, input.address, options) : inputAmount;
 
+  // Floors are derived from what will actually be spent, not from the gross notional: the
+  // solver's fee comes off the top before any leg is bought, so quoting the gross amount would
+  // set a floor no honest solver could clear.
+  const maxFeeBps = clampBps(Math.round((spec.maxFeePercent ?? 0.3) * PERCENT_TO_BPS), 0, 1_000);
+  const spendable = (notional * BigInt(10_000 - maxFeeBps)) / 10_000n;
+
   const quoted = await Promise.all(
     targets.map(async (target, i) => {
-      if (!options.quote || notional === 0n) return undefined;
-      const legNotional = (notional * BigInt(weights[i]!)) / 10_000n;
+      if (!options.quote || spendable === 0n) return undefined;
+      const legNotional = (spendable * BigInt(weights[i]!)) / 10_000n;
       if (legNotional === 0n) return undefined;
       try {
         return await options.quote(input.address, target.asset.address, legNotional);
@@ -119,7 +127,10 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
         kind: spec.action === "onboard_rwa" ? IntentKind.RWA_ONBOARD : undefined,
       });
 
-  const ttlSeconds = Math.max(120, Math.round((spec.ttlMinutes ?? 10) * 60));
+  const ttlSeconds = Math.max(
+    120,
+    spec.ttlMinutes !== null ? Math.round(spec.ttlMinutes * 60) : (options.ttlSeconds ?? 600),
+  );
   const auctionSeconds = Math.min(options.auctionSeconds ?? 20, Math.floor(ttlSeconds / 2));
   const now = options.now ?? Math.floor(Date.now() / 1000);
 
@@ -128,7 +139,7 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
     maxNotional: isRebalance ? 0n : inputAmount,
     validAfter: 0n,
     validUntil: BigInt(now + ttlSeconds + 60),
-    maxFeeBps: clampBps(Math.round((spec.maxFeePercent ?? 0.3) * PERCENT_TO_BPS), 0, 1_000),
+    maxFeeBps,
     minReputationBps: clampBps(Math.round((spec.minSolverReputationPercent ?? 0) * PERCENT_TO_BPS), 0, 10_000),
     requireRwaAttested: spec.requireRwaAttested,
     tokenAllowlist: spec.restrictToDeclaredAssets
