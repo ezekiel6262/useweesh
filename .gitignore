@@ -19,3 +19,5 @@ apps/api/.mempool.json
 apps/web/dist/
 apps/web/public/app.js
 .vercel
+api/*.js
+api/*.cjs

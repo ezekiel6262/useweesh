@@ -25,12 +25,14 @@
     "solvers": "npm run dev -w @intentos/solver-agent",
     "agent": "npm run dev -w @intentos/agent --",
     "web": "npm run build -w @intentos/intent-schema && npm run build -w @intentos/intent-ai && npm run build -w @intentos/web",
-    "build:web": "npm run build -w @intentos/intent-schema && npm run build -w @intentos/intent-ai && npm run build -w @intentos/web"
+    "build:web": "npm run build -w @intentos/intent-schema && npm run build -w @intentos/intent-ai && npm run build -w @intentos/web",
+    "build:api": "node scripts/bundle-api.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
     "tsx": "^4.19.2",
     "@types/node": "^22.9.0",
-    "@vercel/node": "^5.1.8"
+    "@vercel/node": "^5.1.8",
+    "esbuild": "^0.24.0"
   }
 }
