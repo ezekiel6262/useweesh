@@ -114,6 +114,7 @@
   <nav>
     <a href="/">Home</a>
     <a href="/app" class="on">Compose</a>
+    <a href="/spec">Spec</a>
   </nav>
   <div class="mode" id="mode"><span class="dot"></span>connecting</div>
   <button class="btn ghost" id="connect" type="button">Connect</button>
@@ -261,7 +262,7 @@ async function refreshRecent() {
     $("recentBody").innerHTML = intents.map((it) => {
       const tone = /fulfill/i.test(it.statusLabel) ? "win" : /select/i.test(it.statusLabel) ? "bid" : /open/i.test(it.statusLabel) ? "" : "no";
       return `<div class="row">
-        <span class="mono">${short(it.intentId)}</span>
+        <a class="mono" href="/intent/?id=${esc(it.intentId)}">${short(it.intentId)}</a>
         <span class="pill ${tone}">${esc(it.statusLabel)}</span>
       </div>
       <div class="note" style="margin:0 0 8px">${esc(short(it.owner))} · ${it.bidCount} bid${it.bidCount === 1 ? "" : "s"}</div>`;
@@ -287,7 +288,7 @@ async function renderSession() {
     rows += `<div class="note">Could not read balances.</div>`;
   }
   if (lastIntent) {
-    rows += `<div class="row"><span>intent</span><a class="mono" href="${explorer("address/" + deployment.contracts.intentRegistry)}" target="_blank">${short(lastIntent)}</a></div>`;
+    rows += `<div class="row"><span>intent</span><a class="mono" href="/intent/?id=${lastIntent}">${short(lastIntent)}</a></div>`;
   }
   $("sessionBody").innerHTML = rows;
 }

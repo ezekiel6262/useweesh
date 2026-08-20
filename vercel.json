@@ -10,6 +10,8 @@
     }
   },
   "rewrites": [
-    { "source": "/app", "destination": "/app/index.html" }
+    { "source": "/app", "destination": "/app/index.html" },
+    { "source": "/intent", "destination": "/intent/index.html" },
+    { "source": "/spec", "destination": "/spec/index.html" }
   ]
 }

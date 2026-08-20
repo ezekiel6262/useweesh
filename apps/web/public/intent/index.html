@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Intent — IntentOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f7f4ee'/%3E%3Cpath d='M7 11 L16 23 L25 11' fill='none' stroke='%237a3b2e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg:#f7f4ee; --surface:#fffdf9; --ink:#241f1a; --ink-muted:#59524a; --ink-faint:#8a8177;
+    --accent:#7a3b2e; --accent-soft:#f1e2d8; --divider:#e5ddd1; --yes:#3f7a5c; --no:#a4463a; --warn:#8a6a2a;
+    --shadow:0 4px 20px rgba(36,31,26,.06);
+    --sans:"Work Sans",system-ui,sans-serif; --serif:"Newsreader",Georgia,serif; --mono:"IBM Plex Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+  a{color:var(--accent);text-decoration:none}
+  .shell{max-width:760px;margin:0 auto;padding:0 20px 56px}
+  header{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)}
+  .brand{margin-right:auto;font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);display:flex;gap:8px;align-items:center}
+  nav a{color:var(--ink-muted);margin-left:14px;font-size:13px}
+  nav a.on{color:var(--accent)}
+  .card{background:var(--surface);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);margin-top:16px}
+  .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);margin:0 0 10px;font-weight:600}
+  .id{font-family:var(--mono);font-size:13px;word-break:break-all;margin:0 0 12px}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px}
+  .row:last-child{border-bottom:0}
+  .mono{font-family:var(--mono);font-size:12px;color:var(--ink-muted);word-break:break-all;text-align:right}
+  .pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:#efe9df;color:var(--ink-faint)}
+  .pill.win{background:#e4efe9;color:var(--yes)}
+  .pill.bid{background:#f4ead0;color:var(--warn)}
+  .pill.no{background:#f6e3e0;color:var(--no)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--ink-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:0 8px 8px 0;border-bottom:1px solid var(--divider)}
+  td{padding:8px 8px 8px 0;border-bottom:1px solid var(--divider);font-family:var(--mono);font-size:12px}
+  tr:last-child td{border-bottom:0}
+  .err{color:var(--no);margin-top:18px}
+  .empty{color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <a class="brand" href="/">
+    <svg width="18" height="18" viewBox="0 0 26 26" aria-hidden><path d="M4 8 L13 20 L22 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    intentos
+  </a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/app">Compose</a>
+    <a href="/spec">Spec</a>
+  </nav>
+</header>
+<div id="root"><p class="empty">Loading intent…</p></div>
+</div>
+<script type="module">
+const TAG = "n:";
+const decode = (text) => JSON.parse(text, (_k, v) => (typeof v === "string" && v.startsWith(TAG) ? BigInt(v.slice(2)) : v));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const short = (a) => a && a.length > 12 ? `${a.slice(0, 8)}…${a.slice(-6)}` : (a ?? "");
+const id = new URLSearchParams(location.search).get("id") ?? "";
+const tone = (label) => /fulfill/i.test(label) ? "win" : /select|bid|taking/i.test(label) ? "bid" : /cancel|expir|unknown/i.test(label) ? "no" : "";
+
+async function load() {
+  const root = document.getElementById("root");
+  if (!id.startsWith("0x") || id.length !== 66) {
+    root.innerHTML = `<p class="err">Missing intent id. Open this page as /intent/?id=0x…</p>`;
+    return;
+  }
+  document.title = `Intent ${short(id)} — IntentOS`;
+  try {
+    const res = await fetch(`/api/intent?id=${encodeURIComponent(id)}`);
+    const text = await res.text();
+    const data = decode(text);
+    if (!res.ok) throw new Error(data.error ?? res.statusText);
+    const x = data.explorer ?? "https://web3.okx.com/explorer/xlayer-testnet";
+    const bids = (data.bids ?? []).filter((b) => !b.withdrawn);
+    root.innerHTML = `
+      <div class="card">
+        <h2 class="lab">Intent</h2>
+        <p class="id">${esc(id)}</p>
+        <div class="row"><span>status</span><span class="pill ${tone(data.statusLabel)}">${esc(data.statusLabel)}</span></div>
+        <div class="row"><span>kind</span><span class="mono">${esc(data.kindLabel)}</span></div>
+        <div class="row"><span>owner</span><a class="mono" href="${x}/address/${data.owner}" target="_blank">${esc(data.owner)}</a></div>
+        <div class="row"><span>solver</span><span class="mono">${data.selectedSolver && data.selectedSolver !== "0x0000000000000000000000000000000000000000" ? esc(data.selectedSolver) : "—"}</span></div>
+        <div class="row"><span>auction ends</span><span class="mono">${data.auctionEndsAt ? new Date(Number(data.auctionEndsAt) * 1000).toISOString() : "—"}</span></div>
+        <div class="row"><span>deadline</span><span class="mono">${data.deadline ? new Date(Number(data.deadline) * 1000).toISOString() : "—"}</span></div>
+        <div class="row"><span>outcome hash</span><span class="mono">${esc(data.outcomeHash)}</span></div>
+        <div class="row"><span>policy hash</span><span class="mono">${esc(data.policyHash)}</span></div>
+        <div class="row"><span>registry</span><a class="mono" href="${x}/address/${data.contracts?.intentRegistry}" target="_blank">${short(data.contracts?.intentRegistry)}</a></div>
+      </div>
+      <div class="card">
+        <h2 class="lab">Bids</h2>
+        ${bids.length ? `<table>
+          <tr><th>solver</th><th>fee</th><th>eta</th><th>guarantees</th></tr>
+          ${bids.map((b) => `<tr>
+            <td>${esc(short(b.solver))}${data.selectedSolver && b.solver.toLowerCase() === data.selectedSolver.toLowerCase() ? " ✓" : ""}</td>
+            <td>${(b.feeBps / 100).toFixed(2)}%</td>
+            <td>${b.etaSeconds}s</td>
+            <td>${(b.guaranteedOut ?? []).length} legs</td>
+          </tr>`).join("")}
+        </table>` : `<p class="empty">No bids recorded yet.</p>`}
+      </div>`;
+  } catch (error) {
+    root.innerHTML = `<p class="err">${esc(error.message)}</p>`;
+  }
+}
+await load();
+setInterval(load, 8_000);
+</script>
+</body>
+</html>
