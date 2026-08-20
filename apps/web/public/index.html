@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IntentOS — declare an outcome</title>
+<meta name="description" content="An Intent Operating System for X Layer. State an outcome; AI solvers compete to reach it; the chain enforces that they did." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d10'/%3E%3Cpath d='M9 21V11h3v10H9zm7.5 0V11h3l3.5 6v-6h3v10h-3l-3.5-6v6h-3z' fill='%234da3ff'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg:#0b0d10; --panel:#12161b; --line:#1e252d; --ink:#e6edf3; --muted:#8b98a5;
+    --accent:#4da3ff; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);padding:22px 0}
+  .bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  .brand{font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .brand span{color:var(--muted);font-weight:400;font-size:14px;margin-left:10px}
+  .mode{font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+  .mode b{color:var(--ink);font-weight:500}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+    margin:0 0 12px;font-weight:600}
+  .hero{padding:34px 0 10px}
+  .lede{font-size:20px;line-height:1.5;margin:0 0 22px;max-width:66ch}
+  .lede b{color:var(--accent);font-weight:600}
+  textarea{width:100%;min-height:84px;resize:vertical;background:#0b0f14;color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;padding:13px 15px;font:inherit}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:11px}
+  button{background:var(--accent);color:#06101c;border:0;border-radius:7px;padding:9px 17px;
+    font-weight:600;font-size:14px;cursor:pointer}
+  button:disabled{opacity:.55;cursor:default}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .chip{font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;
+    padding:5px 11px;cursor:pointer;background:none;font-weight:400}
+  .chip:hover{color:var(--ink);border-color:var(--accent)}
+  main{padding:8px 0 70px;display:grid;gap:22px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:18px 20px}
+  .cols{display:grid;gap:22px;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr)}
+  @media(max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+  pre{margin:0;white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;line-height:1.65}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--muted);font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.05em;font-weight:500;padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px 8px 0;border-bottom:1px solid #171d24}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-size:12.5px}
+  tr:last-child td{border-bottom:0}
+  .guards{display:flex;flex-wrap:wrap;gap:7px}
+  .guard{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);
+    border-radius:6px;padding:4px 9px;color:var(--muted)}
+  .guard.on{color:var(--good);border-color:#1c3a22}
+  .note{color:var(--muted);font-size:13px}
+  .note+.note{margin-top:7px}
+  .hash{font-family:var(--mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+  .hash b{display:block;color:var(--ink);font-weight:500;text-transform:uppercase;
+    font-size:10.5px;letter-spacing:.06em;margin-bottom:3px}
+  .hash+.hash{margin-top:11px}
+  .flow{display:grid;gap:9px;font-size:13.5px}
+  .flow div{display:flex;gap:11px;align-items:baseline}
+  .flow i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted);min-width:16px}
+  .flow .off{color:var(--muted)}
+  .err{color:var(--bad);font-size:13.5px}
+  footer{border-top:1px solid var(--line);padding:20px 0 40px;color:var(--muted);font-size:13px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <div class="brand">IntentOS<span>an Intent Operating System for X Layer</span></div>
+  <div class="mode" id="mode">connecting…</div>
+</div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <p class="lede">
+      State <b>what should be true afterwards</b>. AI solvers compete over how to get there, and the
+      settlement contract checks the result against what you declared before anything is final.
+    </p>
+
+    <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%</textarea>
+    <div class="actions">
+      <button id="parse">Parse into an intent</button>
+      <span class="note" id="parserNote"></span>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <main>
+    <div id="error" class="err hide"></div>
+
+    <div class="cols">
+      <div style="display:grid;gap:22px">
+        <section id="outcomeCard" class="hide">
+          <h2>What would be committed</h2>
+          <pre id="explanation"></pre>
+          <div id="legsWrap" style="margin-top:16px"></div>
+        </section>
+
+        <section id="noticeCard" class="hide">
+          <h2>Worth knowing</h2>
+          <div id="notices"></div>
+        </section>
+      </div>
+
+      <div style="display:grid;gap:22px">
+        <section id="guardCard" class="hide">
+          <h2>Guardrails</h2>
+          <div class="guards" id="guards"></div>
+          <div class="note" style="margin-top:12px">
+            Committed at submission and enforced at settlement — not advice to the solver.
+          </div>
+        </section>
+
+        <section id="hashCard" class="hide">
+          <h2>Onchain commitment</h2>
+          <div class="hash"><b>outcome hash</b><span id="outcomeHash"></span></div>
+          <div class="hash"><b>policy hash</b><span id="policyHash"></span></div>
+          <div class="note" style="margin-top:12px">
+            Only these hashes go onchain. The outcome is revealed at settlement, and any reveal
+            that does not hash to this is rejected.
+          </div>
+        </section>
+
+        <section>
+          <h2>Where this fits</h2>
+          <div class="flow">
+            <div><i>1</i><span>Declare an outcome — <b>running here</b></span></div>
+            <div><i>2</i><span class="off">Commit the hashes to IntentRegistry</span></div>
+            <div><i>3</i><span class="off">Solvers bid what they will guarantee</span></div>
+            <div><i>4</i><span class="off">Settlement executes and verifies</span></div>
+          </div>
+          <div class="note" id="flowNote" style="margin-top:12px"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap">
+  Steps 2–4 need a chain and a running coordinator — <code>npm run demo</code> in the repo runs the
+  whole loop locally. ·
+  <a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>
+</div></footer>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const pct = (bps) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
+
+const units = (value, decimals, digits = 4) => {
+  const v = BigInt(value), unit = 10n ** BigInt(decimals);
+  const frac = (v % unit).toString().padStart(decimals, "0").slice(0, digits).replace(/0+$/, "");
+  return `${(v / unit).toLocaleString("en-US")}${frac ? "." + frac : ""}`;
+};
+// USDT is 6dp on X Layer; the xStocks are 18dp.
+const dp = (symbol) => (symbol === "USDT" ? 6 : 18);
+
+const EXAMPLES = [
+  "Swap 2,500 USDT into NVDA with 0.3% max slippage",
+  "Rebalance: sell 3 TSLA and 4 NVDA, then buy AAPL and SPY equally",
+  "put 20,000 USDT into NVDA and AAPL, 60/40, only attested assets",
+  "every week put 1,000 USDT into SPY, only if SPY is below 700",
+  "Bring 25,000 USDT onchain into SPY xStock, fees under 0.2%",
+];
+
+$("chips").innerHTML = EXAMPLES.map((e, i) => `<button class="chip" data-i="${i}">${esc(e)}</button>`).join("");
+$("chips").addEventListener("click", (event) => {
+  const chip = event.target.closest(".chip");
+  if (!chip) return;
+  $("prompt").value = EXAMPLES[Number(chip.dataset.i)];
+  run();
+});
+
+let status = null;
+try {
+  status = await (await fetch("/api/status")).json();
+  $("mode").innerHTML = status.mode === "live"
+    ? `network <b>${esc(status.network)}</b> · parser <b>${esc(status.parser)}</b>`
+    : `<b>playground</b> · parser <b>${esc(status.parser)}</b>`;
+  $("flowNote").textContent = status.mode === "live"
+    ? `Connected to ${status.network}.`
+    : "This page is the parser only — it never signs, submits or holds anything.";
+} catch {
+  $("mode").textContent = "offline";
+}
+
+async function run() {
+  const prompt = $("prompt").value.trim();
+  if (!prompt) return;
+
+  const button = $("parse");
+  button.disabled = true;
+  button.textContent = "Parsing…";
+  $("error").classList.add("hide");
+
+  try {
+    const response = await fetch("/api/parse", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error ?? response.statusText);
+    render(result);
+  } catch (error) {
+    for (const id of ["outcomeCard", "guardCard", "hashCard", "noticeCard"]) $(id).classList.add("hide");
+    $("error").textContent = error.message;
+    $("error").classList.remove("hide");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Parse into an intent";
+  }
+}
+
+function render(result) {
+  $("explanation").textContent = result.explanation;
+  $("parserNote").textContent = `parsed by ${result.parser}${result.model ? ` (${result.model})` : ""}`;
+
+  const rows = [
+    ...result.outcome.exits.map((exit) => `<tr>
+      <td style="color:var(--bad)">sell ${esc(exit.symbol)}</td>
+      <td class="num">—</td>
+      <td class="num">${units(exit.amountIn, dp(exit.symbol))}</td></tr>`),
+    ...result.outcome.legs.map((leg) => `<tr>
+      <td>${esc(leg.symbol)}</td>
+      <td class="num">${pct(leg.weightBps)}</td>
+      <td class="num">${leg.minOut === "0" ? "open" : units(leg.minOut, dp(leg.symbol))}</td></tr>`),
+  ].join("");
+
+  $("legsWrap").innerHTML = `<table>
+    <tr><th>asset</th><th class="num">weight</th><th class="num">${
+      result.outcome.exits.length ? "amount / floor" : "floor"
+    }</th></tr>${rows}</table>`;
+  $("outcomeCard").classList.remove("hide");
+
+  const policy = result.policy;
+  $("guards").innerHTML = [
+    `fee ≤ ${pct(policy.maxFeeBps)}`,
+    policy.maxNotional !== "0" ? `spend ≤ ${units(policy.maxNotional, dp(result.outcome.inputSymbol))} ${result.outcome.inputSymbol}` : "",
+    `slippage ≤ ${pct(result.outcome.maxSlippageBps)}`,
+    policy.minReputationBps ? `solver reputation ≥ ${pct(policy.minReputationBps)}` : "",
+    policy.requireRwaAttested ? "RWA attested" : "",
+    policy.allowlist.length ? `pinned to ${policy.allowlist.map(esc).join(", ")}` : "",
+    `${result.timing.auctionSeconds}s auction`,
+  ].filter(Boolean).map((g) => `<span class="guard ${/attested|pinned|reputation/.test(g) ? "on" : ""}">${g}</span>`).join("");
+  $("guardCard").classList.remove("hide");
+
+  $("outcomeHash").textContent = result.commitment.outcomeHash;
+  $("policyHash").textContent = result.commitment.policyHash;
+  $("hashCard").classList.remove("hide");
+
+  const notices = [
+    ...result.clarifications.map((c) => `<div class="note">Needs an answer — ${esc(c)}</div>`),
+    ...result.assumptions.map((a) => `<div class="note">Assumed — ${esc(a)}</div>`),
+    result.metadata.schedule
+      ? `<div class="note">Recurring — every ${result.metadata.schedule.everySeconds}s, submitted once per period by the agent runtime.</div>`
+      : "",
+    ...(result.metadata.conditions ?? []).map((c) =>
+      `<div class="note">Precondition — serve only while ${esc(c.subject ?? c.kind)} is ${
+        c.operator.startsWith("l") ? "below" : "above"} ${c.value}.</div>`),
+    !result.quotesAvailable
+      ? `<div class="note">Floors read “open” because this page has no venue to quote against. With a
+         chain attached they are derived from live quotes; either way the winning solver's own
+         auction guarantee binds every leg onchain.</div>`
+      : "",
+  ].filter(Boolean).join("");
+
+  $("notices").innerHTML = notices;
+  $("noticeCard").classList.toggle("hide", !notices);
+}
+
+$("parse").addEventListener("click", run);
+$("prompt").addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") run();
+});
+await run();
+</script>
+</body>
+</html>
