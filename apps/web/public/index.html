@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — declare an outcome on X Layer</title>
-<meta name="description" content="An Intent Operating System for X Layer. State an outcome; AI solvers compete to reach it; the chain enforces that they did." />
+<title>IntentOS — an Intent Operating System for X Layer</title>
+<meta name="description" content="State an outcome. Competing AI solvers work out how. The chain enforces that they did — live on X Layer." />
 <meta property="og:title" content="IntentOS" />
 <meta property="og:description" content="State what should be true afterwards. AI solvers compete over how. The chain enforces that they did." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,23 +23,16 @@
     --divider: #e5ddd1;
     --yes: #3f7a5c;
     --no: #a4463a;
-    --warn: #8a6a2a;
     --shadow-card: 0 4px 20px rgba(36, 31, 26, 0.06);
     --sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
     --serif: "Newsreader", ui-serif, Georgia, serif;
     --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
   }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font: 15px/1.55 var(--sans);
-  }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
   body { text-wrap: pretty; }
   a { color: var(--accent); text-decoration: none; }
   a:hover { opacity: 0.75; }
-  button { font: inherit; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
   @media (min-width: 640px) { .wrap { padding: 0 32px; } }
   @media (min-width: 1024px) { .wrap { padding: 0 64px; } }
@@ -48,7 +41,9 @@
     border-bottom: 1px solid var(--divider);
     background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
   }
-  .banner .wrap { padding-top: 10px; padding-bottom: 10px; font-size: 12.5px; line-height: 1.5; color: var(--accent); }
+  .banner .wrap { padding: 10px 20px; font-size: 12.5px; line-height: 1.5; color: var(--accent); }
+  @media (min-width: 640px) { .banner .wrap { padding-left: 32px; padding-right: 32px; } }
+  @media (min-width: 1024px) { .banner .wrap { padding-left: 64px; padding-right: 64px; } }
   .banner b { font-weight: 600; }
 
   header { padding: 20px 0; }
@@ -57,317 +52,169 @@
     display: flex; align-items: center; gap: 8px; margin-right: auto;
     font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ink);
   }
-  .brand:hover { opacity: 1; text-decoration: none; }
+  .brand:hover { opacity: 1; }
   nav { display: flex; flex-wrap: wrap; gap: 16px; }
   nav a { color: var(--ink-muted); font-size: 14px; }
-  nav a:hover { color: var(--accent); opacity: 1; text-decoration: none; }
+  nav a:hover { color: var(--accent); opacity: 1; }
   nav a.on { color: var(--accent); }
-  .mode {
-    font-family: var(--mono); font-size: 12px; color: var(--ink-muted);
-    border: 1px solid var(--divider); background: var(--surface);
-    border-radius: 999px; padding: 10px 16px;
-  }
 
-  .hero { padding: 36px 0 8px; }
-  .kicker {
-    font-family: var(--mono); font-size: 11.5px; color: var(--accent);
-    letter-spacing: 0.06em; margin: 0 0 14px; font-weight: 500;
-  }
-  .lede {
-    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
-    font-weight: 500; line-height: 1.12; margin: 0 0 18px; max-width: 16ch; letter-spacing: -0.02em;
-  }
-  .lede em { font-style: italic; color: var(--accent); }
-  .sub {
-    margin: 0 0 22px; max-width: 52ch; font-size: 17px; line-height: 1.65; color: var(--ink-muted);
-  }
-  textarea {
-    width: 100%; min-height: 104px; resize: vertical;
-    background: var(--surface); color: var(--ink);
-    border: 1px solid var(--divider); border-radius: 14px;
-    padding: 16px 18px; font: inherit; box-shadow: var(--shadow-card);
-  }
-  textarea:focus { outline: none; border-color: var(--accent); }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--accent); color: var(--bg); border: 0; border-radius: 999px;
-    padding: 12px 20px; font-weight: 600; font-size: 14px; cursor: pointer;
+    padding: 12px 20px; font-weight: 600; font-size: 14px;
   }
   .btn:hover { opacity: 0.9; }
   .btn.ghost {
     background: var(--surface); color: var(--ink); border: 1px solid var(--divider);
   }
   .btn.ghost:hover { border-color: var(--accent); opacity: 1; }
-  .btn:disabled { opacity: 0.45; cursor: default; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .chip {
-    font-size: 12.5px; color: var(--ink-muted);
-    border: 1px solid var(--divider); background: var(--surface);
-    border-radius: 999px; padding: 7px 14px; cursor: pointer; font-weight: 500;
-  }
-  .chip:hover { color: var(--accent); border-color: var(--accent); }
 
-  main { padding-bottom: 88px; }
-  .view { display: none; }
-  .view.on { display: block; }
+  .hero { padding: 48px 0 28px; }
+  .kicker {
+    font-family: var(--mono); font-size: 11.5px; color: var(--accent);
+    letter-spacing: 0.06em; margin: 0 0 14px; font-weight: 500;
+  }
+  .lede {
+    font-family: var(--serif); font-size: clamp(34px, 5.2vw, 58px);
+    font-weight: 500; line-height: 1.1; margin: 0 0 20px; max-width: 16ch; letter-spacing: -0.02em;
+  }
+  .lede em { font-style: italic; color: var(--accent); }
+  .sub { margin: 0 0 28px; max-width: 52ch; font-size: 17px; line-height: 1.65; color: var(--ink-muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .fine { margin-top: 18px; font-size: 12.5px; color: var(--ink-faint); }
+
+  .rule { border-top: 1px solid var(--divider); padding: 48px 0; }
+  h2.serif { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 20px; }
+  .stages { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .stages { grid-template-columns: minmax(0, 1fr); } }
   .card {
     background: var(--surface); border-radius: 14px; padding: 20px 22px;
     box-shadow: var(--shadow-card);
   }
-  .card.hatch {
-    background: repeating-linear-gradient(135deg, var(--surface) 0 10px, #f1ebe1 10px 20px);
-    box-shadow: none; border: 1px solid var(--divider);
-  }
-  h2.lab {
-    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--ink-faint); margin: 0 0 12px; font-weight: 600;
-  }
-  h2.serif { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 16px; text-transform: none; letter-spacing: 0; color: var(--ink); }
-  .cols { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); }
-  .stack { display: grid; gap: 18px; }
+  .card n { display: block; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 10px; }
+  .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
+  .card p { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
+  .cols { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
   @media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } }
-  pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 13px; line-height: 1.65; color: var(--ink); }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  th {
-    text-align: left; color: var(--ink-faint); font-size: 11.5px; text-transform: uppercase;
-    letter-spacing: 0.06em; font-weight: 500; padding: 0 12px 10px 0; border-bottom: 1px solid var(--divider);
+  .quote { font-family: var(--serif); font-size: 19px; line-height: 1.5; margin: 0 0 14px; }
+  .list { display: grid; gap: 10px; font-size: 14px; }
+  .list div { display: flex; gap: 12px; align-items: baseline; }
+  .list i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted);
+    border: 1px solid var(--divider); background: var(--surface);
+    border-radius: 999px; padding: 7px 12px;
   }
-  td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--divider); vertical-align: middle; color: var(--ink-muted); }
-  td.num, th.num { text-align: right; font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
-  tr:last-child td { border-bottom: 0; }
-  .barline { height: 6px; border-radius: 3px; background: var(--divider); overflow: hidden; min-width: 72px; }
-  .barline > i {
-    display: block; height: 100%; background: var(--accent); transform-origin: left;
-    animation: grow 0.6s ease-out both;
-  }
-  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .guards { display: flex; flex-wrap: wrap; gap: 7px; }
-  .guard {
-    font-family: var(--mono); font-size: 11.5px; background: #efe9df; color: var(--ink-faint);
-    border-radius: 12px; padding: 5px 10px;
-  }
-  .guard.on { background: #e4efe9; color: var(--yes); }
-  .note { color: var(--ink-muted); font-size: 13.5px; line-height: 1.55; }
-  .note + .note { margin-top: 8px; }
-  .hash { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); word-break: break-all; }
-  .hash b {
-    display: block; color: var(--ink-faint); font-weight: 500; text-transform: uppercase;
-    font-size: 10.5px; letter-spacing: 0.06em; margin-bottom: 4px;
-  }
-  .hash + .hash { margin-top: 14px; }
-  .flow { display: grid; gap: 10px; font-size: 14px; }
-  .flow div { display: flex; gap: 12px; align-items: baseline; }
-  .flow i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 18px; }
-  .flow .off { color: var(--ink-faint); }
-  .err { color: var(--no); font-size: 13.5px; }
-  .hide { display: none !important; }
-  .kind {
-    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
-    color: var(--accent); background: var(--accent-soft); border-radius: 12px;
-    padding: 4px 9px; margin-left: 8px; vertical-align: middle;
-  }
-  .solver { border-top: 1px solid var(--divider); padding-top: 14px; margin-top: 14px; }
-  .solver:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
-  .solver.head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-  .pill {
-    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
-    text-transform: uppercase; padding: 4px 9px; border-radius: 12px; background: #efe9df; color: var(--ink-faint);
-  }
-  .pill.bid { background: #f4ead0; color: var(--warn); }
-  .pill.win { background: #e4efe9; color: var(--yes); }
-  .pill.no { background: #f6e3e0; color: var(--no); }
-  .stages { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  @media (max-width: 900px) { .stages { grid-template-columns: minmax(0, 1fr); } }
-  .stage n { display: block; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 10px; }
-  .stage h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
-  .stage p { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
-  .quote {
-    font-family: var(--serif); font-size: 19px; line-height: 1.5; margin: 0 0 14px; color: var(--ink);
-  }
-  .rule { border-top: 1px solid var(--divider); padding-top: 48px; margin-top: 48px; }
   footer {
     border-top: 1px solid var(--divider); padding: 36px 0 44px;
     color: var(--ink-faint); font-size: 13px;
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px;
   }
-  .sdk { background: var(--bg); border-radius: 14px; padding: 16px 18px; overflow: auto; }
-  .sdk pre { color: var(--ink); font-size: 12.5px; }
-  code { font-family: var(--mono); font-size: 12px; }
-  @media (prefers-reduced-motion: reduce) { .barline > i { animation: none; } }
 </style>
 </head>
 <body>
 
 <div class="banner"><div class="wrap">
-  <b>Live on X Layer Testnet (1952).</b> Gemini parses the intent. Your wallet submits it. Bonded solvers bid and settle onchain.
+  <b>Live on X Layer Testnet.</b> Gemini parses. Your wallet submits. Bonded solvers settle onchain.
 </div></div>
 
 <header><div class="wrap bar">
-  <a class="brand" href="#compose">
+  <a class="brand" href="/">
     <svg width="20" height="20" viewBox="0 0 26 26" aria-hidden>
       <path d="M4 8 L13 20 L22 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     intentos
   </a>
   <nav>
-    <a href="#compose" data-view="compose" class="on">Compose</a>
-    <a href="#loop" data-view="loop">How it works</a>
-    <a href="#network" data-view="network">Network</a>
-    <a href="#agents" data-view="agents">Agents</a>
+    <a href="/" class="on">Home</a>
+    <a href="#loop">How it works</a>
+    <a href="#rwa">xStocks</a>
+    <a href="/app">App</a>
   </nav>
-  <button class="btn ghost" id="connect" type="button">Connect wallet</button>
-  <div class="mode" id="mode">connecting…</div>
+  <a class="btn" href="/app">Open the app</a>
 </div></header>
 
 <main class="wrap">
-  <div id="compose" class="view on">
-    <div class="hero">
-      <p class="kicker">01 · DECLARE &nbsp; X Layer testnet · Gemini · live solvers</p>
-      <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
-      <p class="sub">Gemini compiles the sentence. You sign one submission. Competing solvers bid on X Layer, and the settlement contract checks the result before anything is final.</p>
-      <textarea id="prompt" spellcheck="false">Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%</textarea>
-      <div class="actions">
-        <button class="btn" id="parse">Parse with Gemini</button>
-        <button class="btn ghost" id="faucet">Get test USDT</button>
-        <button class="btn" id="fulfill">Submit &amp; settle onchain</button>
-        <span class="note" id="parserNote"></span>
-      </div>
-      <div class="chips" id="chips"></div>
+  <div class="hero">
+    <p class="kicker">AN INTENT OPERATING SYSTEM · X LAYER</p>
+    <h1 class="lede">State what should be true <em>afterwards</em>.</h1>
+    <p class="sub">
+      Users and agents declare an outcome — a basket of xStocks, a rebalance, an RWA onboard.
+      Competing solvers bid on how. Settlement sizes the legs from your weights and reverts if the floors are missed.
+    </p>
+    <div class="actions">
+      <a class="btn" href="/app">Declare an intent</a>
+      <a class="btn ghost" href="#loop">See the loop</a>
     </div>
-
-    <div id="error" class="err hide" style="margin:16px 0 8px"></div>
-
-    <div class="cols" style="margin-top:28px">
-      <div class="stack">
-        <div class="card hide" id="outcomeCard">
-          <h2 class="lab">What would be committed <span class="kind" id="kindBadge"></span></h2>
-          <pre id="explanation"></pre>
-          <div id="legsWrap" style="margin-top:16px"></div>
-        </div>
-        <div class="card hide" id="auctionCard">
-          <h2 class="lab">Solver auction · preview</h2>
-          <div id="auctionBody"></div>
-        </div>
-        <div class="card hatch hide" id="noticeCard">
-          <h2 class="lab">Worth knowing</h2>
-          <div id="notices"></div>
-        </div>
-      </div>
-      <div class="stack">
-        <div class="card hide" id="guardCard">
-          <h2 class="lab">Guardrails</h2>
-          <div class="guards" id="guards"></div>
-          <p class="note" style="margin:14px 0 0">Committed at submission and enforced at settlement — not advice to the solver.</p>
-        </div>
-        <div class="card hide" id="hashCard">
-          <h2 class="lab">Onchain commitment</h2>
-          <div class="hash"><b>outcome hash</b><span id="outcomeHash"></span></div>
-          <div class="hash"><b>policy hash</b><span id="policyHash"></span></div>
-          <p class="note" style="margin:14px 0 0">Only these hashes go onchain. A reveal that does not hash to this is rejected.</p>
-        </div>
-        <div class="card">
-          <h2 class="lab">Where this fits</h2>
-          <div class="flow">
-            <div><i>01</i><span id="step1">Declare an outcome</span></div>
-            <div><i>02</i><span id="step2" class="off">Commit hashes to IntentRegistry</span></div>
-            <div><i>03</i><span id="step3" class="off">Solvers bid what they will guarantee</span></div>
-            <div><i>04</i><span id="step4" class="off">Settlement executes and verifies</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <p class="fine">Chain 1952 · Gemini 3.6 Flash · no new token · no proprietary liquidity</p>
   </div>
 
-  <div id="loop" class="view">
-    <div class="hero">
-      <p class="kicker">02 · THE LOOP</p>
-      <h1 class="lede" style="max-width:18ch">A commitment, an auction, a settlement.</h1>
-      <p class="sub">And the AI that feeds the first and drives the second. Four stages, one chain. Nothing here is trusted that does not have to be.</p>
-    </div>
+  <section class="rule" id="loop">
+    <h2 class="serif">How it works</h2>
     <div class="stages">
-      <div class="card stage"><n>01 · PARSE</n><h3>Declare</h3><p>A sentence becomes an IntentSpec in tickers and percents. A compiler resolves symbols against the onchain catalog. A hallucinated ticker dies here, not in a transaction.</p></div>
-      <div class="card stage"><n>02 · COMMIT</n><h3>Hash, don’t instruct</h3><p>IntentRegistry stores the outcome hash and the policy hash — not the contents. The id is derived onchain from those hashes, the owner, a salt and the timing.</p></div>
-      <div class="card stage"><n>03 · AUCTION</n><h3>Bind the how</h3><p>Solvers bid a fee, an ETA, and a vector of guaranteed outputs. Winning means being held to that vector. A bonded coordinator can pick; a dominated pick can be slashed.</p></div>
-      <div class="card stage"><n>04 · SETTLE</n><h3>Measure, then pay</h3><p>IntentSettlement sizes every leg from committed weights, calls allowlisted routers, and checks balance deltas on the recipient. The solver never supplies amounts.</p></div>
+      <div class="card"><n>01 · PARSE</n><h3>Declare</h3><p>A sentence becomes an IntentSpec in tickers and percents. Gemini never names an address. A hallucinated ticker dies at the catalog, not in a transaction.</p></div>
+      <div class="card"><n>02 · COMMIT</n><h3>Hash, don’t instruct</h3><p>IntentRegistry stores the outcome hash and the policy hash. Only at settlement is the outcome revealed, and a mismatch reverts.</p></div>
+      <div class="card"><n>03 · AUCTION</n><h3>Bind the how</h3><p>Solvers bid a fee, an ETA, and a vector of guaranteed outputs. Winning means being held to that vector. A bonded coordinator can be slashed for a dominated pick.</p></div>
+      <div class="card"><n>04 · SETTLE</n><h3>Measure, then pay</h3><p>IntentSettlement sizes every leg from committed weights, calls allowlisted routers, and checks balance deltas on the recipient. The solver never supplies amounts.</p></div>
     </div>
-    <div class="rule">
-      <div class="cols">
-        <div>
-          <h2 class="serif">What is not trusted</h2>
-          <div class="flow">
-            <div><i>—</i><span><b>Not the solver.</b> It picks routes. It cannot pick amounts, recipients, weights or floors.</span></div>
-            <div><i>—</i><span><b>Not the coordinator, for funds.</b> It can pick a worse-but-valid solver, so it posts a bond.</span></div>
-            <div><i>—</i><span><b>Not the mempool.</b> Drafts are verified against the onchain commitment before anyone plans against them.</span></div>
-            <div><i>—</i><span><b>Not the language model.</b> It never emits an address or a wei amount.</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <p class="quote">You are trusting the router allowlist, the RWA attestors, and the contracts. Everything else is designed to be wrong without being able to hurt the outcome.</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <div id="network" class="view">
-    <div class="hero">
-      <p class="kicker">03 · NETWORK</p>
-      <h1 class="lede" style="max-width:14ch">Solvers, venues, attested xStocks.</h1>
-      <p class="sub">Two bonded strategies, two demo venues, five attested xStocks. Reputation starts at 50% and moves with every settlement.</p>
-    </div>
+  <section class="rule" id="rwa">
     <div class="cols">
+      <div>
+        <h2 class="serif">Built for xStocks and RWA</h2>
+        <p class="sub" style="margin-bottom:0">
+          One intent can allocate across TSLA, NVDA, AAPL and SPY xStocks with equal weight,
+          a slippage cap, attested-only assets, and a fee ceiling. Rebalances exit and enter
+          in the same transaction, so the portfolio is never caught half-rotated.
+        </p>
+        <div class="chips">
+          <span class="chip">TSLAx</span>
+          <span class="chip">NVDAx</span>
+          <span class="chip">AAPLx</span>
+          <span class="chip">SPYx</span>
+          <span class="chip">GOOGLx</span>
+          <span class="chip">RWA attested</span>
+        </div>
+      </div>
       <div class="card">
-        <h2 class="lab">Solvers</h2>
-        <div id="solverTable"></div>
-      </div>
-      <div class="stack">
-        <div class="card">
-          <h2 class="lab">Venues</h2>
-          <div id="venueTable"></div>
-        </div>
-        <div class="card">
-          <h2 class="lab">RWA attestations</h2>
-          <div id="rwaTable"></div>
-        </div>
+        <p class="quote">Weights are not negotiable. Floors are doubled. The whole notional gets deployed, or settlement reverts.</p>
+        <p>Guardrails travel with the intent: spend cap, fee cap, solver reputation, token allowlist, live RWA attestation.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div id="agents" class="view">
-    <div class="hero">
-      <p class="kicker">04 · AGENTS</p>
-      <h1 class="lede" style="max-width:16ch">Agents declare. Agents can also solve.</h1>
-      <p class="sub">The SDK is one import from a sentence to a settled position. Open questions are not signed on the user’s behalf.</p>
-    </div>
+  <section class="rule">
     <div class="cols">
-      <div class="card">
-        <h2 class="lab">@intentos/sdk</h2>
-        <div class="sdk"><pre>import { IntentAgent, IntentOSClient } from "@intentos/sdk";
-
-const agent = new IntentAgent(client);
-
-const { intentId, explanation, submitted, heldFor } =
-  await agent.declare(
-    "put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets"
-  );
-
-// Open questions are not signed on the user's behalf.
-if (!submitted) console.log(heldFor);
-
-await agent.track(intentId);</pre></div>
-        <p class="note" style="margin-top:14px">Clarifications hold the intent. Recurrence is offchain in v0.1 — the agent runtime submits once per period. Conditions fail closed: no observation, no serve.</p>
-      </div>
-      <div class="card">
-        <h2 class="lab">Why agents first</h2>
-        <div class="flow">
+      <div>
+        <h2 class="serif">Agents declare. Agents can also solve.</h2>
+        <div class="list" style="margin-top:8px">
           <div><i>01</i><span>They already speak in outcomes. Encoding four swaps is a bug farm.</span></div>
-          <div><i>02</i><span>Policy is committed: spend cap, fee cap, reputation floor, attested-only.</span></div>
+          <div><i>02</i><span>Policy is committed, so a budget handed to an agent cannot step outside it.</span></div>
           <div><i>03</i><span>The coordinator closes auctions so the agent does not have to stay online.</span></div>
           <div><i>04</i><span>A solver that wins and walks loses reputation. The next intent can require a floor.</span></div>
         </div>
       </div>
+      <div class="card">
+        <n>@intentos/sdk</n>
+        <p style="font-family:var(--mono);font-size:12.5px;color:var(--ink);line-height:1.65">
+          await agent.declare(<br>
+          &nbsp;&nbsp;"put 5,000 USDT into NVDA and AAPL, 60/40"<br>
+          );<br>
+          await agent.track(intentId);
+        </p>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="rule" style="border-bottom:0;padding-bottom:72px">
+    <div class="card" style="padding:28px 32px">
+      <h2 class="serif" style="margin-bottom:12px">Ready when you are.</h2>
+      <p class="sub">Connect a wallet on X Layer testnet, mint test USDT, and submit a live intent. Gemini reads it. Solvers compete. The chain checks the result.</p>
+      <a class="btn" href="/app">Open the app</a>
+    </div>
+  </section>
 </main>
 
 <div class="wrap">
@@ -376,381 +223,5 @@ await agent.track(intentId);</pre></div>
     <a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>
   </footer>
 </div>
-
-<script type="module" src="./app.js"></script>
-<script type="module">
-const $ = (id) => document.getElementById(id);
-const TAG = "n:";
-const encode = (value) => JSON.stringify(value, (_k, v) => (typeof v === "bigint" ? TAG + v : v));
-const decode = (text) => JSON.parse(text, (_k, v) => (typeof v === "string" && v.startsWith(TAG) ? BigInt(v.slice(2)) : v));
-const api = async (path, options) => {
-  const response = await fetch(path, options);
-  const text = await response.text();
-  const data = text ? decode(text) : {};
-  if (!response.ok) throw new Error(data.error ?? response.statusText);
-  return data;
-};
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-const pct = (bps) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
-const dp = (symbol) => (symbol === "USDT" ? 6 : 18);
-const units = (value, decimals, digits = 4) => {
-  const v = BigInt(value), unit = 10n ** BigInt(decimals);
-  const frac = (v % unit).toString().padStart(decimals, "0").slice(0, digits).replace(/0+$/, "");
-  return `${(v / unit).toLocaleString("en-US")}${frac ? "." + frac : ""}`;
-};
-
-const EXAMPLES = [
-  "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%",
-  "Swap 2,500 USDT into NVDA with 0.3% max slippage",
-  "Rebalance: sell 3 TSLA and 4 NVDA, then buy AAPL and SPY equally",
-  "put 20,000 USDT into NVDA and AAPL, 60/40, only attested assets",
-  "every week put 1,000 USDT into SPY, only if SPY is below 700",
-  "Bring 25,000 USDT onchain into SPY xStock, fees under 0.2%",
-];
-const CHIP_LABELS = ["4-asset xStocks basket", "single NVDA swap", "atomic rebalance", "60/40 NVDA·AAPL", "weekly SPY, conditional", "RWA onboard into SPY"];
-
-$("chips").innerHTML = CHIP_LABELS.map((label, i) =>
-  `<button class="chip" data-i="${i}">${esc(label)}</button>`).join("");
-$("chips").addEventListener("click", (event) => {
-  const chip = event.target.closest(".chip");
-  if (!chip) return;
-  $("prompt").value = EXAMPLES[Number(chip.dataset.i)];
-  runParse();
-});
-
-const { parse, previewAuction, assets, solvers, venues, connectWallet, mintTestUsdt, submitDraft } = window.IntentOS;
-
-let lastParsed = null;
-let lastDraft = null;
-let account = null;
-let deployment = null;
-let health = { live: false, parser: "grammar" };
-
-try {
-  health = await api("/api/health");
-  if (health.ok) deployment = await api("/api/deployment");
-} catch {
-  health = { live: false, parser: "grammar" };
-}
-
-$("mode").textContent = health.live
-  ? `X Layer testnet · ${health.parser} · chain ${deployment?.chainId ?? 1952}`
-  : `offline grammar · ${assets.length} assets`;
-
-function setStep(n) {
-  for (let i = 1; i <= 4; i++) {
-    const el = $("step" + i);
-    if (!el) continue;
-    el.classList.toggle("off", i !== n);
-  }
-}
-
-async function ensureWallet() {
-  account = await connectWallet();
-  $("connect").textContent = `${account.slice(0, 6)}…${account.slice(-4)}`;
-  return account;
-}
-
-function showView() {
-  const name = (location.hash.replace("#", "") || "compose");
-  for (const el of document.querySelectorAll(".view")) el.classList.toggle("on", el.id === name);
-  for (const a of document.querySelectorAll("nav a")) a.classList.toggle("on", a.dataset.view === name);
-}
-window.addEventListener("hashchange", showView);
-showView();
-
-function renderNetwork() {
-  $("solverTable").innerHTML = `<table>
-    <tr><th>solver</th><th>style</th><th class="num">fee</th><th class="num">reputation</th><th class="num">done</th></tr>
-    ${solvers.map((s) => `<tr>
-      <td style="color:var(--ink)">${esc(s.name)}</td>
-      <td>${esc(s.style)}</td>
-      <td class="num">${pct(s.feeBps)}</td>
-      <td class="num"><div class="barline"><i style="width:${s.reputationBps / 100}%"></i></div></td>
-      <td class="num">${s.fulfilled}/${s.fulfilled + s.failed}</td>
-    </tr>`).join("")}
-  </table>`;
-  $("venueTable").innerHTML = venues.map((v) =>
-    `<div class="note" style="margin-top:8px"><b style="color:var(--ink)">${esc(v.name)}</b> · fee ${pct(v.feeBps)}</div>`).join("");
-  $("rwaTable").innerHTML = `<table>
-    <tr><th>asset</th><th>ref</th><th class="num">status</th></tr>
-    ${assets.filter((a) => a.kind !== "base").map((a) => `<tr>
-      <td style="color:var(--ink)">${esc(a.symbol)}<div class="note">${esc(a.name)}</div></td>
-      <td><code>${esc(a.assetRef)}</code></td>
-      <td class="num" style="color:var(--yes)">attested</td>
-    </tr>`).join("")}
-  </table>`;
-}
-renderNetwork();
-
-async function runParse() {
-  const prompt = $("prompt").value.trim();
-  if (!prompt) return;
-  const button = $("parse");
-  button.disabled = true;
-  button.textContent = health.live ? "Gemini is reading…" : "Parsing…";
-  $("error").classList.add("hide");
-  $("auctionCard").classList.add("hide");
-  lastDraft = null;
-  try {
-    if (health.live) {
-      const recipient = account ?? "0x0000000000000000000000000000000000000001";
-      const result = await api("/api/parse", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: encode({ prompt, recipient }),
-      });
-      lastDraft = result.draft;
-      lastParsed = {
-        parser: result.parser,
-        model: result.model,
-        explanation: result.explanation,
-        spec: result.spec,
-        assumptions: result.assumptions ?? [],
-        clarifications: result.clarifications ?? [],
-        quotesAvailable: true,
-        outcome: {
-          kind: result.draft.outcome.kind,
-          kindLabel: ["SWAP", "BASKET", "REBALANCE", "RWA_ONBOARD", "BATCH"][result.draft.outcome.kind],
-          inputSymbol: symbolOf(result.draft.outcome.inputToken),
-          inputAmount: result.draft.outcome.inputAmount.toString(),
-          maxSlippageBps: result.draft.outcome.maxSlippageBps,
-          legs: result.draft.outcome.legs.map((leg) => ({
-            symbol: symbolOf(leg.token),
-            weightBps: leg.weightBps,
-            minOut: leg.minOut.toString(),
-          })),
-          exits: (result.draft.outcome.exits ?? []).map((exit) => ({
-            symbol: symbolOf(exit.token),
-            amountIn: exit.amountIn.toString(),
-          })),
-        },
-        policy: {
-          maxNotional: result.draft.policy.maxNotional.toString(),
-          maxFeeBps: result.draft.policy.maxFeeBps,
-          minReputationBps: result.draft.policy.minReputationBps,
-          requireRwaAttested: result.draft.policy.requireRwaAttested,
-          allowlist: (result.draft.policy.tokenAllowlist ?? []).map(symbolOf),
-        },
-        timing: { auctionSeconds: 20, settleSeconds: 160 },
-        metadata: result.draft.metadata ?? { schedule: null, conditions: [] },
-        commitment: { outcomeHash: result.outcomeHash, policyHash: result.policyHash },
-        fallbackReason: result.fallbackReason,
-      };
-    } else {
-      lastParsed = await parse(prompt);
-    }
-    renderParsed(lastParsed);
-    setStep(1);
-  } catch (error) {
-    lastParsed = null;
-    for (const id of ["outcomeCard", "guardCard", "hashCard", "noticeCard", "auctionCard"]) $(id).classList.add("hide");
-    $("error").textContent = error.message;
-    $("error").classList.remove("hide");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Parse with Gemini";
-  }
-}
-
-function symbolOf(token) {
-  const hit = (deployment?.assets ?? assets).find((a) => (a.address ?? "").toLowerCase() === String(token).toLowerCase());
-  return hit?.symbol ?? `${String(token).slice(0, 6)}…`;
-}
-
-function renderParsed(result) {
-  $("explanation").textContent = result.explanation;
-  $("parserNote").textContent = `parsed by ${result.parser}`;
-  $("kindBadge").textContent = result.outcome.kindLabel;
-
-  const rows = [
-    ...result.outcome.exits.map((exit) => `<tr>
-      <td style="color:var(--no)">sell ${esc(exit.symbol)}</td>
-      <td></td>
-      <td class="num">—</td>
-      <td class="num">${units(exit.amountIn, dp(exit.symbol))}</td></tr>`),
-    ...result.outcome.legs.map((leg) => `<tr>
-      <td style="color:var(--ink)">${esc(leg.symbol)}</td>
-      <td><div class="barline"><i style="width:${leg.weightBps / 100}%"></i></div></td>
-      <td class="num">${pct(leg.weightBps)}</td>
-      <td class="num">${leg.minOut === "0" ? "open" : units(leg.minOut, dp(leg.symbol))}</td></tr>`),
-  ].join("");
-
-  $("legsWrap").innerHTML = `<table>
-    <tr><th>asset</th><th>weight</th><th class="num">share</th><th class="num">${
-      result.outcome.exits.length ? "amount / floor" : "floor"
-    }</th></tr>${rows}</table>`;
-  $("outcomeCard").classList.remove("hide");
-
-  const policy = result.policy;
-  $("guards").innerHTML = [
-    `fee ≤ ${pct(policy.maxFeeBps)}`,
-    policy.maxNotional !== "0" ? `spend ≤ ${units(policy.maxNotional, dp(result.outcome.inputSymbol))} ${result.outcome.inputSymbol}` : "",
-    `slippage ≤ ${pct(result.outcome.maxSlippageBps)}`,
-    policy.minReputationBps ? `solver reputation ≥ ${pct(policy.minReputationBps)}` : "",
-    policy.requireRwaAttested ? "RWA attested" : "",
-    policy.allowlist.length ? `pinned to ${policy.allowlist.map(esc).join(", ")}` : "",
-    `${result.timing.auctionSeconds}s auction`,
-  ].filter(Boolean).map((g) => `<span class="guard ${/attested|pinned|reputation/.test(g) ? "on" : ""}">${g}</span>`).join("");
-  $("guardCard").classList.remove("hide");
-
-  $("outcomeHash").textContent = result.commitment.outcomeHash;
-  $("policyHash").textContent = result.commitment.policyHash;
-  $("hashCard").classList.remove("hide");
-
-  const notices = [
-    ...result.clarifications.map((c) => `<div class="note">Needs an answer — ${esc(c)}</div>`),
-    ...result.assumptions.map((a) => `<div class="note">Assumed — ${esc(a)}</div>`),
-    result.metadata.schedule
-      ? `<div class="note">Recurring — every ${result.metadata.schedule.everySeconds}s, submitted once per period by the agent runtime.</div>`
-      : "",
-    ...(result.metadata.conditions ?? []).map((c) =>
-      `<div class="note">Precondition — serve only while ${esc(c.subject ?? c.kind)} is ${
-        c.operator.startsWith("l") ? "below" : "above"} ${c.value}.</div>`),
-    result.fallbackReason ? `<div class="note">Fell back from the model — ${esc(result.fallbackReason)}</div>` : "",
-    result.model ? `<div class="note">Model — ${esc(result.model)}</div>` : "",
-    !result.quotesAvailable
-      ? `<div class="note">Floors read “open” because live quotes were unavailable.</div>`
-      : "",
-  ].filter(Boolean).join("");
-  $("notices").innerHTML = notices;
-  $("noticeCard").classList.toggle("hide", !notices);
-}
-
-function renderAuction(preview) {
-  const solverHtml = preview.solvers.map((s) => {
-    if (s.action === "declined") {
-      return `<div class="solver">
-        <div class="solver.head"><b>${esc(s.name)}</b><span class="pill no">declined</span></div>
-        <div class="note" style="margin-top:8px">${esc(s.reason)}</div>
-      </div>`;
-    }
-    const won = preview.winner === s.name;
-    const legs = (s.legs ?? []).map((leg) =>
-      `<tr><td style="color:var(--ink)">${esc(leg.symbol)}</td><td>${esc(leg.venue)}</td><td class="num">${esc(leg.guaranteed)}</td></tr>`
-    ).join("");
-    return `<div class="solver">
-      <div class="solver.head">
-        <b>${esc(s.name)}</b>
-        <span class="pill ${won ? "win" : "bid"}">${won ? "selected" : "bid"} · ${pct(s.feeBps)} · ${s.confidence}% · ${s.etaSeconds}s</span>
-      </div>
-      <table style="margin-top:10px"><tr><th>leg</th><th>venue</th><th class="num">guarantee</th></tr>${legs}</table>
-    </div>`;
-  }).join("");
-
-  const settle = preview.settlement
-    ? `<table style="margin-top:16px">
-        <tr><th>asset</th><th class="num">before</th><th class="num">after</th><th class="num">change</th></tr>
-        ${preview.settlement.map((row) => `<tr>
-          <td style="color:var(--ink)">${esc(row.symbol)}</td><td class="num">${esc(row.before)}</td>
-          <td class="num">${esc(row.after)}</td><td class="num">${esc(row.change)}</td>
-        </tr>`).join("")}
-      </table>`
-    : "";
-
-  $("auctionBody").innerHTML = `
-    <div class="note">Notional ${esc(preview.notional)} ${esc(preview.inputSymbol)} · ${
-      preview.winner ? `selected <b style="color:var(--ink)">${esc(preview.winner)}</b> at ${pct(preview.winnerFeeBps ?? 0)}` : "no bidder cleared the floors"
-    }</div>
-    ${solverHtml}${settle}
-    <div class="note" style="margin-top:14px">${esc(preview.note)}</div>`;
-  $("auctionCard").classList.remove("hide");
-}
-
-async function runFulfill() {
-  if (!health.live || !deployment) throw new Error("live deployment is not available yet");
-  if (!lastDraft) await runParse();
-  if (!lastDraft) return;
-  const button = $("fulfill");
-  button.disabled = true;
-  $("error").classList.add("hide");
-  try {
-    button.textContent = "Connecting wallet…";
-    await ensureWallet();
-    button.textContent = "Submitting onchain…";
-    setStep(2);
-    const submitted = await submitDraft(deployment, account, lastDraft);
-    lastDraft = submitted.draft;
-    $("parserNote").textContent = `intent ${submitted.intentId.slice(0, 10)}…`;
-    button.textContent = "Solvers bidding…";
-    setStep(3);
-    const bid = await api("/api/bid", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: encode({ intentId: submitted.intentId, draft: lastDraft }),
-    });
-    renderLiveActivity(bid.activity ?? [], "bidding");
-    const waitMs = Math.max(2_000, Number(lastDraft.auctionEndsAt) * 1000 - Date.now() + 3_000);
-    button.textContent = `Auction window (${Math.ceil(waitMs / 1000)}s)…`;
-    await sleep(Math.min(waitMs, 25_000));
-    button.textContent = "Closing auction…";
-    let closed;
-    for (let i = 0; i < 6; i++) {
-      closed = await api("/api/close", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: encode({ intentId: submitted.intentId, draft: lastDraft }),
-      });
-      if (closed.selected || (closed.skipped && !/still open/i.test(closed.skipped))) break;
-      await sleep(3_000);
-    }
-    button.textContent = "Settling…";
-    setStep(4);
-    const settled = await api("/api/settle", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: encode({ intentId: submitted.intentId, draft: lastDraft }),
-    });
-    renderLiveActivity([...(bid.activity ?? []), ...(settled.activity ?? [])], closed?.selected?.solver);
-    $("parserNote").textContent = `settled ${submitted.intentId.slice(0, 10)}…`;
-  } catch (error) {
-    $("error").textContent = error.message;
-    $("error").classList.remove("hide");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Submit & settle onchain";
-  }
-}
-
-function renderLiveActivity(activity, winner) {
-  const rows = (activity ?? []).map((item) => {
-    const pill = item.action === "declined" || item.action === "failed" ? "no" : item.action === "settled" || item.action === "bid" ? "win" : "bid";
-    return `<div class="solver">
-      <div class="solver.head"><b>${esc(item.action)}</b><span class="pill ${pill}">${esc(item.action)}</span></div>
-      <div class="note" style="margin-top:8px">${esc(item.detail)}</div>
-    </div>`;
-  }).join("");
-  $("auctionBody").innerHTML = `<div class="note">${winner && winner !== "bidding" ? `winner ${esc(String(winner))}` : "onchain solver activity"}</div>${rows || "<div class='note'>waiting for bids</div>"}`;
-  $("auctionCard").classList.remove("hide");
-}
-
-$("parse").addEventListener("click", runParse);
-$("connect").addEventListener("click", () => ensureWallet().catch((error) => {
-  $("error").textContent = error.message;
-  $("error").classList.remove("hide");
-}));
-$("faucet").addEventListener("click", async () => {
-  try {
-    if (!deployment) throw new Error("live deployment is not available yet");
-    await ensureWallet();
-    $("faucet").disabled = true;
-    $("faucet").textContent = "Minting…";
-    await mintTestUsdt(deployment, account);
-    $("parserNote").textContent = "minted 100,000 test USDT";
-  } catch (error) {
-    $("error").textContent = error.message;
-    $("error").classList.remove("hide");
-  } finally {
-    $("faucet").disabled = false;
-    $("faucet").textContent = "Get test USDT";
-  }
-});
-$("fulfill").addEventListener("click", runFulfill);
-$("prompt").addEventListener("keydown", (event) => {
-  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runParse();
-});
-await runParse();
-</script>
 </body>
 </html>
