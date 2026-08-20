@@ -1,0 +1,157 @@
+[
+  {
+    "name": "single-leg swap",
+    "chainId": 31337,
+    "registry": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "owner": "0x00000000000000000000000000000000000A11cE",
+    "salt": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    "auctionEndsAt": "1800000020",
+    "deadline": "1800000600",
+    "outcome": {
+      "kind": 0,
+      "inputToken": "0x0000000000000000000000000000000000000011",
+      "inputAmount": "10000000000",
+      "recipient": "0x000000000000000000000000000000000000bEEF",
+      "maxSlippageBps": 50,
+      "legs": [
+        {
+          "token": "0x0000000000000000000000000000000000000021",
+          "weightBps": 10000,
+          "minOut": "30000000000000000000"
+        }
+      ],
+      "exits": []
+    },
+    "policy": {
+      "maxNotional": "0",
+      "validAfter": "0",
+      "validUntil": "0",
+      "maxFeeBps": 30,
+      "minReputationBps": 0,
+      "requireRwaAttested": false,
+      "tokenAllowlist": []
+    },
+    "expected": {
+      "outcomeHash": "0xf582d252776bdd52321620c6129808b54f72e60dcaeb82e02011e6107bad9256",
+      "policyHash": "0xb12e24c9c84ac6c8268fa4259875aae76962c46c420212176d8868babe375cfa",
+      "intentId": "0xe7b598979777896ba815b823e843700c970992eb8842b028be37710fd575cf41"
+    }
+  },
+  {
+    "name": "four-leg xStocks basket with allowlist and attestation requirement",
+    "chainId": 31337,
+    "registry": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "owner": "0x00000000000000000000000000000000000A11cE",
+    "salt": "0x0202020202020202020202020202020202020202020202020202020202020202",
+    "auctionEndsAt": "1800000030",
+    "deadline": "1800001200",
+    "outcome": {
+      "kind": 1,
+      "inputToken": "0x0000000000000000000000000000000000000011",
+      "inputAmount": "10000000000",
+      "recipient": "0x000000000000000000000000000000000000bEEF",
+      "maxSlippageBps": 100,
+      "legs": [
+        {
+          "token": "0x0000000000000000000000000000000000000021",
+          "weightBps": 2500,
+          "minOut": "7500000000000000000"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000022",
+          "weightBps": 2500,
+          "minOut": "13800000000000000000"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000023",
+          "weightBps": 2500,
+          "minOut": "10800000000000000000"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000024",
+          "weightBps": 2500,
+          "minOut": "3900000000000000000"
+        }
+      ],
+      "exits": []
+    },
+    "policy": {
+      "maxNotional": "25000000000",
+      "validAfter": "1800000000",
+      "validUntil": "1800090000",
+      "maxFeeBps": 25,
+      "minReputationBps": 4000,
+      "requireRwaAttested": true,
+      "tokenAllowlist": [
+        "0x0000000000000000000000000000000000000021",
+        "0x0000000000000000000000000000000000000022",
+        "0x0000000000000000000000000000000000000023",
+        "0x0000000000000000000000000000000000000024"
+      ]
+    },
+    "expected": {
+      "outcomeHash": "0x59cfb8ca057ad494a8d2f1be4f3ee89c96fb27e7df0b09e4553543ea494d4e24",
+      "policyHash": "0xf5546c83b6adc117940f01512dde17c34a4dff5ebfc6f415841a79cd30acf65d",
+      "intentId": "0xb2e768d7f00fb5972a6d94468f050e6bd660f68275ddc680a4e7b2f664205871"
+    }
+  },
+  {
+    "name": "rebalance with two exits and three entries",
+    "chainId": 31337,
+    "registry": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "owner": "0x00000000000000000000000000000000000A11cE",
+    "salt": "0x0303030303030303030303030303030303030303030303030303030303030303",
+    "auctionEndsAt": "1800000045",
+    "deadline": "1800003600",
+    "outcome": {
+      "kind": 2,
+      "inputToken": "0x0000000000000000000000000000000000000011",
+      "inputAmount": "0",
+      "recipient": "0x000000000000000000000000000000000000bEEF",
+      "maxSlippageBps": 75,
+      "legs": [
+        {
+          "token": "0x0000000000000000000000000000000000000022",
+          "weightBps": 4000,
+          "minOut": "1"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000023",
+          "weightBps": 4000,
+          "minOut": "2"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000024",
+          "weightBps": 2000,
+          "minOut": "3"
+        }
+      ],
+      "exits": [
+        {
+          "token": "0x0000000000000000000000000000000000000021",
+          "amountIn": "5000000000000000000",
+          "minOut": "1600000000"
+        },
+        {
+          "token": "0x0000000000000000000000000000000000000025",
+          "amountIn": "2000000000000000000",
+          "minOut": "390000000"
+        }
+      ]
+    },
+    "policy": {
+      "maxNotional": "0",
+      "validAfter": "0",
+      "validUntil": "1800090000",
+      "maxFeeBps": 40,
+      "minReputationBps": 6000,
+      "requireRwaAttested": false,
+      "tokenAllowlist": []
+    },
+    "expected": {
+      "outcomeHash": "0x3142180910459626ee22dcdbaea72420400ecaeb24999a628900a6c3af6302b4",
+      "policyHash": "0x37719c678fff836d9f8aa4d754c4a79d7f3a0c176331b6c1f6b960c0c728e27c",
+      "intentId": "0xbc77055750a4272951b06e5e6adef9464a9fa3a408f7848c2cfad9970da4457f"
+    }
+  }
+]

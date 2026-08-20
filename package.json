@@ -2,13 +2,15 @@
   "name": "intentos",
   "version": "0.1.0",
   "private": true,
-  "description": "IntentOS — a single-chain Intent Operating System native to X Layer",
+  "description": "IntentOS \u2014 a single-chain Intent Operating System native to X Layer",
   "workspaces": [
     "packages/*",
     "apps/*",
     "contracts"
   ],
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
@@ -17,7 +19,8 @@
     "demo": "npm run demo -w @intentos/solver-core",
     "api": "npm run dev -w @intentos/api",
     "solvers": "npm run dev -w @intentos/solver-agent",
-    "web": "npm run dev -w @intentos/web"
+    "web": "npm run dev -w @intentos/web",
+    "gen:abi": "node scripts/gen-abi.mjs"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
