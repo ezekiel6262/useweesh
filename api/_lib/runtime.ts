@@ -7,16 +7,17 @@ import {
   type DeploymentFile,
 } from "@intentos/sdk";
 import { AGGRESSIVE, CONSERVATIVE, Coordinator, Solver, StaticIntentFeed } from "@intentos/solver-core";
+import { XLAYER_TESTNET_DEPLOYMENT } from "./xlayerTestnet.js";
 
 export function loadLiveDeployment(): DeploymentFile {
   if (process.env.INTENTOS_DEPLOYMENT_JSON) {
     return JSON.parse(process.env.INTENTOS_DEPLOYMENT_JSON) as DeploymentFile;
   }
   const file = join(process.cwd(), "deployments", "xlayerTestnet.json");
-  if (!existsSync(file)) {
-    throw new Error("no xlayerTestnet deployment — run npm run deploy:testnet");
+  if (existsSync(file)) {
+    return JSON.parse(readFileSync(file, "utf8")) as DeploymentFile;
   }
-  return JSON.parse(readFileSync(file, "utf8")) as DeploymentFile;
+  return XLAYER_TESTNET_DEPLOYMENT;
 }
 
 export function rpcUrl(): string {

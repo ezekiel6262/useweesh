@@ -67,10 +67,10 @@ function makeQuoter(client: ReturnType<typeof reader>) {
               ],
               outputs: [{ name: "amounts", type: "uint256[]" }],
             },
-          ],
+          ] as const,
           functionName: "getAmountsOut",
           args: [amountIn, [tokenIn, tokenOut]],
-        })) as readonly bigint[];
+        } as any)) as readonly bigint[];
         const out = amounts[amounts.length - 1]!;
         if (out > best) best = out;
       } catch {
