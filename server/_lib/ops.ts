@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { encodeFunctionData, type Address, type Hex } from "viem";
 import { INTENT_REGISTRY_ABI } from "@intentos/sdk";

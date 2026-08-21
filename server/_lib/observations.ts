@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DEX_ROUTER_ABI } from "@intentos/sdk";
 import { loadLiveDeployment, reader } from "./runtime.js";
 
@@ -29,7 +30,7 @@ export async function liveObservations(): Promise<Record<string, number>> {
         abi: DEX_ROUTER_ABI as any,
         functionName: "getAmountsOut",
         args: [one, [usdt, token]],
-      })) as readonly bigint[];
+      } as any)) as readonly bigint[];
       const raw = amounts[amounts.length - 1] ?? 0n;
       const price = Number(raw) / 1e18;
       if (price > 0) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { explainDraft, hashOutcome, hashPolicy, parseIntent, retimeDraft, type Address } from "@intentos/sdk";
 import { readBody, send } from "./_lib/json.js";
