@@ -23,6 +23,10 @@ export interface DeclareOptions extends Partial<Omit<ParseOptions, "catalog" | "
   /** Parse and explain, but do not send anything. */
   dryRun?: boolean;
   metadataURI?: string;
+  /** Coordinator relay that pays `submitFor`. When set, declare prefers the gasless path. */
+  relayUrl?: string;
+  /** Force gasless (no fallback to a gas-paying `submit`). */
+  gasless?: boolean;
 }
 
 export interface DeclarationResult {
@@ -33,6 +37,8 @@ export interface DeclarationResult {
   intentId?: Hex;
   txHash?: Hex;
   submitted: boolean;
+  /** True when the coordinator relayed `submitFor` instead of the agent paying gas. */
+  gasless?: boolean;
   /** Set when the intent was held back because the parse needs a human answer. */
   heldFor?: string[];
 }
@@ -60,12 +66,45 @@ export class IntentAgent {
       return { parsed, draft: parsed.draft, explanation, submitted: false };
     }
 
+    const relayUrl = options.relayUrl;
+    const preferGasless = Boolean(relayUrl) && options.gasless !== false;
+    if (preferGasless && relayUrl) {
+      try {
+        const { intentId, hash, draft } = await this.client.submitIntentGasless(parsed.draft, {
+          relayUrl,
+          metadataURI: options.metadataURI ?? "",
+          auctionSeconds: options.auctionSeconds,
+          ttlSeconds: options.ttlSeconds,
+        });
+        return { parsed, draft, explanation, intentId, txHash: hash, submitted: true, gasless: true };
+      } catch (error) {
+        if (options.gasless === true) throw error;
+      }
+    }
+
     const { intentId, hash, draft } = await this.client.submitIntent(parsed.draft, {
       metadataURI: options.metadataURI ?? "",
       auctionSeconds: options.auctionSeconds,
       ttlSeconds: options.ttlSeconds,
     });
-    return { parsed, draft, explanation, intentId, txHash: hash, submitted: true };
+    return { parsed, draft, explanation, intentId, txHash: hash, submitted: true, gasless: false };
+  }
+
+  /**
+   * Every intent this owner (human or agent) has submitted, newest first.
+   * Same registry index the compose app and `/history` read.
+   */
+  async history(owner?: Address, limit = 50) {
+    const who = owner ?? this.client.account?.address;
+    if (!who) throw new Error("pass an owner address — this client has no signer");
+    const ids = await this.client.listIntentsOf(who, limit);
+    return Promise.all(
+      ids.map(async (intentId) => {
+        const record = await this.client.getIntent(intentId);
+        const bids = await this.client.getBids(intentId);
+        return { ...record, bidCount: bids.filter((b) => !b.withdrawn).length };
+      }),
+    );
   }
 
   /** Submit a draft that was built directly rather than parsed. */

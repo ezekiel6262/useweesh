@@ -82,6 +82,8 @@
   <nav>
     <a href="/" class="on">Home</a>
     <a href="/app">App</a>
+    <a href="/history">History</a>
+    <a href="/agents">Agents</a>
     <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
   </nav>
@@ -96,11 +98,12 @@
       <p>The chain enforces that they did — the X Layer-native Intent Operating System for agents, stablecoins and Real World Assets.</p>
       <div class="cta-col">
         <a class="btn" href="/app">Declare an intent</a>
-        <a class="btn ghost" href="/spec">Read the spec</a>
+        <a class="btn ghost" href="/history">Intent history</a>
+        <a class="btn ghost" href="/agents">Agents</a>
       </div>
     </div>
   </section>
-  <div class="fine">X Layer testnet · solver-sponsored gas · no new token · no proprietary liquidity</div>
+  <div class="fine">X Layer testnet · wallet abstraction via submitFor · agents share owner history · no new token</div>
 
   <section class="stats">
     <div><b>1952</b><span>chain id · X Layer testnet</span></div>
@@ -143,7 +146,7 @@
       <div class="cell"><n>PAYMENTS</n><h3>Stables &amp; payments</h3><p>Gasless USDG sends and stable-to-stable swaps with a slippage ceiling, not a hope.</p><span class="ex">Pay 500 USDG gaslessly to 0x…cafe</span></div>
       <div class="cell"><n>RWA</n><h3>xStocks &amp; RWA</h3><p>Weighted baskets across attested tokenized equities, sized from committed weights.</p><span class="ex">Allocate 10,000 USDT across 4 xStocks</span></div>
       <div class="cell"><n>COMPLIANT</n><h3>Compliant only</h3><p>Pin a lane: only KYB-attested solvers may win. Everyone else reverts out.</p><span class="ex">Using only compliant solvers, allocate 25,000 USDT</span></div>
-      <div class="cell"><n>AGENTS</n><h3>Agents &amp; enterprise</h3><p>Declared via SDK, integrator-controlled selection, recurring rebalances.</p><span class="ex">Rebalance my xStocks every Monday</span></div>
+      <div class="cell"><n>AGENTS</n><h3>Agents &amp; enterprise</h3><p>Declared via SDK, same owner history as a wallet, integrator-controlled selection.</p><span class="ex">Rebalance my xStocks every Monday</span><p style="margin:12px 0 0;font-size:12px"><a href="/agents">Agent surface</a> · <a href="/history">History</a></p></div>
     </div>
   </section>
 
@@ -171,7 +174,7 @@
       <div class="cell"><n>AI</n><p style="margin-top:8px">General solvers compete on fee, ETA, and guaranteed output.</p></div>
       <div class="cell"><n>KYB</n><p style="margin-top:8px">Compliant solvers are owner-attested. Policy.requireCompliant reverts anyone else.</p></div>
       <div class="cell"><n>RWA</n><p style="margin-top:8px">Specialists that only touch attested xStocks and tokenized funds.</p></div>
-      <div class="cell"><n>GAS</n><p style="margin-top:8px">Gasless solvers sponsor settlement. Humans and agents never need native OKB to finish.</p></div>
+      <div class="cell"><n>GAS</n><p style="margin-top:8px">You sign. Coordinator pays submit gas via submitFor. Solvers can sponsor settlement. No OKB required to declare.</p></div>
     </div>
   </section>
 
@@ -193,7 +196,10 @@
   </section>
 
   <section style="border-top:2px solid var(--ink);padding:48px 0">
-    <h6 class="kicker">Registry — recent</h6>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px">
+      <h6 class="kicker">Registry — recent</h6>
+      <a href="/history" style="font-size:13px">Your history →</a>
+    </div>
     <div class="recent" id="recentHome"><p style="color:var(--faint)">No intents on this deployment yet.</p></div>
   </section>
 
@@ -201,10 +207,11 @@
     <div>
       <h6 class="kicker">Agents are first-class</h6>
       <h2 class="display" style="font-size:22px;margin:0 0 12px">Declare via SDK</h2>
-      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0">Clarifications hold the intent — nothing is signed until the spec is complete. Recurrence is metadata; the agent runtime submits once per period.</p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0">Clarifications hold the intent — nothing is signed until the spec is complete. Gasless by default (submitFor + permit). History is the same list a human wallet sees.</p>
     </div>
-    <pre style="border:1px solid var(--line);padding:20px;margin:0;font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;background:var(--wash)">await agent.declare(<span style="color:var(--accent)">"put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets"</span>);
-await agent.track(intentId);</pre>
+    <pre style="border:1px solid var(--line);padding:20px;margin:0;font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;background:var(--wash)">await agent.declare(<span style="color:var(--accent)">"put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets"</span>, { relayUrl });
+await agent.track(intentId);
+await agent.history();</pre>
   </section>
 
   <section style="border-top:2px solid var(--ink);padding:48px 0">
@@ -213,12 +220,14 @@ await agent.track(intentId);</pre>
     <div class="faq"><b>Why single-chain, not a bridge?</b><p>One atomic settlement means no half-finished cross-chain state. A guarantee that only means something if every leg lands in the same transaction.</p></div>
     <div class="faq"><b>What stops a solver from lying in its bid?</b><p>Nothing stops the bid — the contract stops the payout. A solver that wins and can’t meet its guarantee doesn’t get paid, and its reputation drops.</p></div>
     <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can’t touch funds and can’t force a bad settlement — it can only pick a worse bid, and that’s slashable via challengeSelection.</p></div>
+    <div class="faq"><b>Is this wallet abstraction / ERC-4337?</b><p>The live path is signed intents: EIP-712 Submit + exact-amount permit, coordinator pays submit gas. Agents are owner addresses on the same registry. Smart accounts and session keys are next, not a rewrite.</p></div>
   </section>
 
   <section class="close">
     <h2 class="display" style="font-size:26px;margin:0 0 12px">Ready when you are</h2>
     <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect a wallet on X Layer testnet, mint test stables, and submit a live intent. Solvers compete. The chain checks the result.</p>
     <a class="btn" href="/app" style="padding:14px 28px">Open the app</a>
+    <a class="btn ghost" href="/history" style="padding:14px 28px;margin-left:8px">See history</a>
   </section>
 </main>
 
@@ -229,7 +238,7 @@ await agent.track(intentId);</pre>
 <footer class="foot" style="max-width:1120px">
   <span>© 2026 IntentOS · OKX Build X AI Season · live on X Layer testnet</span>
   <div class="foot-links">
-    <a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/changelog">Changelog</a><a href="/spec">Spec</a><a href="/app">App</a><a href="https://github.com/ezekiel6262/useweesh">Repo</a>
+    <a href="/how">How it works</a><a href="/history">History</a><a href="/agents">Agents</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/changelog">Changelog</a><a href="/spec">Spec</a><a href="/app">App</a><a href="https://github.com/ezekiel6262/useweesh">Repo</a>
   </div>
 </footer>
 <script>

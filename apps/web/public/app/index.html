@@ -45,7 +45,8 @@
   .status-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
   .commit { display: grid; gap: 8px; }
   .commit-note { font-size: 11px; color: var(--faint); margin: 10px 0 0; }
-  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; font-family: var(--mono); }
+  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; font-family: var(--mono); color: var(--ink); }
+  a.row:hover { color: var(--accent); }
   .row:last-child { border-bottom: 0; }
   .table-wrap { overflow-x: auto; min-width: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -69,6 +70,8 @@
   <nav>
     <a href="/">Home</a>
     <a href="/app" class="on">App</a>
+    <a href="/history">History</a>
+    <a href="/agents">Agents</a>
     <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
   </nav>
@@ -118,8 +121,20 @@
   <div class="stack">
     <div class="card" id="sessionCard">
       <h2 class="lab">Session</h2>
-      <div id="sessionEmpty" class="empty">Connect on X Layer testnet. Mint stables, then parse and submit — the coordinator pays submit gas.</div>
+      <div id="sessionEmpty" class="empty">Connect on X Layer testnet. Mint stables, then parse and submit — you sign, the coordinator pays gas (wallet abstraction path).</div>
       <div id="sessionBody" class="kv hide"></div>
+    </div>
+
+    <div class="card" id="historyCard">
+      <h2 class="lab">Your intents <a href="/history" style="margin-left:auto;font-family:var(--sans);font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);font-size:12px">full history</a></h2>
+      <div id="historyEmpty" class="empty">Connect a wallet to load this account’s intent history. Agent declares land here too — same owner address.</div>
+      <div id="historyBody"></div>
+    </div>
+
+    <div class="card" id="agentsCard">
+      <h2 class="lab">Agents &amp; abstraction</h2>
+      <p class="console-note" style="margin-top:0">Humans and agents share one history. Submit is a signature, not a gas-paying tx — the coordinator relays <span class="mono">submitFor</span>. Agents can also register as solvers.</p>
+      <p style="margin:12px 0 0"><a class="btn ghost" href="/agents" style="padding:8px 14px;font-size:13px">Agent surface</a></p>
     </div>
 
     <div class="card" id="consoleCard">
@@ -398,6 +413,31 @@ async function renderSession() {
     rows += kv("intent", `<a href="/intent/?id=${lastIntent}">${esc(short(lastIntent))}</a>`);
   }
   $("sessionBody").innerHTML = rows;
+  await refreshHistory();
+}
+
+async function refreshHistory() {
+  if (!account) return;
+  try {
+    const { intents } = await api(`/api/history?owner=${account}&limit=8`);
+    if (!intents?.length) {
+      $("historyEmpty").textContent = "No intents from this account yet. Submit from compose or POST /api/declare as this owner.";
+      $("historyEmpty").classList.remove("hide");
+      $("historyBody").innerHTML = "";
+      return;
+    }
+    $("historyEmpty").classList.add("hide");
+    $("historyBody").innerHTML = intents.map((it) => {
+      const tone = /fulfill/i.test(it.statusLabel) ? "win" : /select|open|bid/i.test(it.statusLabel) ? "bid" : "no";
+      return `<a class="row" href="/intent/?id=${esc(it.intentId)}">
+        <span>${esc(it.kindLabel)} · ${short(it.intentId)}</span>
+        <span class="pill ${tone}">${esc(it.statusLabel)}</span>
+      </a>`;
+    }).join("");
+  } catch {
+    $("historyEmpty").textContent = "Could not read history.";
+    $("historyEmpty").classList.remove("hide");
+  }
 }
 
 async function ensureWallet() {
@@ -577,6 +617,7 @@ async function runFulfill() {
     $("parserNote").textContent = "settled";
     await renderSession();
     await refreshRecent();
+    await refreshHistory();
   } catch (error) {
     $("error").textContent = error.message;
     $("error").classList.remove("hide");

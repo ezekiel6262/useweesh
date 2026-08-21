@@ -1,4 +1,4 @@
-import type { Hex } from "viem";
+import type { Address, Hex } from "viem";
 import {
   IntentAgent,
   IntentOSClient,
@@ -14,6 +14,8 @@ import {
  *
  *   npm run agent -- "put 5,000 USDT into NVDA and AAPL, 60/40, max 0.4% slippage"
  *   npm run agent -- --dry-run "rebalance out of TSLA into SPY"
+ *   npm run agent -- --history
+ *   npm run agent -- --history 0xOwner
  *
  * It declares an outcome, publishes the draft so solvers can see what they are bidding on, and
  * follows the intent until it settles. No route, venue or transaction is ever named by the
@@ -23,17 +25,19 @@ import {
 async function main() {
   const argv = process.argv.slice(2);
   const dryRun = argv.includes("--dry-run");
+  const historyOnly = argv.includes("--history");
   const request = argv.filter((arg) => !arg.startsWith("--")).join(" ").trim();
 
-  if (!request) {
+  if (!historyOnly && !request) {
     console.error(`usage: npm run agent -- [--dry-run] "<what you want to happen>"`);
+    console.error(`       npm run agent -- --history [0xOwner]`);
     process.exitCode = 1;
     return;
   }
 
   const deployment = loadDeployment(process.env.INTENTOS_NETWORK);
   const privateKey = process.env.AGENT_PRIVATE_KEY as Hex | undefined;
-  if (!privateKey && !dryRun) {
+  if (!privateKey && !dryRun && !historyOnly) {
     throw new Error("set AGENT_PRIVATE_KEY to submit an intent, or pass --dry-run to preview one");
   }
 
@@ -44,7 +48,25 @@ async function main() {
     privateKey: privateKey ?? ("0x" + "11".repeat(32)) as Hex,
   });
   const agent = new IntentAgent(client);
-  const apiUrl = process.env.INTENTOS_API_URL ?? "http://localhost:8787";
+  const apiUrl = (process.env.INTENTOS_API_URL ?? "http://localhost:8787").replace(/\/$/, "");
+
+  if (historyOnly) {
+    const ownerArg = request.startsWith("0x") && request.length === 42 ? (request as Address) : undefined;
+    const owner = ownerArg ?? (privateKey ? client.account?.address : undefined);
+    if (!owner) throw new Error("pass an owner address, or set AGENT_PRIVATE_KEY");
+    const rows = await agent.history(owner);
+    console.log(`\nhistory for ${owner} (${rows.length})\n`);
+    if (!rows.length) {
+      console.log("  (none)\n");
+      return;
+    }
+    for (const row of rows) {
+      const when = row.createdAt ? new Date(Number(row.createdAt) * 1000).toISOString() : "";
+      console.log(`  ${statusLabel(row.status).padEnd(14)} ${row.intentId}  ${when}  ${row.bidCount} bids`);
+    }
+    console.log();
+    return;
+  }
 
   console.log(`\n"${request}"\n`);
 
@@ -53,6 +75,7 @@ async function main() {
     auctionSeconds: Number(process.env.AUCTION_SECONDS ?? 15),
     ttlSeconds: Number(process.env.INTENT_TTL_SECONDS ?? 900),
     quote: makeQuoter(client),
+    relayUrl: dryRun ? undefined : `${apiUrl}/api/relay`,
   });
 
   console.log(declaration.explanation);

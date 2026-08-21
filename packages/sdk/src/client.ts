@@ -12,9 +12,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import {
   ERC20_ABI,
   INTENT_REGISTRY_ABI,
+  PERMIT_TYPES,
   RWA_REGISTRY_ABI,
   SETTLEMENT_ABI,
   SOLVER_REGISTRY_ABI,
+  SUBMIT_TYPES,
   type IntentDraft,
   type IntentRecord,
   type Route,
@@ -23,9 +25,12 @@ import {
   hashOutcome,
   hashPolicy,
   retimeDraft,
+  submitDomain,
 } from "@intentos/intent-schema";
 import { type AssetCatalog, catalogFromDeployment, type DeploymentFile } from "@intentos/intent-ai";
 import { chainById } from "./chain.js";
+
+const ZERO = "0x0000000000000000000000000000000000000000" as Address;
 
 /**
  * The IntentOS client: everything an agent, a solver or a dashboard needs to talk to the
@@ -154,6 +159,151 @@ export class IntentOSClient {
     return { intentId, hash, draft: submitted };
   }
 
+  /**
+   * Wallet-abstraction submit. The owner signs EIP-712 `Submit` (and ERC-20 `permit` when
+   * settlement needs an allowance). The coordinator pays gas via `/api/relay` → `submitFor`.
+   * Exact-amount permit — never an unlimited approval.
+   */
+  async submitIntentGasless(
+    draft: IntentDraft,
+    options: {
+      relayUrl: string;
+      metadataURI?: string;
+      auctionSeconds?: number;
+      ttlSeconds?: number;
+      integrator?: Address;
+    },
+  ): Promise<{ intentId: Hex; hash: Hex; draft: IntentDraft }> {
+    if (!this.walletClient || !this.account) {
+      throw new Error("this client is read-only — construct it with a private key");
+    }
+
+    const settleWindow = Number(draft.deadline - draft.auctionEndsAt);
+    const auctionSeconds = options.auctionSeconds ?? 20;
+    const submitted = retimeDraft(draft, {
+      now: await this.chainNow(),
+      auctionSeconds,
+      ttlSeconds: options.ttlSeconds ?? auctionSeconds + settleWindow,
+    });
+
+    const owner = this.address;
+    const registry = this.addresses.intentRegistry!;
+    const settlement = this.addresses.settlement!;
+    const chainId = this.deployment.chainId;
+    const coordinator = this.deployment.roles?.coordinator;
+    const pinIntegrator = Boolean(submitted.metadata.integratorControlled) && Boolean(coordinator);
+    const integrator = options.integrator ?? (pinIntegrator && coordinator ? coordinator : ZERO);
+    const metadataURI = (options.metadataURI ?? submitted.metadata.prompt ?? "").slice(0, 500);
+    const outcomeHash = hashOutcome(submitted.outcome);
+    const policyHash = hashPolicy(submitted.policy);
+    const now = await this.chainNow();
+
+    let permit:
+      | {
+          token: Address;
+          owner: Address;
+          spender: Address;
+          value: string;
+          deadline: string;
+          signature: Hex;
+        }
+      | undefined;
+
+    if (submitted.outcome.inputAmount > 0n) {
+      const allowance = (await this.publicClient.readContract({
+        address: submitted.outcome.inputToken,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [owner, settlement],
+      })) as bigint;
+      if (allowance < submitted.outcome.inputAmount) {
+        const token = submitted.outcome.inputToken;
+        const [name, nonce] = await Promise.all([
+          this.publicClient.readContract({ address: token, abi: ERC20_ABI, functionName: "name" }) as Promise<string>,
+          this.publicClient.readContract({
+            address: token,
+            abi: ERC20_ABI,
+            functionName: "nonces",
+            args: [owner],
+          }) as Promise<bigint>,
+        ]);
+        const permitDeadline = BigInt(now + 3_600);
+        const signature = await this.walletClient.signTypedData({
+          account: this.account,
+          domain: { name, version: "1", chainId, verifyingContract: token },
+          types: PERMIT_TYPES,
+          primaryType: "Permit",
+          message: {
+            owner,
+            spender: settlement,
+            value: submitted.outcome.inputAmount,
+            nonce,
+            deadline: permitDeadline,
+          },
+        });
+        permit = {
+          token,
+          owner,
+          spender: settlement,
+          value: submitted.outcome.inputAmount.toString(),
+          deadline: permitDeadline.toString(),
+          signature,
+        };
+      }
+    }
+
+    const nonce = (await this.publicClient.readContract({
+      address: registry,
+      abi: INTENT_REGISTRY_ABI,
+      functionName: "nonces",
+      args: [owner],
+    })) as bigint;
+
+    const signature = await this.walletClient.signTypedData({
+      account: this.account,
+      domain: submitDomain(chainId, registry),
+      types: SUBMIT_TYPES,
+      primaryType: "Submit",
+      message: {
+        owner,
+        kind: submitted.outcome.kind,
+        outcomeHash,
+        policyHash,
+        salt: submitted.salt,
+        auctionEndsAt: submitted.auctionEndsAt,
+        deadline: submitted.deadline,
+        legCount: submitted.outcome.legs.length,
+        integrator,
+        metadataURI,
+        nonce,
+      },
+    });
+
+    const intentId = await this.previewIntentId(submitted);
+    const response = await fetch(options.relayUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        owner,
+        salt: submitted.salt,
+        kind: submitted.outcome.kind,
+        outcomeHash,
+        policyHash,
+        legCount: submitted.outcome.legs.length,
+        auctionEndsAt: submitted.auctionEndsAt.toString(),
+        deadline: submitted.deadline.toString(),
+        integrator,
+        metadataURI,
+        signature,
+        permit,
+      }),
+    });
+    const payload = (await response.json()) as { hash?: Hex; error?: string };
+    if (!response.ok || !payload.hash) throw new Error(payload.error ?? "relay failed");
+    await this.publicClient.waitForTransactionReceipt({ hash: payload.hash });
+    return { intentId, hash: payload.hash, draft: submitted };
+  }
+
   /** Approve settlement for the input asset and every position a rebalance will sell. */
   async ensureApprovals(draft: IntentDraft): Promise<Hex[]> {
     const settlement = this.addresses.settlement!;
@@ -175,7 +325,7 @@ export class IntentOSClient {
         args: [this.address, settlement],
       });
       if ((allowance as bigint) >= amount) continue;
-      hashes.push(await this.write(token, ERC20_ABI, "approve", [settlement, 2n ** 256n - 1n]));
+      hashes.push(await this.write(token, ERC20_ABI, "approve", [settlement, amount]));
     }
     return hashes;
   }
@@ -196,6 +346,18 @@ export class IntentOSClient {
       args: [intentId],
     })) as any;
     return { intentId, ...record };
+  }
+
+  /** Intents submitted by `owner`, newest first. */
+  async listIntentsOf(owner: Address, limit = 50): Promise<Hex[]> {
+    const ids = (await this.publicClient.readContract({
+      address: this.addresses.intentRegistry!,
+      abi: INTENT_REGISTRY_ABI,
+      functionName: "intentsOf",
+      args: [owner],
+    })) as Hex[];
+    const newest = [...ids].reverse();
+    return newest.slice(0, limit);
   }
 
   async listIntentIds(limit = 50): Promise<Hex[]> {

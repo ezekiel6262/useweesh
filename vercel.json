@@ -17,6 +17,8 @@
     { "source": "/how", "destination": "/how/index.html" },
     { "source": "/solvers", "destination": "/solvers/index.html" },
     { "source": "/about", "destination": "/about/index.html" },
-    { "source": "/changelog", "destination": "/changelog/index.html" }
+    { "source": "/changelog", "destination": "/changelog/index.html" },
+    { "source": "/history", "destination": "/history/index.html" },
+    { "source": "/agents", "destination": "/agents/index.html" }
   ]
 }

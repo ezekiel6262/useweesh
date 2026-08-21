@@ -19,7 +19,7 @@
 <body>
 <header class="top">
   <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
-  <nav><a href="/">Home</a><a href="/app">App</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
+  <nav><a href="/">Home</a><a href="/app">App</a><a href="/history">History</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
   <span class="chip-net">X LAYER · 1952 · TESTNET</span>
   <a class="btn" href="/app">Connect</a>
 </header>
@@ -31,7 +31,8 @@
   <div class="row"><n>Mempool / draft</n><span>Untrusted. A wrong hash simply can’t settle later.</span></div>
   <div class="row"><n>Solver</n><span>Untrusted. A bid is a promise; the contract enforces it at settlement.</span></div>
   <div class="row"><n>Coordinator</n><span>Cannot touch funds. It can only pick a worse bid — slashable via challengeSelection.</span></div>
-  <div class="row" style="border-bottom:1px solid var(--line)"><n>Settlement</n><span>The only trusted arithmetic. Reveal, size, execute, measure, enforce — one atomic transaction.</span></div>
+  <div class="row"><n>Settlement</n><span>The only trusted arithmetic. Reveal, size, execute, measure, enforce — one atomic transaction.</span></div>
+  <div class="row" style="border-bottom:1px solid var(--line)"><n>Owner history</n><span>intentsOf(owner) — compose, agent declare, and gasless relay all land in one list.</span></div>
   <h2 class="display" style="font-size:20px;margin:48px 0 24px;padding-top:32px;border-top:2px solid var(--ink)">What “enforced” actually means</h2>
   <div class="grid">
     <div class="cell"><b>Doubled floors</b><p class="hint" style="margin:8px 0 0">Every leg must clear max(user minOut, solver guarantee).</p></div>
