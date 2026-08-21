@@ -156,6 +156,57 @@ describe("IntentRegistry — auction and lifecycle", () => {
     expect((await env.intentRegistry.getIntent(second.intentId)).status).to.equal(1); // back to OPEN
   });
 
+  it("slashes the winning solver's bond when it reports a missed guarantee", async () => {
+    const { env, outcome } = await loadFixture(swapFixture);
+    const { intentId } = await submitIntent(env, env.signers.user, outcome);
+    await env.intentRegistry.connect(env.signers.solverA).placeBid(intentId, 20, 30, ethers.ZeroHash, [0n]);
+    await env.intentRegistry.connect(env.signers.solverB).placeBid(intentId, 10, 30, ethers.ZeroHash, [0n]);
+    await time.increase(25);
+    await env.intentRegistry.connect(env.signers.coordinator).selectWinner(intentId, 0);
+
+    const before = await env.solverRegistry.getSolver(env.signers.solverA.address);
+    const runnerUpBefore = await ethers.provider.getBalance(env.signers.solverB.address);
+    const slashBps = await env.intentRegistry.MISS_SLASH_BPS();
+    const take = (before.bond * slashBps) / 10_000n;
+
+    await expect(env.settlement.connect(env.signers.solverA).reportFailure(intentId, "no route"))
+      .to.emit(env.solverRegistry, "SolverSlashed")
+      .withArgs(env.signers.solverA.address, take, env.signers.solverB.address, "missed guarantee");
+
+    const after = await env.solverRegistry.getSolver(env.signers.solverA.address);
+    expect(after.bond).to.equal(before.bond - take);
+    expect(await ethers.provider.getBalance(env.signers.solverB.address)).to.equal(runnerUpBefore + take);
+  });
+
+  it("accepts a commit-reveal bid after the auction window and rejects a bad reveal", async () => {
+    const { env, outcome } = await loadFixture(swapFixture);
+    const { intentId } = await submitIntent(env, env.signers.user, outcome);
+    const salt = ethers.hexlify(ethers.randomBytes(32));
+    const outs = [100n];
+    const commit = ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "bytes32", "uint16", "uint32", "bytes32", "uint256[]", "bytes32"],
+        [env.signers.solverA.address, intentId, 10, 30, ethers.ZeroHash, outs, salt],
+      ),
+    );
+    await env.intentRegistry.connect(env.signers.solverA).commitBid(intentId, commit);
+    await expect(
+      env.intentRegistry
+        .connect(env.signers.solverA)
+        .revealBid(intentId, 10, 30, ethers.ZeroHash, outs, salt),
+    ).to.be.revertedWithCustomError(env.intentRegistry, "AuctionStillOpen");
+
+    await time.increase(25);
+    await expect(
+      env.intentRegistry
+        .connect(env.signers.solverA)
+        .revealBid(intentId, 11, 30, ethers.ZeroHash, outs, salt),
+    ).to.be.revertedWithCustomError(env.intentRegistry, "BadCommit");
+
+    await env.intentRegistry.connect(env.signers.solverA).revealBid(intentId, 10, 30, ethers.ZeroHash, outs, salt);
+    expect(await env.intentRegistry.bidCount(intentId)).to.equal(1);
+  });
+
   it("expires an unserved intent and marks down the solver that abandoned it", async () => {
     const { env, outcome } = await loadFixture(swapFixture);
     const { intentId } = await submitIntent(env, env.signers.user, outcome, ZERO_POLICY, { ttlSeconds: 120 });

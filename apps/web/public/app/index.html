@@ -155,7 +155,7 @@
     <div class="card" id="consoleCard">
       <h2 class="lab">Protocol console</h2>
       <div id="consoleBody" class="kv"></div>
-      <p class="console-note">You sign · coordinator pays submit gas · solvers pay fulfillment.</p>
+      <p class="console-note">You sign · coordinator pays submit gas · solvers pay fulfillment. The four live solvers are IntentOS reference operators we run ourselves, bonded on testnet so auctions are never empty.</p>
       <div class="asset-row" id="laneRow"></div>
       <div class="asset-row" id="assetRow"></div>
     </div>
@@ -196,6 +196,12 @@
       <div id="recentEmpty" class="empty">No intents on this deployment yet.</div>
       <div id="recentBody"></div>
     </div>
+
+    <div class="card" id="slashCard">
+      <h2 class="lab">Bond slashes</h2>
+      <div id="slashEmpty" class="empty">No SolverSlashed events on this deployment yet. A missed guarantee takes 10% of the winner's bond and pays the runner-up.</div>
+      <div id="slashBody"></div>
+    </div>
   </div>
 </div>
 
@@ -216,8 +222,14 @@ const decode = (text) => JSON.parse(text, (_k, v) => (typeof v === "string" && v
 const api = async (path, options) => {
   const response = await fetch(path, options);
   const text = await response.text();
-  const data = text ? decode(text) : {};
-  if (!response.ok) throw new Error(data.error ?? response.statusText);
+  let data = {};
+  try {
+    data = text ? decode(text) : {};
+  } catch {
+    const snippet = (text || response.statusText || "empty response").replace(/\s+/g, " ").slice(0, 180);
+    throw new Error(snippet);
+  }
+  if (!response.ok) throw new Error(data.error ?? text.slice(0, 180) ?? response.statusText);
   return data;
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -410,6 +422,28 @@ async function refreshRecent() {
   }
 }
 await refreshRecent();
+await refreshSlashes();
+
+async function refreshSlashes() {
+  try {
+    const { slashes } = await api("/api/health?kind=slashes");
+    if (!slashes?.length) return;
+    $("slashEmpty").classList.add("hide");
+    $("slashBody").innerHTML = slashes.map((s) => {
+      const okb = s.amount ? (Number(s.amount) / 1e18).toPrecision(4) : "0";
+      const tx = s.txHash
+        ? `<a class="mono" href="${explorer("tx/" + s.txHash)}" target="_blank">${short(s.txHash)}</a>`
+        : "";
+      return `<div class="row">
+        <span>${esc(short(s.solver))} slashed ${esc(okb)} OKB</span>
+        <span class="pill no">${esc(s.reason || "slash")}</span>
+      </div>
+      <div class="note" style="margin:0 0 8px">paid ${esc(short(s.recipient))} ${tx}</div>`;
+    }).join("");
+  } catch {
+    /* logs unavailable */
+  }
+}
 
 async function renderSession() {
   if (!account) return;
@@ -649,6 +683,7 @@ async function runFulfill() {
     $("parserNote").textContent = "settled";
     await renderSession();
     await refreshRecent();
+    await refreshSlashes();
     await refreshHistory();
     if (lastDraft?.metadata?.schedule?.everySeconds && account) {
       try {

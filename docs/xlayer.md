@@ -65,8 +65,28 @@ routing quality dominates, which is the regime this optimiser is tuned for.
 
 ## Verifying contracts
 
-Hardhat's verify plugin is installed. Point it at OKLink's API for X Layer, then:
+Chain 1952 currently has no Sourcify instance and this repo has no OKX/OKLink verify API key.
+Prepare the compiler input and upload it in the explorer UI:
+
+```bash
+npm run build -w @intentos/contracts
+npm run verify:explorer
+```
+
+That writes `verify/standard-json-*.json` plus constructor addresses. In
+[OKX Explorer](https://web3.okx.com/explorer/xlayer-testnet) open each contract, Verify, compiler
+0.8.24, optimizer 200, via-IR, and paste the matching standard JSON input.
+
+If an OKLink key appears later:
 
 ```bash
 npx hardhat verify --network xlayerTestnet <address> <constructor args…>
 ```
+
+## Mainnet routers
+
+`contracts/config/mainnet.ts` records the published OKX DEX aggregator
+(`0x69C236E021F5775B0D0328ded5EaC708E3B869DF`). It is **not** allowlisted: IntentOS settlement
+speaks UniswapV2-style `getAmountsOut` / `swapExactTokensForTokens`. Fill real V2-compatible
+routers and issuer token addresses in `assets.ts` before `deploy:mainnet`. Testnet stays the
+live demo network until that checklist is complete.

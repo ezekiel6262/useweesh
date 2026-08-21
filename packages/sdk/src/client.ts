@@ -416,7 +416,20 @@ export class IntentOSClient {
     return bids;
   }
 
-  async selectWinner(intentId: Hex, bidId: number) {
+  async selectWinner(intentId: Hex, bidId: number, policy?: IntentDraft["policy"]) {
+    if (policy) {
+      try {
+        return await this.write(this.addresses.intentRegistry!, INTENT_REGISTRY_ABI, "selectWinnerChecked", [
+          intentId,
+          bidId,
+          policy,
+        ]);
+      } catch (error) {
+        const message = (error as Error).message ?? "";
+        // Missing selector on a pre-upgrade registry. Do not swallow SolverNotCompliant.
+        if (!/does not (exist|have)|encoded function signature|function selector/i.test(message)) throw error;
+      }
+    }
     return this.write(this.addresses.intentRegistry!, INTENT_REGISTRY_ABI, "selectWinner", [intentId, bidId]);
   }
 

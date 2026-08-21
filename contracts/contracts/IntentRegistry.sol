@@ -40,6 +40,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         uint32 selectedBid;
         bool ownerSelected; // selection made by the owner => not challengeable
         address integrator; // if set, only this address (or the owner) may select
+        uint64 selectedAt; // set when a winner is chosen; starts the challenge window
     }
 
     struct Bid {
@@ -54,6 +55,12 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
 
     uint16 public constant BPS = 10_000;
     uint64 public constant MIN_AUCTION_WINDOW = 3 seconds;
+    /// @notice After auction close, committed bids may reveal for this long.
+    uint64 public constant REVEAL_WINDOW = 15 seconds;
+    /// @notice Anyone may prove a dominating bid for this long after selection.
+    uint64 public constant CHALLENGE_WINDOW = 30 minutes;
+    /// @notice Share of a solver's bond taken on a missed guarantee (markFailed / expire-while-selected).
+    uint16 public constant MISS_SLASH_BPS = 1_000;
     bytes32 public constant SUBMIT_TYPEHASH = keccak256(
         "Submit(address owner,uint8 kind,bytes32 outcomeHash,bytes32 policyHash,bytes32 salt,uint64 auctionEndsAt,uint64 deadline,uint16 legCount,address integrator,string metadataURI,uint256 nonce)"
     );
@@ -86,6 +93,8 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
 
     mapping(bytes32 => IntentRecord) private _intents;
     mapping(bytes32 => Bid[]) private _bids;
+    /// @notice Commit-reveal: solver => commitment hash, cleared on reveal.
+    mapping(bytes32 => mapping(address => bytes32)) public bidCommitments;
     /// @notice Intent ids in submission order, for indexers and the dashboard.
     bytes32[] private _intentIds;
     mapping(address => bytes32[]) private _byOwner;
@@ -102,6 +111,8 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         string metadataURI
     );
     event BidPlaced(bytes32 indexed intentId, uint32 indexed bidId, address indexed solver, uint16 feeBps, bytes32 planHash);
+    event BidCommitted(bytes32 indexed intentId, address indexed solver, bytes32 commit);
+    event BidRevealed(bytes32 indexed intentId, uint32 indexed bidId, address indexed solver);
     event BidWithdrawn(bytes32 indexed intentId, uint32 indexed bidId, address indexed solver);
     event WinnerSelected(bytes32 indexed intentId, uint32 indexed bidId, address indexed solver, bool byOwner);
     event IntentFulfilled(bytes32 indexed intentId, address indexed solver, uint256 notional, uint256 feePaid);
@@ -131,6 +142,11 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     error TransferFailed();
     error BadSignature();
     error SessionDenied();
+    error PolicyMismatch();
+    error SolverNotCompliant();
+    error BadCommit();
+    error RevealWindowClosed();
+    error ChallengeWindowClosed();
 
     constructor(address owner_, SolverRegistry solvers_) Ownable(owner_) {
         solvers = solvers_;
@@ -287,7 +303,8 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
             selectedSolver: address(0),
             selectedBid: 0,
             ownerSelected: false,
-            integrator: integrator
+            integrator: integrator,
+            selectedAt: 0
         });
         _intentIds.push(intentId);
         _byOwner[owner].push(intentId);
@@ -305,14 +322,17 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     }
 
     /// @notice Permissionless: retire an intent whose deadline passed without settlement.
-    function expire(bytes32 intentId) external {
+    function expire(bytes32 intentId) external nonReentrant {
         IntentRecord storage r = _load(intentId);
         if (r.status != IntentLib.Status.OPEN && r.status != IntentLib.Status.SELECTED) revert BadStatus();
         if (block.timestamp <= r.deadline) revert BadTiming();
 
-        // A solver that won the auction and then let the intent expire is marked down.
+        // A solver that won the auction and then let the intent expire is marked down
+        // and loses a slice of bond. Slash after the reputation write: both persist.
         if (r.status == IntentLib.Status.SELECTED && r.selectedSolver != address(0)) {
-            solvers.reportOutcome(r.selectedSolver, false, 0);
+            address solver = r.selectedSolver;
+            solvers.reportOutcome(solver, false, 0);
+            _slashMissedGuarantee(solver, intentId, r.owner);
         }
         r.status = IntentLib.Status.EXPIRED;
         emit IntentExpired(intentId);
@@ -350,6 +370,51 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         emit BidPlaced(intentId, bidId, msg.sender, feeBps, planHash);
     }
 
+    /// @notice Hide the bid until after the auction window. `commit` = keccak256(solver, intentId, fee, eta, plan, outs, salt).
+    function commitBid(bytes32 intentId, bytes32 commit) external {
+        IntentRecord storage r = _load(intentId);
+        if (r.status != IntentLib.Status.OPEN) revert BadStatus();
+        if (block.timestamp > r.auctionEndsAt) revert AuctionClosed();
+        if (!solvers.isActive(msg.sender)) revert SolverInactive();
+        bidCommitments[intentId][msg.sender] = commit;
+        emit BidCommitted(intentId, msg.sender, commit);
+    }
+
+    /// @notice Reveal a committed bid after the auction window. Public `placeBid` still works during the window.
+    function revealBid(
+        bytes32 intentId,
+        uint16 feeBps,
+        uint32 etaSeconds,
+        bytes32 planHash,
+        uint256[] calldata guaranteedOut,
+        bytes32 salt
+    ) external returns (uint32 bidId) {
+        IntentRecord storage r = _load(intentId);
+        if (r.status != IntentLib.Status.OPEN) revert BadStatus();
+        if (block.timestamp <= r.auctionEndsAt) revert AuctionStillOpen();
+        if (block.timestamp > r.auctionEndsAt + REVEAL_WINDOW) revert RevealWindowClosed();
+        if (guaranteedOut.length != r.legCount) revert BadLegCount();
+        if (!solvers.isActive(msg.sender)) revert SolverInactive();
+        bytes32 expected = keccak256(abi.encode(msg.sender, intentId, feeBps, etaSeconds, planHash, guaranteedOut, salt));
+        if (bidCommitments[intentId][msg.sender] != expected) revert BadCommit();
+        bidCommitments[intentId][msg.sender] = bytes32(0);
+
+        bidId = uint32(_bids[intentId].length);
+        _bids[intentId].push(
+            Bid({
+                solver: msg.sender,
+                placedAt: uint64(block.timestamp),
+                feeBps: feeBps,
+                etaSeconds: etaSeconds,
+                planHash: planHash,
+                guaranteedOut: guaranteedOut,
+                withdrawn: false
+            })
+        );
+        emit BidRevealed(intentId, bidId, msg.sender);
+        emit BidPlaced(intentId, bidId, msg.sender, feeBps, planHash);
+    }
+
     function withdrawBid(bytes32 intentId, uint32 bidId) external {
         IntentRecord storage r = _load(intentId);
         if (r.status != IntentLib.Status.OPEN) revert BadStatus();
@@ -363,6 +428,27 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     /// @notice Choose the winning bid. Callable by the intent owner at any point after the
     ///         auction window, or by the bonded auctioneer on the owner's behalf.
     function selectWinner(bytes32 intentId, uint32 bidId) external {
+        _selectWinner(intentId, bidId);
+    }
+
+    /// @notice Same as `selectWinner`, but reveals the committed policy so KYB/reputation
+    ///         gates run at selection, not only at settlement.
+    function selectWinnerChecked(
+        bytes32 intentId,
+        uint32 bidId,
+        IntentLib.Policy calldata policy
+    ) external {
+        IntentRecord storage r = _load(intentId);
+        if (IntentLib.hashPolicy(policy) != r.policyHash) revert PolicyMismatch();
+        Bid storage b = _bid(intentId, bidId);
+        if (policy.requireCompliant && !solvers.kybAttested(b.solver)) revert SolverNotCompliant();
+        if (policy.minReputationBps != 0 && solvers.reputationOf(b.solver) < policy.minReputationBps) {
+            revert SolverInactive();
+        }
+        _selectWinner(intentId, bidId);
+    }
+
+    function _selectWinner(bytes32 intentId, uint32 bidId) private {
         IntentRecord storage r = _load(intentId);
         if (r.status != IntentLib.Status.OPEN) revert BadStatus();
         if (block.timestamp < r.auctionEndsAt) revert AuctionStillOpen();
@@ -380,6 +466,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         r.selectedSolver = b.solver;
         r.selectedBid = bidId;
         r.ownerSelected = byOwner;
+        r.selectedAt = uint64(block.timestamp);
 
         emit WinnerSelected(intentId, bidId, b.solver, byOwner);
     }
@@ -391,6 +478,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         IntentRecord storage r = _load(intentId);
         if (r.status != IntentLib.Status.SELECTED) revert BadStatus();
         if (r.ownerSelected) revert NotChallengeable();
+        if (r.selectedAt != 0 && block.timestamp > r.selectedAt + CHALLENGE_WINDOW) revert ChallengeWindowClosed();
 
         Bid storage winner = _bid(intentId, r.selectedBid);
         Bid storage other = _bid(intentId, dominatingBidId);
@@ -437,12 +525,42 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         IntentRecord storage r = _load(intentId);
         if (r.status != IntentLib.Status.SELECTED) revert BadStatus();
         address solver = r.selectedSolver;
-        // The intent goes back to auction; the solver keeps the reputation hit.
+        address owner = r.owner;
+        // The intent goes back to auction. Reputation drops and a slice of bond is
+        // paid to the runner-up (or the owner if nobody else bid). Slash is a separate
+        // state change from the reverting settle tx — call this after the miss.
         r.status = IntentLib.Status.OPEN;
         r.selectedSolver = address(0);
         r.selectedBid = 0;
+        r.selectedAt = 0;
         solvers.reportOutcome(solver, false, 0);
+        _slashMissedGuarantee(solver, intentId, owner);
         emit IntentFailed(intentId, solver, reason);
+    }
+
+    function _slashMissedGuarantee(address solver, bytes32 intentId, address owner) private {
+        uint256 bond = solvers.getSolver(solver).bond;
+        uint256 take = (bond * MISS_SLASH_BPS) / BPS;
+        if (take == 0) return;
+        address payee = _runnerUp(intentId, solver);
+        if (payee == address(0)) payee = owner;
+        solvers.slash(solver, take, payee, "missed guarantee");
+    }
+
+    function _runnerUp(bytes32 intentId, address excluded) private view returns (address) {
+        Bid[] storage bids = _bids[intentId];
+        address best;
+        uint16 bestFee = type(uint16).max;
+        for (uint256 i = 0; i < bids.length; i++) {
+            Bid storage b = bids[i];
+            if (b.withdrawn || b.solver == excluded) continue;
+            if (!solvers.isActive(b.solver)) continue;
+            if (b.feeBps < bestFee) {
+                bestFee = b.feeBps;
+                best = b.solver;
+            }
+        }
+        return best;
     }
 
     // ----------------------------------------------------------------- views

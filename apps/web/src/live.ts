@@ -485,7 +485,13 @@ export async function submitDraft(
         permit,
       }),
     });
-    const payload = (await response.json()) as { hash?: Hex; error?: string };
+    const raw = await response.text();
+    let payload: { hash?: Hex; error?: string } = {};
+    try {
+      payload = raw ? JSON.parse(raw) : {};
+    } catch {
+      throw new Error((raw || "relay failed").replace(/\s+/g, " ").slice(0, 180));
+    }
     if (!response.ok || !payload.hash) throw new Error(payload.error ?? "relay failed");
     await pub.waitForTransactionReceipt({ hash: payload.hash });
     return { intentId, hash: payload.hash, draft: stamped };

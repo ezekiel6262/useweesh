@@ -187,7 +187,8 @@ async function main() {
   }
 
   if (solverA && solverB) {
-    const bond = minBond;
+    // Bond above the floor so a missed-guarantee slash (10%) does not auto-eject the solver.
+    const bond = minBond * 10n;
     const roster: [Signer, string][] = [
       [solverA, "aggressive"],
       [solverB, "conservative"],

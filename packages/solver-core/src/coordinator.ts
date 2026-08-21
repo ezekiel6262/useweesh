@@ -76,7 +76,7 @@ export class Coordinator {
 
     let txHash: Hex;
     try {
-      txHash = await this.options.client.selectWinner(intentId, winner.bid.bidId);
+      txHash = await this.options.client.selectWinner(intentId, winner.bid.bidId, draft.policy);
     } catch (error) {
       // Losing the race to the head block is expected and self-correcting; the next pass
       // will close the same auction a second later.

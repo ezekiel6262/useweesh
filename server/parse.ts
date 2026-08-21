@@ -16,18 +16,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const recipient = (body.recipient ?? "0x0000000000000000000000000000000000000001") as Address;
     if (!prompt) return send(res, 400, { error: "missing prompt" });
 
-    const client = reader();
+    const assets = catalog();
+    let now = Math.floor(Date.now() / 1000);
+    let quote: ReturnType<typeof makeQuoter> | undefined;
+    try {
+      const client = reader();
+      now = await client.chainNow();
+      quote = makeQuoter(client);
+    } catch {
+      // Parse must still work when RPC or the SDK client cannot load.
+    }
+
     const parsed = await parseIntent(prompt, {
-      catalog: catalog(),
+      catalog: assets,
       recipient,
-      now: await client.chainNow(),
+      now,
       auctionSeconds: 20,
       ttlSeconds: 180,
-      quote: makeQuoter(client),
+      ...(quote ? { quote } : {}),
     });
 
     const draft = retimeDraft(parsed.draft, {
-      now: await client.chainNow(),
+      now,
       auctionSeconds: 20,
       ttlSeconds: 180,
     });
@@ -38,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fallbackReason: parsed.fallbackReason,
       assumptions: parsed.assumptions,
       clarifications: parsed.clarifications,
-      explanation: explainDraft(draft, { catalog: catalog() }),
+      explanation: explainDraft(draft, { catalog: assets }),
       spec: parsed.spec,
       draft,
       outcomeHash: hashOutcome(draft.outcome),

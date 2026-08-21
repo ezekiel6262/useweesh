@@ -21,8 +21,24 @@ export default async function handler(req: { method?: string; query?: Record<str
     "access-control-allow-headers": "content-type",
   };
   if (req?.method === "POST" || (req?.query?.kind && String(req.query.kind) !== "health")) {
-    const { default: ops } = await import("../server/_lib/ops");
-    return ops(req as any, res as any);
+    try {
+      const loaded = await import("../bundled/ops.cjs").catch(() => import("../server/_lib/ops"));
+      const ops = (loaded as any).default ?? loaded;
+      return ops(req as any, res as any);
+    } catch (error) {
+      const body = JSON.stringify({ error: (error as Error).message || "ops failed to load" });
+      if (res && typeof res.end === "function") {
+        res.statusCode = 500;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.setHeader("access-control-allow-origin", "*");
+        res.end(body);
+        return;
+      }
+      return new Response(body, {
+        status: 500,
+        headers: { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" },
+      });
+    }
   }
   if (res && typeof res.end === "function") {
     res.statusCode = req?.method === "OPTIONS" ? 204 : 200;

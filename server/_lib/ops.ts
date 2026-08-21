@@ -63,6 +63,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       return send(res, 200, { to: deployment.contracts.intentRegistry, data, value: "0x0" });
     }
+    if (kind === "slashes") {
+      const deployment = loadLiveDeployment();
+      const client = reader();
+      const latest = await client.publicClient.getBlockNumber();
+      const fromBlock = latest > 50_000n ? latest - 50_000n : 0n;
+      const logs = await client.publicClient.getLogs({
+        address: deployment.contracts.solverRegistry as Address,
+        fromBlock,
+        toBlock: "latest",
+        event: {
+          type: "event",
+          name: "SolverSlashed",
+          inputs: [
+            { name: "solver", type: "address", indexed: true },
+            { name: "amount", type: "uint256", indexed: false },
+            { name: "recipient", type: "address", indexed: true },
+            { name: "reason", type: "string", indexed: false },
+          ],
+        },
+      });
+      return send(res, 200, {
+        slashes: logs.slice(-12).reverse().map((log) => ({
+          solver: log.args.solver,
+          amount: (log.args.amount as bigint).toString(),
+          recipient: log.args.recipient,
+          reason: log.args.reason,
+          txHash: log.transactionHash,
+          blockNumber: log.blockNumber?.toString(),
+        })),
+      });
+    }
+    if (kind === "bundler") {
+      // Live path is coordinator-paid submitFor + ERC-1271 / session keys.
+      // There is no canonical ERC-4337 EntryPoint on this 1952 deployment.
+      return send(res, 200, {
+        entryPoint: null,
+        mode: "submitFor+erc1271",
+        relay: "/api/relay",
+        session: "/api/health?kind=session",
+        declare: "/api/declare",
+        note: "POST EIP-712 Submit (and optional permit) to /api/relay. Smart-account owners are verified with ERC-1271 on IntentRegistry.submitFor. Authorize a session key via kind=session for recurring jobs.",
+      });
+    }
     return send(res, 400, { error: "unknown kind" });
   } catch (error) {
     send(res, 500, { error: (error as Error).message });

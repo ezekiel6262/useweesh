@@ -29,6 +29,11 @@ export const INTENT_REGISTRY_ABI = [
   },
   {
     "inputs": [],
+    "name": "BadCommit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "BadLegCount",
     "type": "error"
   },
@@ -45,6 +50,11 @@ export const INTENT_REGISTRY_ABI = [
   {
     "inputs": [],
     "name": "BadTiming",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ChallengeWindowClosed",
     "type": "error"
   },
   {
@@ -101,7 +111,17 @@ export const INTENT_REGISTRY_ABI = [
   },
   {
     "inputs": [],
+    "name": "PolicyMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RevealWindowClosed",
     "type": "error"
   },
   {
@@ -112,6 +132,11 @@ export const INTENT_REGISTRY_ABI = [
   {
     "inputs": [],
     "name": "SolverInactive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SolverNotCompliant",
     "type": "error"
   },
   {
@@ -153,6 +178,31 @@ export const INTENT_REGISTRY_ABI = [
       },
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "commit",
+        "type": "bytes32"
+      }
+    ],
+    "name": "BidCommitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "intentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
         "internalType": "uint32",
         "name": "bidId",
         "type": "uint32"
@@ -177,6 +227,31 @@ export const INTENT_REGISTRY_ABI = [
       }
     ],
     "name": "BidPlaced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "intentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "bidId",
+        "type": "uint32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "solver",
+        "type": "address"
+      }
+    ],
+    "name": "BidRevealed",
     "type": "event"
   },
   {
@@ -506,7 +581,46 @@ export const INTENT_REGISTRY_ABI = [
   },
   {
     "inputs": [],
+    "name": "CHALLENGE_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MIN_AUCTION_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MISS_SLASH_BPS",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REVEAL_WINDOW",
     "outputs": [
       {
         "internalType": "uint64",
@@ -606,6 +720,30 @@ export const INTENT_REGISTRY_ABI = [
     "inputs": [
       {
         "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "bidCommitments",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
         "name": "intentId",
         "type": "bytes32"
       }
@@ -661,6 +799,24 @@ export const INTENT_REGISTRY_ABI = [
       }
     ],
     "name": "challengeSelection",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "intentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "commit",
+        "type": "bytes32"
+      }
+    ],
+    "name": "commitBid",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -866,6 +1022,11 @@ export const INTENT_REGISTRY_ABI = [
             "internalType": "address",
             "name": "integrator",
             "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "selectedAt",
+            "type": "uint64"
           }
         ],
         "internalType": "struct IntentRegistry.IntentRecord",
@@ -1203,6 +1364,50 @@ export const INTENT_REGISTRY_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "intentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "feeBps",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint32",
+        "name": "etaSeconds",
+        "type": "uint32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "planHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "guaranteedOut",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      }
+    ],
+    "name": "revealBid",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "bidId",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "revokeSession",
     "outputs": [],
@@ -1223,6 +1428,76 @@ export const INTENT_REGISTRY_ABI = [
       }
     ],
     "name": "selectWinner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "intentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "bidId",
+        "type": "uint32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "maxNotional",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validAfter",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "maxFeeBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minReputationBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireRwaAttested",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "requireCompliant",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sponsorGas",
+            "type": "bool"
+          },
+          {
+            "internalType": "address[]",
+            "name": "tokenAllowlist",
+            "type": "address[]"
+          }
+        ],
+        "internalType": "struct IntentLib.Policy",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "selectWinnerChecked",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

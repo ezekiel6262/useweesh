@@ -164,6 +164,22 @@ describe("PolicyEngine and RWARegistry", () => {
     );
   });
 
+  it("refuses to select a non-KYB solver when the policy is revealed at selection", async () => {
+    const { env, outcome } = await loadFixture(fixture);
+    const policy = { ...ZERO_POLICY, requireCompliant: true };
+    const { intentId } = await submitIntent(env, env.signers.user, outcome, policy);
+    const outs = outcome.legs.map(() => 0n);
+    await env.intentRegistry.connect(env.signers.solverA).placeBid(intentId, 10, 30, ethers.ZeroHash, outs);
+    await env.intentRegistry.connect(env.signers.solverB).placeBid(intentId, 12, 30, ethers.ZeroHash, outs);
+    await time.increase(25);
+    await expect(
+      env.intentRegistry.connect(env.signers.coordinator).selectWinnerChecked(intentId, 0, policy),
+    ).to.be.revertedWithCustomError(env.intentRegistry, "SolverNotCompliant");
+
+    await env.intentRegistry.connect(env.signers.coordinator).selectWinnerChecked(intentId, 1, policy);
+    expect((await env.intentRegistry.getIntent(intentId)).selectedSolver).to.equal(env.signers.solverB.address);
+  });
+
   it("lets a KYB-attested solver fill a compliant intent", async () => {
     const { env, tsla, outcome } = await loadFixture(fixture);
     const policy = { ...ZERO_POLICY, requireCompliant: true };

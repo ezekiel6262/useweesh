@@ -19,12 +19,13 @@
 <div class="page">
   <h6 class="kicker">Solvers</h6>
   <h1 class="display">Bond, declare a lane, compete</h1>
-  <p class="hint">A solver that wins and walks loses reputation. A solver that cannot meet its guarantee does not get paid.</p>
+  <p class="hint">The four operators on this testnet are IntentOS reference solvers we run ourselves. They are bonded so auctions are never empty. We are not claiming independent third-party supply yet. A solver that wins and misses its guarantee is slashed onchain, not just scored down.</p>
   <ol class="hint" style="padding-left:18px;max-width:64ch">
-    <li>Post a bond in SolverRegistry.</li>
-    <li>Declare capability bits: AI · KYB · RWA · STABLE · AGENT · GASLESS.</li>
-    <li>Watch open intents. Bid fee, ETA, and guaranteedOut per leg, or decline.</li>
-    <li>Settle what you win. Miss a floor and the fill reverts.</li>
+    <li>Post a bond at or above MIN_BOND in SolverRegistry. Drop below the floor and you cannot bid.</li>
+    <li>Declare capability bits: AI · KYB · RWA · STABLE · AGENT · GASLESS. KYB is owner-attested and checked at selection for requireCompliant intents.</li>
+    <li>Watch open intents. Bid in the clear, or commit-reveal to hide the quote until the window closes.</li>
+    <li>Settle what you win. Miss a floor and the fill reverts; reportFailure slashes 10% of the bond to the runner-up.</li>
+    <li>A coordinator that picks a dominated bid loses auctioneer bond via challengeSelection (30 minute window).</li>
   </ol>
   <p style="margin:24px 0"><span class="pill outline">AI</span> <span class="pill outline">KYB</span> <span class="pill outline">RWA</span> <span class="pill outline">STABLE</span> <span class="pill outline">AGENT</span> <span class="pill outline">GASLESS</span></p>
   <div class="two">
@@ -37,7 +38,7 @@
       <p class="hint">KYB-attested · RWA · AGENT · GASLESS. Leaves headroom. The only live solver that can fill a compliant intent.</p>
     </div>
   </div>
-  <p class="hint" style="margin-top:28px">SolverRegistry <span class="mono">0x073a5541F4f8973dC36428E6a70Dac72922eb8ed</span></p>
+  <p class="hint" style="margin-top:28px">SolverRegistry <span class="mono">0x66874911ffFe383AB6E5fD1e3daFEE896bf2A0Db</span></p>
   <p><a class="btn" href="/app">Watch a live auction</a></p>
 </div>
 <footer class="foot" style="max-width:1000px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/how">How it works</a><a href="/docs">Docs</a></div></footer>

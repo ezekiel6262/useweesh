@@ -21,3 +21,4 @@ apps/web/public/app.js
 .vercel
 api/*.js
 api/*.cjs
+verify/standard-json-*.json

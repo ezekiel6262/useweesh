@@ -80,7 +80,8 @@ export const PREVIEW_VENUES = [
 ];
 
 export const PREVIEW_SOLVERS = [
-  { name: "aggressive", reputationBps: 7200, fulfilled: 18, failed: 1, feeBps: 8, style: "AI / RWA / gasless: tight guarantees, wins on price" },
-  { name: "conservative", reputationBps: 9100, fulfilled: 11, failed: 0, feeBps: 15, style: "KYB-attested / RWA / agent: leaves headroom, rarely fails a win" },
-  { name: "balanced", reputationBps: 5000, fulfilled: 0, failed: 0, feeBps: 12, style: "default; not yet bonded in this preview" },
+  { name: "aggressive", reputationBps: 7200, fulfilled: 18, failed: 1, feeBps: 8, style: "reference operator · AI / RWA / gasless: tight guarantees, wins on price" },
+  { name: "conservative", reputationBps: 9100, fulfilled: 11, failed: 0, feeBps: 15, style: "reference operator · KYB-attested / RWA / agent: leaves headroom" },
+  { name: "rwa-desk", reputationBps: 6400, fulfilled: 4, failed: 0, feeBps: 12, style: "reference operator · RWA / agent: attested baskets only" },
+  { name: "payroll", reputationBps: 5800, fulfilled: 6, failed: 0, feeBps: 5, style: "reference operator · STABLE / gasless: payments lane" },
 ];

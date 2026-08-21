@@ -1,2 +1,5 @@
-export { default } from "../server/bid";
+// @ts-nocheck
+import { wrapHandler } from "../server/_lib/wrap";
+
 export const config = { maxDuration: 60 };
+export default wrapHandler(() => import("../bundled/bid.cjs"));

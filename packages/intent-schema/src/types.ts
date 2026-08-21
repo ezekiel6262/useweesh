@@ -158,6 +158,7 @@ export interface IntentRecord {
   selectedSolver: Address;
   selectedBid: number;
   ownerSelected: boolean;
+  selectedAt?: bigint;
 }
 
 export interface SolverBid {
