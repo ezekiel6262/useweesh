@@ -16,9 +16,27 @@ export function readBody(req: { body?: unknown }): unknown {
   return decode(encode(req.body));
 }
 
-export function send(res: { setHeader: Function; status: Function }, status: number, value: unknown) {
-  res.setHeader("content-type", "application/json; charset=utf-8");
-  res.setHeader("access-control-allow-origin", "*");
-  res.setHeader("access-control-allow-headers", "content-type");
-  res.status(status).send(encode(value));
+export function send(res: any, status: number, value: unknown) {
+  const body = encode(value);
+  if (res && typeof res.setHeader === "function") {
+    res.setHeader("content-type", "application/json; charset=utf-8");
+    res.setHeader("access-control-allow-origin", "*");
+    res.setHeader("access-control-allow-headers", "content-type");
+    res.statusCode = status;
+    if (typeof res.end === "function") {
+      res.end(body);
+      return;
+    }
+    if (typeof res.status === "function") {
+      res.status(status).send(body);
+      return;
+    }
+  }
+  return new Response(body, {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+    },
+  });
 }
