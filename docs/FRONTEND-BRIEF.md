@@ -2,10 +2,10 @@
 
 Paste this whole document into Claude Design. Design a better frontend for a **live** product, not a concept deck. The protocol already runs on X Layer testnet. You are replacing the visual system and information architecture of two surfaces: the marketing homepage and the compose app.
 
-**Live:** https://intentos-nine.vercel.app  
-**Compose:** https://intentos-nine.vercel.app/app  
-**Spec:** https://intentos-nine.vercel.app/spec  
-**Repo:** https://github.com/ezekiel6262/useweesh  
+**Live:** https://tryintentos.xyz  
+**Compose:** https://tryintentos.xyz/app  
+**Spec:** https://tryintentos.xyz/spec  
+**Repo:** https://github.com/ezekiel6262/intentos  
 **Hackathon:** OKX Build X AI Season  
 **Chain:** X Layer testnet, chain id **1952** (mainnet would be 196). Gas in OKB.
 

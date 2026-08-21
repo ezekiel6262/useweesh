@@ -9,7 +9,7 @@ That is also why it is safe to host publicly: there is nothing to leak and nothi
 
 ## Vercel
 
-Import `ezekiel6262/useweesh` at [vercel.com/new](https://vercel.com/new). The **repo-root**
+Import `ezekiel6262/intentos` at [vercel.com/new](https://vercel.com/new). The **repo-root**
 `vercel.json` is enough — do not set a Root Directory:
 
 | Setting | Value |

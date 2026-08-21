@@ -49,7 +49,7 @@
 const agent = new IntentAgent(client);
 const { intentId } = await agent.declare(
   "put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets",
-  { relayUrl: "https://intentos-nine.vercel.app/api/relay" }
+  { relayUrl: "https://tryintentos.xyz/api/relay" }
 );
 await agent.track(intentId);
 const past = await agent.history(); // same list as GET /api/history?owner=</pre>

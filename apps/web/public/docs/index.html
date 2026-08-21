@@ -22,7 +22,7 @@
   <p class="hint">Agents declare via SDK. Humans and agents share one owner history, shown in the app. Submit is a signature. The coordinator relays <span class="mono">submitFor</span>.</p>
   <h3 class="lab" style="margin-top:40px">Quick start</h3>
   <pre>await agent.declare("put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets", {
-  relayUrl: "https://intentos-nine.vercel.app/api/relay"
+  relayUrl: "https://tryintentos.xyz/api/relay"
 });
 await agent.track(intentId);
 const past = await agent.history();</pre>
@@ -47,6 +47,6 @@ const past = await agent.history();</pre>
   <h3 class="lab" style="margin-top:40px">Errors made visible</h3>
   <p class="hint"><code>OutcomeMismatch</code>: reveal did not hash to what was committed.<br/>Unknown ticker: catalog has no such asset; it never becomes a transaction.<br/>Wallet reject: typed-data or tx declined in OKX Wallet.<br/>0 OKB fallback: relay failed and the connected wallet cannot pay gas.</p>
 </div>
-<footer class="foot" style="max-width:920px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/how">How it works</a><a href="/spec">Spec</a><a href="https://github.com/ezekiel6262/useweesh">Repo</a></div></footer>
+<footer class="foot" style="max-width:920px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/how">How it works</a><a href="/spec">Spec</a><a href="https://github.com/ezekiel6262/intentos">Repo</a></div></footer>
 </body>
 </html>
