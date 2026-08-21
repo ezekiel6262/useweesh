@@ -6,7 +6,17 @@ import {
 } from "@intentos/intent-ai";
 import { hashOutcome, hashPolicy, type Address } from "@intentos/intent-schema";
 import { previewAuction } from "./auction.js";
-import { connectWallet, mintTestUsdt, readBalances, submitDraft } from "./live.js";
+import {
+  authorizeCoordinatorSession,
+  challengeSelection,
+  connectWallet,
+  mintTestUsdt,
+  readBalances,
+  submitDraft,
+  vaultBalance,
+  vaultDeposit,
+  vaultWithdraw,
+} from "./live.js";
 import { PREVIEW_ASSETS, PREVIEW_SOLVERS, PREVIEW_UNIVERSE, PREVIEW_VENUES } from "./universe.js";
 
 /**
@@ -141,6 +151,11 @@ declare global {
       mintTestUsdt: typeof mintTestUsdt;
       readBalances: typeof readBalances;
       submitDraft: typeof submitDraft;
+      authorizeCoordinatorSession: typeof authorizeCoordinatorSession;
+      challengeSelection: typeof challengeSelection;
+      vaultDeposit: typeof vaultDeposit;
+      vaultWithdraw: typeof vaultWithdraw;
+      vaultBalance: typeof vaultBalance;
     };
   }
 }
@@ -155,4 +170,9 @@ window.IntentOS = {
   mintTestUsdt,
   readBalances,
   submitDraft,
+  authorizeCoordinatorSession,
+  challengeSelection,
+  vaultDeposit,
+  vaultWithdraw,
+  vaultBalance,
 };

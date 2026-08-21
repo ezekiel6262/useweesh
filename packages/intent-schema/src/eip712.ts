@@ -40,6 +40,16 @@ export interface SubmitMessage {
   nonce: bigint | string | number;
 }
 
+export const SESSION_TYPES = {
+  Session: [
+    { name: "owner", type: "address" },
+    { name: "key", type: "address" },
+    { name: "expiresAt", type: "uint64" },
+    { name: "kinds", type: "uint32" },
+    { name: "nonce", type: "uint256" },
+  ],
+} as const;
+
 export const PERMIT_TYPES = {
   Permit: [
     { name: "owner", type: "address" },

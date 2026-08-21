@@ -134,8 +134,22 @@
 
     <div class="card" id="agentsCard">
       <h2 class="lab">Agents &amp; abstraction</h2>
-      <p class="console-note" style="margin-top:0">Humans and agents share one history. Submit is a signature, not a gas-paying tx. The coordinator relays <span class="mono">submitFor</span>. Agents can also register as solvers.</p>
-      <p style="margin:12px 0 0"><a class="btn ghost" href="/agents" style="padding:8px 14px;font-size:13px">Agent surface</a></p>
+      <p class="console-note" style="margin-top:0">Humans and agents share one history. Submit is a signature, not a gas-paying tx. The coordinator relays <span class="mono">submitFor</span>. Authorize a session so recurring jobs can fire without the root key.</p>
+      <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" id="sessionBtn" type="button" style="padding:8px 14px;font-size:13px">Authorize session</button>
+        <a class="btn ghost" href="/agents" style="padding:8px 14px;font-size:13px">Agent surface</a>
+      </p>
+      <p class="console-note" id="sessionNote"></p>
+    </div>
+
+    <div class="card" id="vaultCard">
+      <h2 class="lab">TSLAx vault</h2>
+      <p class="console-note" style="margin-top:0">1:1 shares over attested TSLAx. Mint test xStocks, deposit, withdraw.</p>
+      <p class="console-note" id="vaultBal"></p>
+      <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" id="vaultIn" type="button" style="padding:8px 14px;font-size:13px">Deposit 1 TSLAx</button>
+        <button class="btn ghost" id="vaultOut" type="button" style="padding:8px 14px;font-size:13px">Withdraw 1</button>
+      </p>
     </div>
 
     <div class="card" id="consoleCard">
@@ -331,7 +345,7 @@ $("playbook").addEventListener("click", (event) => {
   loadPrompt(btn.dataset.prompt);
 });
 
-const { parse, assets, connectWallet, mintTestUsdt, submitDraft, readBalances } = window.IntentOS;
+const { parse, assets, connectWallet, mintTestUsdt, submitDraft, readBalances, authorizeCoordinatorSession, vaultDeposit, vaultWithdraw, vaultBalance } = window.IntentOS;
 
 let lastParsed = null;
 let lastDraft = null;
@@ -350,6 +364,14 @@ try {
 $("mode").textContent = health.live
   ? `X LAYER · ${deployment?.chainId ?? 1952} · TESTNET`
   : `X LAYER · OFFLINE`;
+
+try { fetch("/api/recurring", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
+try {
+  const obs = await api("/api/observations");
+  if (obs && typeof obs.volume === "number") {
+    $("laneRow").dataset.volume = String(obs.volume);
+  }
+} catch {}
 
 function setLoop(i) {
   document.querySelectorAll("#loopStrip > span").forEach((el, n) => el.classList.toggle("on", n === i));
@@ -415,6 +437,7 @@ async function renderSession() {
   }
   $("sessionBody").innerHTML = rows;
   await refreshHistory();
+  await refreshVault();
 }
 
 function queryOwner() {
@@ -628,6 +651,21 @@ async function runFulfill() {
     await renderSession();
     await refreshRecent();
     await refreshHistory();
+    if (lastDraft?.metadata?.schedule?.everySeconds && account) {
+      try {
+        await api("/api/recurring", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: encode({
+            action: "create",
+            owner: account,
+            prompt: $("prompt").value.trim(),
+            everySeconds: lastDraft.metadata.schedule.everySeconds,
+            maxRuns: lastDraft.metadata.schedule.maxRuns ?? 0,
+          }),
+        });
+      } catch { /* session may not be authorized yet */ }
+    }
   } catch (error) {
     $("error").textContent = error.message;
     $("error").classList.remove("hide");
@@ -694,6 +732,52 @@ $("fulfill").addEventListener("click", () => runFulfill().catch((error) => {
   $("error").textContent = error.message;
   $("error").classList.remove("hide");
 }));
+$("sessionBtn").addEventListener("click", async () => {
+  try {
+    if (!deployment) throw new Error("deployment is not available");
+    await ensureWallet();
+    $("sessionBtn").disabled = true;
+    const hash = await authorizeCoordinatorSession(deployment, account);
+    $("sessionNote").textContent = `session live · ${short(hash)}`;
+  } catch (error) {
+    $("sessionNote").textContent = error.message;
+  } finally {
+    $("sessionBtn").disabled = false;
+  }
+});
+async function refreshVault() {
+  if (!deployment || !account || !vaultBalance) return;
+  try {
+    const shares = await vaultBalance(deployment, account);
+    $("vaultBal").textContent = `shares ${units(shares, 18, 4)} vTSLAx`;
+  } catch {
+    $("vaultBal").textContent = "";
+  }
+}
+$("vaultIn").addEventListener("click", async () => {
+  try {
+    if (!deployment) throw new Error("deployment is not available");
+    await ensureWallet();
+    await vaultDeposit(deployment, account, 10n ** 18n);
+    await refreshVault();
+    await renderSession();
+  } catch (error) {
+    $("error").textContent = error.message;
+    $("error").classList.remove("hide");
+  }
+});
+$("vaultOut").addEventListener("click", async () => {
+  try {
+    if (!deployment) throw new Error("deployment is not available");
+    await ensureWallet();
+    await vaultWithdraw(deployment, account, 10n ** 18n);
+    await refreshVault();
+    await renderSession();
+  } catch (error) {
+    $("error").textContent = error.message;
+    $("error").classList.remove("hide");
+  }
+});
 $("prompt").addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter") runParse();
 });

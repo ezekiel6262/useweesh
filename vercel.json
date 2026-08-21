@@ -20,5 +20,8 @@
     { "source": "/changelog", "destination": "/changelog/index.html" },
     { "source": "/history", "destination": "/history/index.html" },
     { "source": "/agents", "destination": "/agents/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/recurring", "schedule": "0 * * * *" }
   ]
 }

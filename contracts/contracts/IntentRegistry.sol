@@ -57,8 +57,21 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     bytes32 public constant SUBMIT_TYPEHASH = keccak256(
         "Submit(address owner,uint8 kind,bytes32 outcomeHash,bytes32 policyHash,bytes32 salt,uint64 auctionEndsAt,uint64 deadline,uint16 legCount,address integrator,string metadataURI,uint256 nonce)"
     );
+    bytes32 public constant SESSION_TYPEHASH = keccak256(
+        "Session(address owner,address key,uint64 expiresAt,uint32 kinds,uint256 nonce)"
+    );
+    bytes4 private constant ERC1271_MAGIC = 0x1626ba7e;
+
+    struct Session {
+        address key;
+        uint64 expiresAt;
+        uint32 kinds; // bitmask of Kind; 0 = any
+        bool revoked;
+    }
 
     mapping(address => uint256) public nonces;
+    mapping(address => uint256) public sessionNonces;
+    mapping(address => Session) public sessions;
 
     SolverRegistry public immutable solvers;
 
@@ -98,6 +111,8 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     event SelectionChallenged(bytes32 indexed intentId, address indexed challenger, uint32 dominatingBid, uint256 reward);
     event SettlementSet(address settlement);
     event AuctioneerSet(address auctioneer);
+    event SessionAuthorized(address indexed owner, address indexed key, uint64 expiresAt, uint32 kinds);
+    event SessionRevoked(address indexed owner);
 
     error IntentExists();
     error UnknownIntent();
@@ -115,6 +130,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     error NotChallengeable();
     error TransferFailed();
     error BadSignature();
+    error SessionDenied();
 
     constructor(address owner_, SolverRegistry solvers_) Ownable(owner_) {
         solvers = solvers_;
@@ -204,8 +220,40 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
                 )
             )
         );
-        if (_recover(digest, signature) != owner) revert BadSignature();
+        _checkOwnerSig(owner, uint8(kind), digest, signature);
         return _open(owner, salt, kind, outcomeHash, policyHash, legCount, auctionEndsAt, deadline, integrator, metadataURI);
+    }
+
+    /// @notice Owner (or a gasless signed owner) authorizes `key` to sign Submit until `expiresAt`.
+    ///         `kinds` is a bitmask of IntentLib.Kind; 0 means every kind.
+    function authorizeSession(
+        address owner,
+        address key,
+        uint64 expiresAt,
+        uint32 kinds,
+        bytes calldata signature
+    ) external {
+        if (key == address(0) || expiresAt <= block.timestamp) revert SessionDenied();
+        if (msg.sender != owner) {
+            uint256 nonce = sessionNonces[owner]++;
+            bytes32 digest = _hashTypedDataV4(
+                keccak256(abi.encode(SESSION_TYPEHASH, owner, key, expiresAt, kinds, nonce))
+            );
+            if (signature.length != 65 || _recover(digest, signature) != owner) {
+                if (owner.code.length == 0) revert BadSignature();
+                (bool ok, bytes memory ret) = owner.staticcall(
+                    abi.encodeWithSelector(ERC1271_MAGIC, digest, signature)
+                );
+                if (!(ok && ret.length >= 32 && bytes4(ret) == ERC1271_MAGIC)) revert BadSignature();
+            }
+        }
+        sessions[owner] = Session({ key: key, expiresAt: expiresAt, kinds: kinds, revoked: false });
+        emit SessionAuthorized(owner, key, expiresAt, kinds);
+    }
+
+    function revokeSession() external {
+        sessions[msg.sender].revoked = true;
+        emit SessionRevoked(msg.sender);
     }
 
     function _open(
@@ -446,6 +494,27 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     function _hashTypedDataV4(bytes32 structHash) private view returns (bytes32) {
         bytes32 domain = keccak256(abi.encode(DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, block.chainid, address(this)));
         return keccak256(abi.encodePacked("\x19\x01", domain, structHash));
+    }
+
+    function _checkOwnerSig(address owner, uint8 kind, bytes32 digest, bytes calldata signature) private view {
+        if (signature.length == 65) {
+            address recovered = _recover(digest, signature);
+            if (recovered == owner) return;
+            Session storage s = sessions[owner];
+            if (
+                recovered == s.key &&
+                !s.revoked &&
+                s.expiresAt >= block.timestamp &&
+                (s.kinds == 0 || (s.kinds & (uint32(1) << kind)) != 0)
+            ) return;
+        }
+        if (owner.code.length > 0) {
+            (bool ok, bytes memory ret) = owner.staticcall(
+                abi.encodeWithSelector(ERC1271_MAGIC, digest, signature)
+            );
+            if (ok && ret.length >= 32 && bytes4(ret) == ERC1271_MAGIC) return;
+        }
+        revert BadSignature();
     }
 
     function _recover(bytes32 digest, bytes calldata signature) private pure returns (address) {

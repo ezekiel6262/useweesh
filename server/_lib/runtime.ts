@@ -6,8 +6,8 @@ import {
   catalogFromDeployment,
   type DeploymentFile,
 } from "@intentos/sdk";
-import { SolverCapability } from "@intentos/intent-schema";
-import { AGGRESSIVE, CONSERVATIVE, Coordinator, Solver, StaticIntentFeed } from "@intentos/solver-core";
+import { IntentKind, SolverCapability } from "@intentos/intent-schema";
+import { AGGRESSIVE, CONSERVATIVE, PAYROLL, RWA_DESK, Coordinator, Solver, StaticIntentFeed } from "@intentos/solver-core";
 import { XLAYER_TESTNET_DEPLOYMENT } from "./xlayerTestnet.js";
 
 export function loadLiveDeployment(): DeploymentFile {
@@ -66,7 +66,33 @@ export function makeSolvers(feed: StaticIntentFeed) {
       SolverCapability.AGENT |
       SolverCapability.GASLESS,
   });
-  return [a, b];
+  const solvers = [a, b];
+  if (key("SOLVER_C_PRIVATE_KEY")) {
+    solvers.push(
+      new Solver({
+        client: operatorClient("SOLVER_C_PRIVATE_KEY"),
+        feed,
+        strategy: RWA_DESK,
+        kyb: false,
+        capabilities: SolverCapability.RWA | SolverCapability.AGENT | SolverCapability.GASLESS,
+        acceptKinds: [IntentKind.RWA_ONBOARD, IntentKind.BASKET, IntentKind.REBALANCE],
+        requireAttested: true,
+      }),
+    );
+  }
+  if (key("SOLVER_D_PRIVATE_KEY")) {
+    solvers.push(
+      new Solver({
+        client: operatorClient("SOLVER_D_PRIVATE_KEY"),
+        feed,
+        strategy: PAYROLL,
+        kyb: false,
+        capabilities: SolverCapability.STABLE | SolverCapability.GASLESS,
+        acceptKinds: [IntentKind.PAYMENT],
+      }),
+    );
+  }
+  return solvers;
 }
 
 export function makeCoordinator(): Coordinator {

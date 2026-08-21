@@ -41,19 +41,25 @@ async function main() {
   let coordinator: Signer = signers[2] ?? deployer;
   let solverA: Signer | undefined = signers[3];
   let solverB: Signer | undefined = signers[4];
+  let solverC: Signer | undefined = signers[5];
+  let solverD: Signer | undefined = signers[6];
   const derivedKeys: Record<string, string> = {};
 
   if (testnet && seedKey && signers.length < 3) {
     coordinator = deriveWallet(seedKey, "coordinator");
     solverA = deriveWallet(seedKey, "solver-a");
     solverB = deriveWallet(seedKey, "solver-b");
+    solverC = deriveWallet(seedKey, "solver-c");
+    solverD = deriveWallet(seedKey, "solver-d");
     treasury = deployer;
     derivedKeys.COORDINATOR_PRIVATE_KEY = (coordinator as Wallet).privateKey;
     derivedKeys.SOLVER_A_PRIVATE_KEY = (solverA as Wallet).privateKey;
     derivedKeys.SOLVER_B_PRIVATE_KEY = (solverB as Wallet).privateKey;
+    derivedKeys.SOLVER_C_PRIVATE_KEY = (solverC as Wallet).privateKey;
+    derivedKeys.SOLVER_D_PRIVATE_KEY = (solverD as Wallet).privateKey;
 
     const gasDrop = ethers.parseEther("0.008");
-    for (const wallet of [coordinator, solverA, solverB]) {
+    for (const wallet of [coordinator, solverA, solverB, solverC, solverD]) {
       const addr = await wallet.getAddress();
       const bal = await ethers.provider.getBalance(addr);
       if (bal < gasDrop / 2n) {
@@ -156,19 +162,39 @@ async function main() {
     routers.push({ name: venue.name, address: routerAddress });
   }
 
+  const recurring = await (await ethers.getContractFactory("RecurringRegistry")).deploy(deployer.address);
+  await recurring.waitForDeployment();
+  await (await recurring.setCoordinator(await coordinator.getAddress())).wait();
+
+  const tslaVault = await (await ethers.getContractFactory("RwaVault")).deploy(
+    deployer.address,
+    tokens.TSLAx!,
+    await rwaRegistry.getAddress(),
+    "IntentOS TSLAx Vault",
+    "vTSLAx",
+  );
+  await tslaVault.waitForDeployment();
+
   // Fund operator accounts so solvers and the dashboard have something to spend.
-  const funded = [deployer, coordinator, solverA, solverB].filter(Boolean) as Signer[];
+  const funded = [deployer, coordinator, solverA, solverB, solverC, solverD].filter(Boolean) as Signer[];
   for (const signer of funded) {
     await (await usdt.mint(await signer.getAddress(), ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
     await (await usdg.mint(await signer.getAddress(), ethers.parseUnits("1000000", 6))).wait();
+    await (await (await ethers.getContractAt("MockERC20", tokens.TSLAx!)).mint(
+      await signer.getAddress(),
+      ethers.parseUnits("1000", 18),
+    )).wait();
   }
 
   if (solverA && solverB) {
     const bond = minBond;
-    for (const [solver, name] of [
+    const roster: [Signer, string][] = [
       [solverA, "aggressive"],
       [solverB, "conservative"],
-    ] as const) {
+    ];
+    if (solverC) roster.push([solverC, "rwa"]);
+    if (solverD) roster.push([solverD, "payroll"]);
+    for (const [solver, name] of roster) {
       const registry = solverRegistry.connect(solver);
       await (await registry.register(`intentos://solver/${name}`, { value: bond })).wait();
       console.log(`registered ${name} solver ${await solver.getAddress()}`);
@@ -188,8 +214,22 @@ async function main() {
       capCompliant | capRwa | capStable | capAgent | capGasless,
     )).wait();
     await (await solverRegistry.attestKyb(await solverB.getAddress(), true)).wait();
+    if (solverC) {
+      await (await solverRegistry.attestCapabilities(
+        await solverC.getAddress(),
+        capRwa | capAgent | capGasless,
+      )).wait();
+    }
+    if (solverD) {
+      await (await solverRegistry.attestCapabilities(
+        await solverD.getAddress(),
+        capStable | capGasless,
+      )).wait();
+    }
     console.log("solver A: AI + RWA + stable + gasless");
     console.log("solver B: KYB + RWA + stable + agent + gasless");
+    if (solverC) console.log("solver C: RWA desk");
+    if (solverD) console.log("solver D: payroll / payments");
   }
 
   const deployment = {
@@ -202,12 +242,16 @@ async function main() {
       policyEngine: await policyEngine.getAddress(),
       intentRegistry: await intentRegistry.getAddress(),
       settlement: await settlement.getAddress(),
+      recurringRegistry: await recurring.getAddress(),
+      tslaVault: await tslaVault.getAddress(),
     },
     roles: {
       treasury: await treasury.getAddress(),
       coordinator: await coordinator.getAddress(),
       solverA: solverA ? await solverA.getAddress() : undefined,
       solverB: solverB ? await solverB.getAddress() : undefined,
+      solverC: solverC ? await solverC.getAddress() : undefined,
+      solverD: solverD ? await solverD.getAddress() : undefined,
     },
     tokens,
     routers,

@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { parseIntentDraft, type Hex } from "@intentos/sdk";
 import { StaticIntentFeed } from "@intentos/solver-core";
 import { readBody, send } from "./_lib/json.js";
+import { liveObservations } from "./_lib/observations.js";
 import { makeSolvers } from "./_lib/runtime.js";
 
 export const config = { maxDuration: 60 };
@@ -16,6 +17,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const draft = parseIntentDraft(body.draft);
     const feed = new StaticIntentFeed();
     feed.add(body.intentId as Hex, draft);
+    try {
+      feed.observe(await liveObservations());
+    } catch {
+      feed.observe({ volume: 2_500_000, funding: 0.012, volatility: 18 });
+    }
     const solvers = makeSolvers(feed);
     const activity = [];
     for (const solver of solvers) {

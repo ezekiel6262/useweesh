@@ -59,8 +59,32 @@ export const BALANCED: SolverStrategy = {
   etaSeconds: 25,
 };
 
+/** RWA desk: only attested baskets and onboards. Leaves headroom. */
+export const RWA_DESK: SolverStrategy = {
+  name: "rwa",
+  safetyMarginBps: 50,
+  feeBps: 12,
+  riskAversion: 1.4,
+  gasPerLegBase: 20_000n,
+  minEdgeBps: 15,
+  etaSeconds: 30,
+};
+
+/** Payroll / payments: tight on stables, low fee. */
+export const PAYROLL: SolverStrategy = {
+  name: "payroll",
+  safetyMarginBps: 5,
+  feeBps: 4,
+  riskAversion: 0.3,
+  gasPerLegBase: 10_000n,
+  minEdgeBps: 1,
+  etaSeconds: 8,
+};
+
 export const STRATEGIES: Record<string, SolverStrategy> = {
   aggressive: AGGRESSIVE,
   conservative: CONSERVATIVE,
   balanced: BALANCED,
+  rwa: RWA_DESK,
+  payroll: PAYROLL,
 };

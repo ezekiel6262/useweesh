@@ -80,7 +80,8 @@ async function load() {
       </table>` : `<p class="empty">No bids recorded yet.</p>`}
       <div class="card" style="margin-top:36px">
         <div style="font-family:var(--display);font-weight:700;font-size:14px;text-transform:uppercase;margin-bottom:6px">Dispute this selection</div>
-        <p class="hint" style="margin:0">Anyone can call challengeSelection if a recorded bid Pareto-dominates the pick. The coordinator's bond is slashed and the challenger takes a cut.</p>
+        <p class="hint" style="margin:0 0 12px">Anyone can call challengeSelection if a recorded bid Pareto-dominates the pick. The coordinator's bond is slashed and the challenger takes a cut.</p>
+        <div id="challengeBox">${challengeMarkup(data, bids)}</div>
       </div>
       <p class="hint" style="margin-top:24px">Settlement measures recipient balance deltas. A miss on max(user minOut, solver guarantee) reverts the whole fill.</p>
     `;
@@ -88,6 +89,68 @@ async function load() {
     root.innerHTML = `<p class="err">${esc(error.message)}</p>`;
   }
 }
+function asBig(v) {
+  if (typeof v === "bigint") return v;
+  const s = String(v ?? "0");
+  return s.startsWith("n:") ? BigInt(s.slice(2)) : BigInt(s);
+}
+function dominates(a, b) {
+  if (Number(a.feeBps) > Number(b.feeBps)) return false;
+  const ag = a.guaranteedOut ?? [];
+  const bg = b.guaranteedOut ?? [];
+  if (ag.length !== bg.length) return false;
+  let strict = Number(a.feeBps) < Number(b.feeBps);
+  for (let i = 0; i < ag.length; i++) {
+    const ga = asBig(ag[i]);
+    const gb = asBig(bg[i]);
+    if (ga < gb) return false;
+    if (ga > gb) strict = true;
+  }
+  return strict;
+}
+function challengeMarkup(data, bids) {
+  if (!/select/i.test(data.statusLabel ?? "")) {
+    return `<p class="empty">Challenge is open only while a winner is selected and not yet settled.</p>`;
+  }
+  const winner = bids.find((b) => data.selectedSolver && b.solver.toLowerCase() === data.selectedSolver.toLowerCase());
+  if (!winner) return `<p class="empty">No selected bid to compare.</p>`;
+  const better = bids.find((b) => !b.withdrawn && b.solver.toLowerCase() !== winner.solver.toLowerCase() && dominates(b, winner));
+  if (!better) return `<p class="empty">No recorded bid dominates this pick.</p>`;
+  return `<button class="btn" id="challengeBtn" type="button" data-bid="${better.bidId}">Challenge with bid ${better.bidId} (${esc(short(better.solver))})</button>
+    <p class="hint" style="margin-top:8px" id="challengeNote">Pays you a cut of the coordinator bond if the contract agrees.</p>`;
+}
+
+document.getElementById("root").addEventListener("click", async (event) => {
+  const btn = event.target.closest("#challengeBtn");
+  if (!btn) return;
+  const bidId = Number(btn.dataset.bid);
+  const w = window;
+  const eth = w.okxwallet ?? w.ethereum;
+  if (!eth) { document.getElementById("challengeNote").textContent = "No injected wallet."; return; }
+  try {
+    btn.disabled = true;
+    const accounts = await eth.request({ method: "eth_requestAccounts" });
+    const from = accounts[0];
+    const intentId = new URLSearchParams(location.search).get("id");
+    const prepared = await fetch("/api/challenge", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ intentId, bidId }),
+    });
+    const call = await prepared.json();
+    if (!prepared.ok) throw new Error(call.error ?? "could not encode challenge");
+    const tx = await eth.request({
+      method: "eth_sendTransaction",
+      params: [{ from, to: call.to, data: call.data, value: "0x0" }],
+    });
+    document.getElementById("challengeNote").textContent = `submitted ${tx}`;
+  } catch (error) {
+    document.getElementById("challengeNote").textContent = error.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 await load();
 setInterval(load, 8_000);
 </script>

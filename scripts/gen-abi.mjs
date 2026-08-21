@@ -19,6 +19,8 @@ const SOURCES = [
   ["POLICY_ENGINE_ABI", "contracts/PolicyEngine.sol/PolicyEngine.json"],
   ["ERC20_ABI", "contracts/mocks/MockERC20.sol/MockERC20.json"],
   ["DEX_ROUTER_ABI", "contracts/mocks/MockDexRouter.sol/MockDexRouter.json"],
+  ["RECURRING_ABI", "contracts/RecurringRegistry.sol/RecurringRegistry.json"],
+  ["RWA_VAULT_ABI", "contracts/RwaVault.sol/RwaVault.json"],
 ];
 
 const chunks = [

@@ -13,6 +13,7 @@ import {
   retimeDraft,
   submitDomain,
   SUBMIT_TYPES,
+  SESSION_TYPES,
   PERMIT_TYPES,
   IntentKind,
   type IntentDraft,
@@ -113,6 +114,61 @@ const REGISTRY = [
     inputs: [{ name: "owner", type: "address" }],
     outputs: [{ type: "uint256" }],
   },
+  {
+    type: "function",
+    name: "sessionNonces",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "authorizeSession",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "key", type: "address" },
+      { name: "expiresAt", type: "uint64" },
+      { name: "kinds", type: "uint32" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "challengeSelection",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "intentId", type: "bytes32" },
+      { name: "dominatingBidId", type: "uint32" },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const VAULT = [
+  {
+    type: "function",
+    name: "deposit",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  { type: "function", name: "asset", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
 ] as const;
 
 export interface DeploymentInfo {
@@ -238,6 +294,19 @@ export async function mintTestUsdt(deployment: DeploymentInfo, account: Address,
       rpc: deployment.rpc,
       to: usdg,
       data: encodeFunctionData({ abi: ERC20, functionName: "mint", args: [account, amount] }),
+    });
+  }
+  const tsla = deployment.tokens.TSLAx;
+  if (tsla) {
+    await sendTx({
+      account,
+      rpc: deployment.rpc,
+      to: tsla,
+      data: encodeFunctionData({
+        abi: ERC20,
+        functionName: "mint",
+        args: [account, 10n ** 21n],
+      }),
     });
   }
   return hash;
@@ -468,4 +537,148 @@ export async function readBalances(
     rows.push({ symbol, token, balance: await balanceOf(deployment.rpc, token, account) });
   }
   return rows;
+}
+
+export async function authorizeCoordinatorSession(
+  deployment: DeploymentInfo,
+  account: Address,
+  days = 30,
+): Promise<Hex> {
+  const coordinator = deployment.roles?.coordinator;
+  if (!coordinator) throw new Error("no coordinator on this deployment");
+  const pub = publicClient(deployment.rpc);
+  const chainId = Number(await pub.getChainId());
+  const registry = deployment.contracts.intentRegistry;
+  const expiresAt = BigInt(Math.floor(Date.now() / 1000) + days * 86_400);
+  const nonce = (await pub.readContract({
+    address: registry,
+    abi: REGISTRY,
+    functionName: "sessionNonces",
+    args: [account],
+  })) as bigint;
+  const signature = await signTypedData(account, {
+    types: {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ],
+      Session: SESSION_TYPES.Session,
+    },
+    primaryType: "Session",
+    domain: submitDomain(chainId, registry),
+    message: {
+      owner: account,
+      key: coordinator,
+      expiresAt: expiresAt.toString(),
+      kinds: 0,
+      nonce: nonce.toString(),
+    },
+  });
+  try {
+    const response = await fetch("/api/session", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        owner: account,
+        key: coordinator,
+        expiresAt: expiresAt.toString(),
+        kinds: 0,
+        signature,
+      }),
+    });
+    const payload = (await response.json()) as { hash?: Hex; error?: string };
+    if (!response.ok || !payload.hash) throw new Error(payload.error ?? "session relay failed");
+    await pub.waitForTransactionReceipt({ hash: payload.hash });
+    return payload.hash;
+  } catch {
+    return sendTx({
+      account,
+      rpc: deployment.rpc,
+      to: registry,
+      data: encodeFunctionData({
+        abi: REGISTRY,
+        functionName: "authorizeSession",
+        args: [account, coordinator, expiresAt, 0, signature],
+      }),
+    });
+  }
+}
+
+export async function challengeSelection(
+  deployment: DeploymentInfo,
+  account: Address,
+  intentId: Hex,
+  dominatingBidId: number,
+): Promise<Hex> {
+  return sendTx({
+    account,
+    rpc: deployment.rpc,
+    to: deployment.contracts.intentRegistry,
+    data: encodeFunctionData({
+      abi: REGISTRY,
+      functionName: "challengeSelection",
+      args: [intentId, dominatingBidId],
+    }),
+  });
+}
+
+export async function vaultDeposit(
+  deployment: DeploymentInfo,
+  account: Address,
+  amount: bigint,
+): Promise<Hex> {
+  const vault = deployment.contracts.tslaVault;
+  if (!vault) throw new Error("no TSLAx vault on this deployment");
+  const tsla = deployment.tokens.TSLAx;
+  const allowance = (await publicClient(deployment.rpc).readContract({
+    address: tsla,
+    abi: ERC20,
+    functionName: "allowance",
+    args: [account, vault],
+  })) as bigint;
+  if (allowance < amount) {
+    await sendTx({
+      account,
+      rpc: deployment.rpc,
+      to: tsla,
+      data: encodeFunctionData({ abi: ERC20, functionName: "approve", args: [vault, amount] }),
+    });
+  }
+  return sendTx({
+    account,
+    rpc: deployment.rpc,
+    to: vault,
+    data: encodeFunctionData({ abi: VAULT, functionName: "deposit", args: [amount] }),
+  });
+}
+
+export async function vaultWithdraw(
+  deployment: DeploymentInfo,
+  account: Address,
+  amount: bigint,
+): Promise<Hex> {
+  const vault = deployment.contracts.tslaVault;
+  if (!vault) throw new Error("no TSLAx vault on this deployment");
+  return sendTx({
+    account,
+    rpc: deployment.rpc,
+    to: vault,
+    data: encodeFunctionData({ abi: VAULT, functionName: "withdraw", args: [amount] }),
+  });
+}
+
+export async function vaultBalance(
+  deployment: DeploymentInfo,
+  account: Address,
+): Promise<bigint> {
+  const vault = deployment.contracts.tslaVault;
+  if (!vault) return 0n;
+  return publicClient(deployment.rpc).readContract({
+    address: vault,
+    abi: VAULT,
+    functionName: "balanceOf",
+    args: [account],
+  }) as Promise<bigint>;
 }

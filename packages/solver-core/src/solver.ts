@@ -1,5 +1,5 @@
 import type { Address, Hex } from "viem";
-import { IntentStatus, SolverCapability, type IntentDraft } from "@intentos/intent-schema";
+import { IntentKind, IntentStatus, SolverCapability, type IntentDraft } from "@intentos/intent-schema";
 import { IntentOSClient, conditionsHold, verifyDraftAgainstRecord } from "@intentos/sdk";
 import { planIntent, planHashOf } from "./planner.js";
 import { Quoter, type Venue } from "./quotes.js";
@@ -32,6 +32,10 @@ export interface SolverOptions {
   kyb?: boolean;
   /** Capability bits this solver will honour (AI, RWA, stable, gasless, agent). */
   capabilities?: number;
+  /** If set, only these intent kinds are considered. */
+  acceptKinds?: IntentKind[];
+  /** If true, skip intents that do not require attested RWA. */
+  requireAttested?: boolean;
   log?: (message: string, detail?: Record<string, unknown>) => void;
 }
 
@@ -131,6 +135,25 @@ export class Solver {
       return;
     }
 
+    if (this.options.acceptKinds && !this.options.acceptKinds.includes(draft.outcome.kind)) {
+      this.record(intentId, "skipped", "outside this solver's kind lane");
+      return;
+    }
+    if (this.options.requireAttested && !draft.policy.requireRwaAttested && draft.outcome.kind !== IntentKind.RWA_ONBOARD) {
+      this.record(intentId, "skipped", "RWA desk only fills attested intents");
+      return;
+    }
+    if (draft.outcome.kind === IntentKind.PAYMENT && ((this.options.capabilities ?? 0) & SolverCapability.STABLE) === 0) {
+      this.record(intentId, "declined", "payment intents need the STABLE lane");
+      return;
+    }
+    if (
+      (draft.policy.requireRwaAttested || draft.outcome.kind === IntentKind.RWA_ONBOARD) &&
+      ((this.options.capabilities ?? 0) & SolverCapability.RWA) === 0
+    ) {
+      this.record(intentId, "declined", "attested RWA intents need the RWA lane");
+      return;
+    }
     if (draft.policy.requireCompliant && !this.options.kyb) {
       this.record(intentId, "declined", "intent requires a KYB-attested solver");
       return;
