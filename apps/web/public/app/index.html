@@ -365,9 +365,8 @@ $("mode").textContent = health.live
   ? `X LAYER · ${deployment?.chainId ?? 1952} · TESTNET`
   : `X LAYER · OFFLINE`;
 
-try { fetch("/api/ops?kind=tick"); } catch {}
 try {
-  const obs = await api("/api/ops?kind=observations");
+  const obs = await api("/api/health?kind=observations");
   if (obs && typeof obs.volume === "number") {
     $("laneRow").dataset.volume = String(obs.volume);
   }
@@ -653,7 +652,7 @@ async function runFulfill() {
     await refreshHistory();
     if (lastDraft?.metadata?.schedule?.everySeconds && account) {
       try {
-        await api("/api/ops", {
+        await api("/api/health", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: encode({

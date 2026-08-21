@@ -132,7 +132,7 @@ document.getElementById("root").addEventListener("click", async (event) => {
     const accounts = await eth.request({ method: "eth_requestAccounts" });
     const from = accounts[0];
     const intentId = new URLSearchParams(location.search).get("id");
-    const prepared = await fetch("/api/ops", {
+    const prepared = await fetch("/api/health", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind: "challenge", intentId, bidId }),

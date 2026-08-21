@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { encodeFunctionData, type Address, type Hex } from "viem";
 import { INTENT_REGISTRY_ABI } from "@intentos/sdk";
-import { readBody, send } from "./_lib/json.js";
-import { liveObservations } from "./_lib/observations.js";
-import { handleRecurring, tickDueJobs } from "./_lib/recurring.js";
-import { loadLiveDeployment, operatorClient } from "./_lib/runtime.js";
+import { readBody, send } from "./json.js";
+import { liveObservations } from "./observations.js";
+import { handleRecurring, tickDueJobs } from "./recurring.js";
+import { loadLiveDeployment, operatorClient } from "./runtime.js";
 
 export const config = { maxDuration: 60 };
 

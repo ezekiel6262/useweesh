@@ -577,7 +577,7 @@ export async function authorizeCoordinatorSession(
     },
   });
   try {
-    const response = await fetch("/api/ops", {
+    const response = await fetch("/api/health", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({

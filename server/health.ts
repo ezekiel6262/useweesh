@@ -1,9 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import ops from "./_lib/ops.js";
 import { send } from "./_lib/json.js";
+import { tickDueJobs } from "./_lib/recurring.js";
 import { XLAYER_TESTNET_DEPLOYMENT } from "./_lib/xlayerTestnet.js";
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+export const config = { maxDuration: 60 };
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "OPTIONS") return send(res, 204, {});
+  const kind = String(req.query.kind ?? "");
+  if (req.method === "POST" || (kind && kind !== "health")) {
+    return ops(req, res);
+  }
   try {
+    tickDueJobs().catch(() => undefined);
     send(res, 200, {
       ok: true,
       live: true,
@@ -21,6 +31,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         coordinator: Boolean(process.env.COORDINATOR_PRIVATE_KEY),
         solverA: Boolean(process.env.SOLVER_A_PRIVATE_KEY),
         solverB: Boolean(process.env.SOLVER_B_PRIVATE_KEY),
+        solverC: Boolean(process.env.SOLVER_C_PRIVATE_KEY),
+        solverD: Boolean(process.env.SOLVER_D_PRIVATE_KEY),
       },
     });
   } catch (error) {

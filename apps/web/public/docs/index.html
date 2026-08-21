@@ -39,7 +39,7 @@ const past = await agent.history();</pre>
     <tr><td class="mono">POST</td><td class="mono">/api/settle</td><td>Reveal and fill</td></tr>
     <tr><td class="mono">GET</td><td class="mono">/api/recent</td><td>Latest intents (network)</td></tr>
     <tr><td class="mono">GET</td><td class="mono">/api/history?owner=</td><td>Intent history for an owner (used by the app sidebar)</td></tr>
-    <tr><td class="mono">GET/POST</td><td class="mono">/api/ops</td><td>observations, recurring, session, challenge (one function)</td></tr>
+    <tr><td class="mono">GET/POST</td><td class="mono">/api/health?kind=</td><td>health, plus observations, recurring, session, challenge</td></tr>
   </table>
   <h3 class="lab" style="margin-top:40px">Wallet abstraction</h3>
   <p class="hint">Session keys: authorize the coordinator to sign Submit until expiry. ERC-1271 smart accounts can be the owner. Full ERC-4337 bundler is not live. Recurring jobs re-declare from the prompt when due. Observations gate volume/vol/funding conditions. Challenge is a wallet call on the intent page.</p>
