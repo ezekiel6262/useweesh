@@ -1,2 +1,3 @@
-export { default } from "../server/intent.js";
+﻿export { default } from "../server/intent";
 export const config = { maxDuration: 60 };
+

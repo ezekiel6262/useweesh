@@ -1,2 +1,3 @@
-export { default } from "../server/relay.js";
+﻿export { default } from "../server/relay";
 export const config = { maxDuration: 60 };
+
