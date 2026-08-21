@@ -21,4 +21,3 @@ apps/web/public/app.js
 .vercel
 api/*.js
 api/*.cjs
-!api/ping.js

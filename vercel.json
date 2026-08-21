@@ -1,11 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build:packages && npm run build -w @intentos/web && npm run build:api",
+  "buildCommand": "npm run build:packages && npm run build -w @intentos/web",
   "outputDirectory": "apps/web/public",
   "installCommand": "npm install",
   "framework": null,
   "functions": {
-    "api/*.js": {
+    "api/*.ts": {
       "maxDuration": 60
     }
   },
