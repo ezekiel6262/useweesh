@@ -23,7 +23,7 @@
   a { color: var(--accent); text-decoration: none; }
   a:hover { opacity: .75; }
   button { font: inherit; }
-  .shell { max-width: 1120px; margin: 0 auto; padding: 0 20px 48px; }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 48px; }
   header {
     display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
     padding: 14px 0; border-bottom: 1px solid var(--divider);
@@ -40,13 +40,13 @@
     border-radius: 999px; padding: 7px 12px;
   }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yes); margin-right: 6px; }
-  .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr); gap: 16px; padding-top: 18px; }
-  @media (min-width: 901px) { .workspace { grid-template-columns: minmax(0, 1.15fr) minmax(0, 320px); } }
+  .workspace { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr); gap: 16px; padding-top: 14px; }
+  @media (min-width: 901px) { .workspace { grid-template-columns: minmax(0, 1.25fr) minmax(0, 360px); } }
   @media (max-width: 900px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
   .card { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
   .lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   textarea {
-    width: 100%; min-height: 120px; resize: vertical; background: var(--bg); color: var(--ink);
+    width: 100%; min-height: 132px; resize: vertical; background: var(--bg); color: var(--ink);
     border: 1px solid var(--divider); border-radius: 10px; padding: 12px 14px; font: inherit;
   }
   textarea:focus { outline: none; border-color: var(--accent); }
@@ -136,6 +136,46 @@
   }
   footer a { color: var(--ink-muted); }
   .status-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .loop {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+    margin: 14px 0 0;
+  }
+  @media (max-width: 700px) { .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .loop span {
+    display: block; background: var(--bg); border-radius: 10px; padding: 10px 12px; min-width: 0;
+  }
+  .loop n {
+    display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .loop b { display: block; font-size: 13px; font-weight: 600; }
+  .loop p { margin: 4px 0 0; color: var(--ink-muted); font-size: 12px; line-height: 1.4; }
+  .book-cat {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-faint); font-weight: 600; margin: 14px 0 8px;
+  }
+  .book-cat:first-child { margin-top: 0; }
+  .use {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--divider); border-radius: 10px;
+    padding: 10px 12px; margin: 0 0 8px; color: inherit;
+  }
+  .use:hover { border-color: var(--accent); }
+  .use:last-child { margin-bottom: 0; }
+  .use strong { display: block; font-size: 13px; font-weight: 600; }
+  .use em { display: block; margin-top: 3px; font-style: normal; color: var(--ink-muted); font-size: 12px; line-height: 1.45; }
+  .use code {
+    display: block; margin-top: 6px; font-family: var(--mono); font-size: 11px;
+    color: var(--ink-faint); line-height: 1.45; overflow-wrap: anywhere;
+  }
+  .console-line {
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
+    color: var(--ink-muted); padding: 5px 0; border-bottom: 1px solid var(--divider);
+  }
+  .console-line:last-child { border-bottom: 0; }
+  .console-line b { color: var(--ink-faint); font-weight: 500; display: inline-block; min-width: 72px; }
+  .asset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .hint { margin: 0 0 10px; color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -160,7 +200,8 @@
   <div class="stack">
     <div class="card">
       <h2 class="lab">Intent</h2>
-      <textarea id="prompt" spellcheck="false" placeholder="What should be true afterwards?"></textarea>
+      <p class="hint">State an outcome. Solvers bid on how. Settlement sizes the legs from your weights and reverts if the floors are missed.</p>
+      <textarea id="prompt" spellcheck="false" placeholder="What should be true afterwards? Pick a playbook intent or write your own."></textarea>
       <div class="actions">
         <button class="btn" id="parse">Parse</button>
         <button class="btn" id="fulfill">Submit &amp; settle</button>
@@ -169,6 +210,18 @@
       </div>
       <div class="chips" id="chips"></div>
       <div id="error" class="err hide"></div>
+      <div class="loop">
+        <span><n>01</n><b>Declare</b><p>A sentence in tickers and percents. No addresses from the model.</p></span>
+        <span><n>02</n><b>Commit</b><p>Only outcome and policy hashes go onchain.</p></span>
+        <span><n>03</n><b>Auction</b><p>Solvers bid a fee, ETA, and guaranteed outs.</p></span>
+        <span><n>04</n><b>Settle</b><p>Weights are sized here. Miss a floor and it reverts.</p></span>
+      </div>
+    </div>
+
+    <div class="card" id="playbookCard">
+      <h2 class="lab">Playbook</h2>
+      <p class="hint">Click any intent to load it. These are the jobs this protocol is built to take.</p>
+      <div id="playbook"></div>
     </div>
 
     <div class="card hide" id="outcomeCard">
@@ -186,8 +239,17 @@
   <div class="stack">
     <div class="card" id="sessionCard">
       <h2 class="lab">Session</h2>
-      <div id="sessionEmpty" class="empty">Connect a wallet on X Layer testnet to mint USDT and submit.</div>
+      <div id="sessionEmpty" class="empty">Connect on X Layer testnet. Mint stables, then parse and submit — the coordinator pays submit gas.</div>
       <div id="sessionBody" class="kv hide"></div>
+    </div>
+
+    <div class="card" id="consoleCard">
+      <h2 class="lab">Protocol console</h2>
+      <div id="consoleBody">
+        <div class="console-line"><b>chain</b> X Layer · 1952</div>
+        <div class="console-line"><b>status</b> connecting…</div>
+      </div>
+      <div class="asset-row" id="assetRow"></div>
     </div>
 
     <div class="card hide" id="guardCard">
@@ -250,7 +312,7 @@ const api = async (path, options) => {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 const pct = (bps) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
-const dp = (symbol) => (symbol === "USDT" ? 6 : 18);
+const dp = (symbol) => (symbol === "USDT" || symbol === "USDG" ? 6 : 18);
 const units = (value, decimals, digits = 4) => {
   const v = BigInt(value), unit = 10n ** BigInt(decimals);
   const frac = (v % unit).toString().padStart(decimals, "0").slice(0, digits).replace(/0+$/, "");
@@ -271,20 +333,109 @@ const setHash = (id, value) => {
 };
 const explorer = (path) => `https://web3.okx.com/explorer/xlayer-testnet/${path}`;
 
-const EXAMPLES = [
-  "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%",
-  "Pay 500 USDG gaslessly to 0x000000000000000000000000000000000000cafe",
-  "Using only compliant solvers, allocate 25,000 USDT equally across TSLA, NVDA, AAPL, META and SPY xStocks with max 0.3% slippage",
-  "Rebalance my xStocks to 25% TSLA, 25% NVDA, 25% AAPL, 25% SPY every Monday",
+const PLAYBOOK = [
+  {
+    cat: "Stablecoins & payments",
+    items: [
+      {
+        title: "Gasless USDG payment",
+        blurb: "1:1 cash sleeve. You sign; the coordinator pays submit gas.",
+        prompt: "Pay 500 USDG gaslessly to 0x000000000000000000000000000000000000cafe",
+      },
+      {
+        title: "Convert stables into USDG",
+        blurb: "Swap the testnet USDT rail into USDG at the 1:1 venue book.",
+        prompt: "Swap 2,500 USDT into USDG with 0.1% max slippage",
+      },
+      {
+        title: "Recurring payroll",
+        blurb: "A standing payment intent. The agent runtime submits each period.",
+        prompt: "Pay 1,200 USDG gaslessly to 0x000000000000000000000000000000000000cafe every month",
+      },
+    ],
+  },
+  {
+    cat: "xStocks & RWA",
+    items: [
+      {
+        title: "Equal-weight xStocks basket",
+        blurb: "Four attested names, slippage cap, fee ceiling. Weights are not negotiable.",
+        prompt: "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight, max 0.5% slippage, only attested assets, fees under 0.25%",
+      },
+      {
+        title: "Five-name KYB basket",
+        blurb: "Includes META. Only KYB-attested solvers may win.",
+        prompt: "Using only compliant solvers, allocate 25,000 USDT equally across TSLA, NVDA, AAPL, META and SPY xStocks with max 0.3% slippage",
+      },
+      {
+        title: "Monday rebalance",
+        blurb: "Target weights plus a weekly schedule, stored as metadata.",
+        prompt: "Rebalance my xStocks to 25% TSLA, 25% NVDA, 25% AAPL, 25% SPY every Monday",
+      },
+      {
+        title: "Volume-gated entries",
+        blurb: "Do not serve unless 24h volume clears the gate.",
+        prompt: "Allocate 8,000 USDT equally across TSLA, NVDA and AAPL, only if 24h volume exceeds 1000000",
+      },
+      {
+        title: "Exit to USDG on a vol spike",
+        blurb: "Sell the book into the stable if volatility breaks the cap.",
+        prompt: "Exit all TSLA, NVDA and AAPL into USDG if volatility spikes above 40",
+      },
+      {
+        title: "RWA onboard",
+        blurb: "Bring an attested tokenized asset onchain and take a position.",
+        prompt: "Onboard SPY xStock as an attested RWA and put 5,000 USDT into it, only attested assets",
+      },
+    ],
+  },
+  {
+    cat: "Compliant & agents",
+    items: [
+      {
+        title: "Neobank / integrator path",
+        blurb: "Pins selection to the named integrator. Only they (or you) can pick the winner.",
+        prompt: "Using only compliant solvers, integrator-controlled, allocate 15,000 USDT equally across TSLA and NVDA xStocks, only attested assets",
+      },
+      {
+        title: "Agent-declared 60/40",
+        blurb: "The same sentence an agent would POST to /api/declare.",
+        prompt: "put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets",
+      },
+    ],
+  },
 ];
-const CHIP_LABELS = ["xStocks basket", "gasless pay", "KYB basket", "Monday rebalance"];
-$("chips").innerHTML = CHIP_LABELS.map((label, i) =>
-  `<button class="chip" data-i="${i}">${esc(label)}</button>`).join("");
+const CHIP_ITEMS = [
+  PLAYBOOK[1].items[0],
+  PLAYBOOK[0].items[0],
+  PLAYBOOK[1].items[1],
+  PLAYBOOK[1].items[2],
+];
+function loadPrompt(text) {
+  $("prompt").value = text;
+  $("prompt").focus();
+  $("prompt").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("chips").innerHTML = CHIP_ITEMS.map((item, i) =>
+  `<button class="chip" data-i="${i}" type="button">${esc(item.title)}</button>`).join("");
 $("chips").addEventListener("click", (event) => {
   const chip = event.target.closest(".chip");
   if (!chip) return;
-  $("prompt").value = EXAMPLES[Number(chip.dataset.i)];
-  $("prompt").focus();
+  loadPrompt(CHIP_ITEMS[Number(chip.dataset.i)].prompt);
+});
+$("playbook").innerHTML = PLAYBOOK.map((group) =>
+  `<div class="book-cat">${esc(group.cat)}</div>` +
+  group.items.map((item) =>
+    `<button class="use" type="button" data-prompt="${esc(item.prompt)}">
+      <strong>${esc(item.title)}</strong>
+      <em>${esc(item.blurb)}</em>
+      <code>${esc(item.prompt)}</code>
+    </button>`).join("")
+).join("");
+$("playbook").addEventListener("click", (event) => {
+  const btn = event.target.closest(".use");
+  if (!btn) return;
+  loadPrompt(btn.dataset.prompt);
 });
 
 const { parse, assets, connectWallet, mintTestUsdt, submitDraft, readBalances } = window.IntentOS;
@@ -313,8 +464,27 @@ if (deployment?.contracts) {
     `<a href="${explorer("address/" + c.intentRegistry)}" target="_blank" rel="noopener">registry ${short(c.intentRegistry)}</a>`,
     `<a href="${explorer("address/" + c.settlement)}" target="_blank" rel="noopener">settlement ${short(c.settlement)}</a>`,
     `<a href="${explorer("address/" + deployment.tokens.USDT)}" target="_blank" rel="noopener">USDT ${short(deployment.tokens.USDT)}</a>`,
+    deployment.tokens.USDG ? `<a href="${explorer("address/" + deployment.tokens.USDG)}" target="_blank" rel="noopener">USDG ${short(deployment.tokens.USDG)}</a>` : "",
     `<a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>`,
-  ].join("");
+  ].filter(Boolean).join("");
+}
+
+{
+  const c = deployment?.contracts;
+  const tokens = Object.keys(deployment?.tokens ?? {});
+  const live = Boolean(health.live && c);
+  $("consoleBody").innerHTML = [
+    `<div class="console-line"><b>chain</b> X Layer · ${deployment?.chainId ?? 1952}</div>`,
+    `<div class="console-line"><b>status</b> ${live ? "live · solvers bonded · gasless relay on" : "offline"}</div>`,
+    c ? `<div class="console-line"><b>registry</b> <a href="${explorer("address/" + c.intentRegistry)}" target="_blank">${short(c.intentRegistry)}</a></div>` : "",
+    c ? `<div class="console-line"><b>settle</b> <a href="${explorer("address/" + c.settlement)}" target="_blank">${short(c.settlement)}</a></div>` : "",
+    `<div class="console-line"><b>lanes</b> AI · KYB · RWA · STABLE · AGENT · GASLESS</div>`,
+    `<div class="console-line"><b>kinds</b> SWAP · BASKET · REBALANCE · RWA_ONBOARD · PAYMENT</div>`,
+    `<div class="console-line"><b>enforces</b> weights · doubled floors · spend · KYB · gas</div>`,
+    `<div class="console-line"><b>submit</b> you sign · coordinator pays gas</div>`,
+  ].filter(Boolean).join("");
+  $("assetRow").innerHTML = (tokens.length ? tokens : ["USDT", "USDG", "TSLAx", "NVDAx", "AAPLx", "METAx", "SPYx", "GOOGLx"])
+    .map((s) => `<span class="pill">${esc(s)}</span>`).join("");
 }
 
 async function refreshRecent() {
