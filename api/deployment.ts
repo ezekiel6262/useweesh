@@ -1,25 +1,52 @@
-import { catalogFromDeployment } from "@intentos/sdk";
-import { XLAYER_TESTNET_DEPLOYMENT } from "../server/_lib/xlayerTestnet";
-
 export const config = { maxDuration: 60 };
 
+const deployment = {
+  network: "xlayerTestnet",
+  chainId: 1952,
+  rpc: "https://testrpc.xlayer.tech",
+  explorer: "https://web3.okx.com/explorer/xlayer-testnet",
+  contracts: {
+    solverRegistry: "0xf46dCa275b0698f847f318DAc357A23540B44280",
+    rwaRegistry: "0xBaF79Da5aE8c61EC95178B1c64d8280287553576",
+    policyEngine: "0xb59E325278F641847124A9F009b006713f7e1236",
+    intentRegistry: "0x8AA313ce51AdCC6c6B448Fd1fd0429dc24328eB6",
+    settlement: "0x8CEC593527fB711205D3e656B1e277E35C793C9f",
+    recurringRegistry: "0xF4e3018d883AAfA8541F1B722d392B14407d0AdC",
+    tslaVault: "0xA3741ff772A198c0374d37592931db33C5e6E096",
+  },
+  roles: {
+    treasury: "0xD9ac4CA5d5b931d645D5309bEE7b18db536245E8",
+    coordinator: "0x583fdb73aEF1390647b64778349D289d4783Dd72",
+    solverA: "0xE7Cb0ECa2ab4bAEeA92940865CC0dA7998E1eb22",
+    solverB: "0x1ccCc3162EBc37855cb4F4a304267dE3C391c4DF",
+    solverC: "0x24579f8EDab97795D8BF577f7aDc8A8BB17d8aE8",
+    solverD: "0x027308b460b26F305c2AC3642DE7beA3D9272655",
+  },
+  tokens: {
+    USDT: "0xfED4F90Bd60cB56231876f1A3b34b677a7183644",
+    USDG: "0x040798cb4CcD3D74b835ab028d982179bBd24487",
+    TSLAx: "0x22ABA6F1Cda5F2E08529260b3230FbC61fF767c0",
+    NVDAx: "0x8fC8C1B99b9ac9dFC0779f5CC3C460b789e8B5aF",
+    AAPLx: "0x27D75B6Ca09493906108D1E7FA18ADa00E588259",
+    SPYx: "0x1CBbF281A5ee2E52c3B669A316Fd2b4E958A9C39",
+    GOOGLx: "0xEEE6e0deF7008A0576F9bC307d51b4eBC6D437B8",
+    METAx: "0x6c2C06b64E25408E23af1dd61e2E1ad9Eb248C68",
+  },
+  routers: [
+    { name: "OKX-DEX-sim", address: "0x8BF223AF4735216A3588A7cBe39899137De07412" },
+    { name: "XSwap-sim", address: "0x446bea23Af83dD4935901d754A17347e0A0A652f" },
+  ],
+};
+
 export default async function handler(_req: unknown, res?: { statusCode: number; setHeader: Function; end: Function }) {
-  const deployment = XLAYER_TESTNET_DEPLOYMENT;
-  const payload = JSON.stringify(
-    {
-      network: deployment.network,
-      chainId: deployment.chainId,
-      rpc: process.env.INTENTOS_RPC ?? process.env.XLAYER_TESTNET_RPC ?? "https://testrpc.xlayer.tech",
-      explorer: "https://web3.okx.com/explorer/xlayer-testnet",
-      contracts: deployment.contracts,
-      tokens: deployment.tokens,
-      routers: deployment.routers,
-      roles: deployment.roles ?? {},
-      assets: catalogFromDeployment(deployment).all(),
-      now: Math.floor(Date.now() / 1000),
-    },
-    (_k, v) => (typeof v === "bigint" ? `n:${v}` : v),
-  );
+  const tokens = deployment.tokens as Record<string, string>;
+  const assets = Object.entries(tokens).map(([symbol, address]) => ({
+    symbol,
+    address,
+    decimals: symbol === "USDT" || symbol === "USDG" ? 6 : 18,
+    kind: symbol === "USDT" || symbol === "USDG" ? "base" : "xstock",
+  }));
+  const payload = JSON.stringify({ ...deployment, assets, now: Math.floor(Date.now() / 1000) });
   const headers = {
     "content-type": "application/json; charset=utf-8",
     "access-control-allow-origin": "*",
