@@ -80,7 +80,7 @@ export const PREVIEW_VENUES = [
 ];
 
 export const PREVIEW_SOLVERS = [
-  { name: "aggressive", reputationBps: 7200, fulfilled: 18, failed: 1, feeBps: 8, style: "AI / RWA / gasless — tight guarantees, wins on price" },
-  { name: "conservative", reputationBps: 9100, fulfilled: 11, failed: 0, feeBps: 15, style: "KYB-attested / RWA / agent — leaves headroom, rarely fails a win" },
+  { name: "aggressive", reputationBps: 7200, fulfilled: 18, failed: 1, feeBps: 8, style: "AI / RWA / gasless: tight guarantees, wins on price" },
+  { name: "conservative", reputationBps: 9100, fulfilled: 11, failed: 0, feeBps: 15, style: "KYB-attested / RWA / agent: leaves headroom, rarely fails a win" },
   { name: "balanced", reputationBps: 5000, fulfilled: 0, failed: 0, feeBps: 12, style: "default; not yet bonded in this preview" },
 ];

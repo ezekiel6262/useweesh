@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — Compose</title>
+<title>IntentOS Compose</title>
 <meta name="description" content="Declare an outcome on X Layer. Solvers compete. Settlement verifies." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,6 +48,8 @@
   .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; font-family: var(--mono); color: var(--ink); }
   a.row:hover { color: var(--accent); }
   .row:last-child { border-bottom: 0; }
+  #historyBody { max-height: 420px; overflow-y: auto; }
+  #historyBody .when { color: var(--faint); font-size: 11px; }
   .table-wrap { overflow-x: auto; min-width: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .chip { font-size: 11.5px; color: var(--faint); border: 1px solid var(--line); background: none; padding: 4px 10px; cursor: pointer; }
@@ -70,7 +72,6 @@
   <nav>
     <a href="/">Home</a>
     <a href="/app" class="on">App</a>
-    <a href="/history">History</a>
     <a href="/agents">Agents</a>
     <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
@@ -121,19 +122,19 @@
   <div class="stack">
     <div class="card" id="sessionCard">
       <h2 class="lab">Session</h2>
-      <div id="sessionEmpty" class="empty">Connect on X Layer testnet. Mint stables, then parse and submit — you sign, the coordinator pays gas (wallet abstraction path).</div>
+      <div id="sessionEmpty" class="empty">Connect on X Layer testnet. Mint stables, then parse and submit. You sign; the coordinator pays gas.</div>
       <div id="sessionBody" class="kv hide"></div>
     </div>
 
     <div class="card" id="historyCard">
-      <h2 class="lab">Your intents <a href="/history" style="margin-left:auto;font-family:var(--sans);font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);font-size:12px">full history</a></h2>
-      <div id="historyEmpty" class="empty">Connect a wallet to load this account’s intent history. Agent declares land here too — same owner address.</div>
+      <h2 class="lab">History</h2>
+      <div id="historyEmpty" class="empty">Connect a wallet to load this account's intent history. Agent declares for the same owner land here too.</div>
       <div id="historyBody"></div>
     </div>
 
     <div class="card" id="agentsCard">
       <h2 class="lab">Agents &amp; abstraction</h2>
-      <p class="console-note" style="margin-top:0">Humans and agents share one history. Submit is a signature, not a gas-paying tx — the coordinator relays <span class="mono">submitFor</span>. Agents can also register as solvers.</p>
+      <p class="console-note" style="margin-top:0">Humans and agents share one history. Submit is a signature, not a gas-paying tx. The coordinator relays <span class="mono">submitFor</span>. Agents can also register as solvers.</p>
       <p style="margin:12px 0 0"><a class="btn ghost" href="/agents" style="padding:8px 14px;font-size:13px">Agent surface</a></p>
     </div>
 
@@ -407,7 +408,7 @@ async function renderSession() {
       rows += `<div class="note">Could not read balances.</div>`;
     }
   } else {
-    rows += `<div class="note">Deployment unavailable — balances not loaded.</div>`;
+    rows += `<div class="note">Deployment unavailable. Balances not loaded.</div>`;
   }
   if (lastIntent) {
     rows += kv("intent", `<a href="/intent/?id=${lastIntent}">${esc(short(lastIntent))}</a>`);
@@ -416,10 +417,16 @@ async function renderSession() {
   await refreshHistory();
 }
 
-async function refreshHistory() {
-  if (!account) return;
+function queryOwner() {
+  const q = new URLSearchParams(location.search).get("owner");
+  return q && q.startsWith("0x") && q.length === 42 ? q : "";
+}
+
+async function refreshHistory(ownerOverride) {
+  const owner = ownerOverride || account || queryOwner();
+  if (!owner) return;
   try {
-    const { intents } = await api(`/api/history?owner=${account}&limit=8`);
+    const { intents } = await api(`/api/history?owner=${owner}&limit=50`);
     if (!intents?.length) {
       $("historyEmpty").textContent = "No intents from this account yet. Submit from compose or POST /api/declare as this owner.";
       $("historyEmpty").classList.remove("hide");
@@ -429,8 +436,9 @@ async function refreshHistory() {
     $("historyEmpty").classList.add("hide");
     $("historyBody").innerHTML = intents.map((it) => {
       const tone = /fulfill/i.test(it.statusLabel) ? "win" : /select|open|bid/i.test(it.statusLabel) ? "bid" : "no";
+      const when = it.createdAt ? new Date(Number(it.createdAt) * 1000).toISOString().slice(0, 16).replace("T", " ") : "";
       return `<a class="row" href="/intent/?id=${esc(it.intentId)}">
-        <span>${esc(it.kindLabel)} · ${short(it.intentId)}</span>
+        <span>${esc(it.kindLabel)} · ${short(it.intentId)} <span class="when">${esc(when)}</span></span>
         <span class="pill ${tone}">${esc(it.statusLabel)}</span>
       </a>`;
     }).join("");
@@ -439,6 +447,8 @@ async function refreshHistory() {
     $("historyEmpty").classList.remove("hide");
   }
 }
+
+if (queryOwner()) await refreshHistory(queryOwner());
 
 async function ensureWallet() {
   account = await connectWallet();
@@ -528,7 +538,7 @@ function renderParsed(result) {
   const rows = [
     ...result.outcome.exits.map((exit) => `<tr>
       <td style="color:var(--no)">sell ${esc(exit.symbol)}</td><td></td>
-      <td class="num">—</td><td class="num">${units(exit.amountIn, dp(exit.symbol))}</td></tr>`),
+      <td class="num">-</td><td class="num">${units(exit.amountIn, dp(exit.symbol))}</td></tr>`),
     ...result.outcome.legs.map((leg) => `<tr>
       <td style="color:var(--ink)">${esc(leg.symbol)}</td>
       <td><div class="barline"><i style="width:${leg.weightBps / 100}%"></i></div></td>
@@ -562,9 +572,9 @@ function renderParsed(result) {
   }
 
   const notices = [
-    ...result.clarifications.map((c) => `<div class="note">Needs an answer — ${esc(c)}</div>`),
-    ...result.assumptions.map((a) => `<div class="note">Assumed — ${esc(a)}</div>`),
-    result.metadata.schedule ? `<div class="note">Recurring — agent runtime submits each period.</div>` : "",
+    ...result.clarifications.map((c) => `<div class="note">Needs an answer: ${esc(c)}</div>`),
+    ...result.assumptions.map((a) => `<div class="note">Assumed: ${esc(a)}</div>`),
+    result.metadata.schedule ? `<div class="note">Recurring: agent runtime submits each period.</div>` : "",
     ...(result.metadata.conditions ?? []).map((c) =>
       `<div class="note">Serve only while ${esc(c.subject ?? c.kind)} is ${c.operator.startsWith("l") ? "below" : "above"} ${c.value}.</div>`),
   ].filter(Boolean).join("");

@@ -211,7 +211,7 @@ export function previewAuction(view: AuctionInput): AuctionPreview {
     winnerFeeBps: winner?.feeBps,
     settlement: winner ? settlement : undefined,
     note:
-      "Preview against the demo venue book — not a live settlement. " +
+      "Preview against the demo venue book, not a live settlement. " +
       "On a chain, IntentSettlement sizes the legs from the committed weights and reverts if any floor is missed.",
   };
 }

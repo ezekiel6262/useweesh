@@ -3,99 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — History</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
-<link rel="stylesheet" href="/intentos.css" />
-<style>
-  .page { max-width: 960px; margin: 0 auto; padding: 56px clamp(16px,3vw,40px); }
-  h1 { font-size: clamp(28px,4vw,40px); margin: 0 0 12px; }
-  .lookup { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 28px; }
-  .lookup input { flex: 1; min-width: 220px; border: 1px solid var(--line); padding: 10px 12px; font-family: var(--mono); font-size: 13px; }
-  .item { display: grid; grid-template-columns: 1.2fr 1.4fr auto auto; gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 13px; color: var(--ink); }
-  .item:hover { color: var(--accent); }
-  .head { color: var(--faint); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--ink); }
-  .head:hover { color: var(--faint); }
-  @media (max-width: 720px) { .item { grid-template-columns: 1fr auto; } .item .hide-sm { display: none; } }
-</style>
+<title>IntentOS</title>
+<link rel="canonical" href="/app" />
+<meta http-equiv="refresh" content="0;url=/app" />
+<script>location.replace("/app" + location.search);</script>
 </head>
 <body>
-<header class="top">
-  <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
-  <nav><a href="/">Home</a><a href="/app">App</a><a href="/history" class="on">History</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
-  <span class="chip-net">X LAYER · 1952</span>
-  <button class="btn" id="connect" type="button">Connect</button>
-</header>
-<div class="page">
-  <h6 class="kicker">Account</h6>
-  <h1 class="display">Intent history</h1>
-  <p class="hint">Every intent this owner submitted — compose app, agent SDK, or gasless relay. Same registry index, one list.</p>
-  <form class="lookup" id="lookup">
-    <input id="ownerInput" name="owner" spellcheck="false" placeholder="0x owner or agent address" autocomplete="off" />
-    <button class="btn" type="submit">Load</button>
-  </form>
-  <p class="mono" id="ownerLabel" style="margin-bottom:16px;color:var(--faint)">Connect a wallet, paste an address, or open /history?owner=0x…</p>
-  <div id="list"><p class="empty">No history loaded.</p></div>
-</div>
-<footer class="foot" style="max-width:960px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/app">App</a><a href="/agents">Agents</a><a href="/docs">Docs</a></div></footer>
-<script type="module">
-const TAG = "n:";
-const decode = (text) => JSON.parse(text, (_k, v) => (typeof v === "string" && v.startsWith(TAG) ? BigInt(v.slice(2)) : v));
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-const short = (a) => a && a.length > 12 ? `${a.slice(0, 8)}…${a.slice(-6)}` : (a ?? "");
-const tone = (l) => /fulfill/i.test(l) ? "win" : /select|open|bid/i.test(l) ? "bid" : "no";
-const when = (t) => t ? new Date(Number(t) * 1000).toISOString().replace("T", " ").replace(".000Z", "Z") : "";
-
-async function load(owner) {
-  const list = document.getElementById("list");
-  document.getElementById("ownerLabel").textContent = owner;
-  document.getElementById("ownerInput").value = owner;
-  try {
-    const res = await fetch(`/api/history?owner=${owner}&limit=50`);
-    const data = decode(await res.text());
-    if (!res.ok) throw new Error(data.error ?? res.statusText);
-    if (!data.intents?.length) {
-      list.innerHTML = `<p class="empty">No intents from this account yet.</p>`;
-      return;
-    }
-    list.innerHTML = `<div class="item head"><span>Kind · id</span><span class="hide-sm">Opened</span><span class="hide-sm">Bids</span><span>Status</span></div>` +
-      data.intents.map((it) =>
-      `<a class="item" href="/intent/?id=${esc(it.intentId)}">
-        <span>${esc(it.kindLabel)} · ${short(it.intentId)}</span>
-        <span class="hide-sm" style="color:var(--faint)">${when(it.createdAt)}</span>
-        <span class="hide-sm" style="color:var(--faint)">${it.bidCount}</span>
-        <span class="pill ${tone(it.statusLabel)}">${esc(it.statusLabel)}</span>
-      </a>`).join("");
-  } catch (e) {
-    list.innerHTML = `<p class="err">${esc(e.message)}</p>`;
-  }
-}
-
-const q = new URLSearchParams(location.search).get("owner");
-if (q?.startsWith("0x") && q.length === 42) load(q);
-
-document.getElementById("lookup").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const owner = document.getElementById("ownerInput").value.trim();
-  if (!owner.startsWith("0x") || owner.length !== 42) {
-    document.getElementById("list").innerHTML = `<p class="err">Need a 20-byte 0x address.</p>`;
-    return;
-  }
-  history.replaceState({}, "", `/history?owner=${owner}`);
-  load(owner);
-});
-
-document.getElementById("connect").addEventListener("click", async () => {
-  const w = window;
-  const eth = w.okxwallet ?? w.ethereum;
-  if (!eth) { document.getElementById("list").innerHTML = `<p class="err">No injected wallet.</p>`; return; }
-  const accounts = await eth.request({ method: "eth_requestAccounts" });
-  const owner = accounts[0];
-  document.getElementById("connect").textContent = short(owner);
-  history.replaceState({}, "", `/history?owner=${owner}`);
-  await load(owner);
-});
-</script>
+<p>History lives in the <a href="/app">app</a>.</p>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — Agents &amp; wallet abstraction</title>
+<title>IntentOS Agents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
@@ -23,14 +23,14 @@
 <body>
 <header class="top">
   <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
-  <nav><a href="/">Home</a><a href="/app">App</a><a href="/history">History</a><a href="/agents" class="on">Agents</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
+  <nav><a href="/">Home</a><a href="/app">App</a><a href="/agents" class="on">Agents</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
   <span class="chip-net">X LAYER · 1952</span>
   <a class="btn" href="/app">Connect</a>
 </header>
 <div class="page">
   <h6 class="kicker">Agents &amp; wallet abstraction</h6>
   <h1 class="display">Same owner. Same history. No gas on submit.</h1>
-  <p class="hint" style="font-size:16px;max-width:64ch">A human wallet and an agent are the same kind of user: an owner address that signs an outcome. Wallet abstraction here is signed intents plus permit — not a separate smart-account stack yet. ERC-4337 and session keys are next, not a different product.</p>
+  <p class="hint" style="font-size:16px;max-width:64ch">A human wallet and an agent are the same kind of user: an owner address that signs an outcome. Wallet abstraction here is signed intents plus permit, not a separate smart-account stack yet. ERC-4337 and session keys are next, not a different product.</p>
 
   <div class="grid">
     <div>
@@ -39,7 +39,7 @@
     </div>
     <div>
       <h6 class="kicker">Agents (live)</h6>
-      <p class="hint" style="margin:0">Agents call <span class="mono">declare</span> with the same relay. Those intents show up in <a href="/history">History</a> for that address. Agents can also register as solvers on the AGENT lane. CLI: <span class="mono">npm run agent -- --history</span>.</p>
+      <p class="hint" style="margin:0">Agents call <span class="mono">declare</span> with the same relay. Those intents show up in the app history for that address. Agents can also register as solvers on the AGENT lane. CLI: <span class="mono">npm run agent -- --history</span>.</p>
     </div>
   </div>
 
@@ -54,16 +54,16 @@ const { intentId } = await agent.declare(
 await agent.track(intentId);
 const past = await agent.history(); // same list as GET /api/history?owner=</pre>
 
-  <h3 class="lab" style="margin-top:40px">Look up an agent’s history</h3>
-  <p class="hint">Paste the agent (or wallet) address. History is onchain — <span class="mono">intentsOf(owner)</span> — so it does not matter who submitted.</p>
+  <h3 class="lab" style="margin-top:40px">Look up an agent's history</h3>
+  <p class="hint">Paste the agent (or wallet) address. History is onchain (<span class="mono">intentsOf(owner)</span>), so it does not matter who submitted. It opens in the app.</p>
   <form class="lookup" id="lookup">
     <input id="ownerInput" name="owner" spellcheck="false" placeholder="0x agent or wallet" autocomplete="off" />
-    <button class="btn" type="submit">Open history</button>
+    <button class="btn" type="submit">Open in app</button>
   </form>
 
   <h3 class="lab" style="margin-top:40px">What’s next on this path</h3>
-  <p class="hint">Session keys so an agent can declare inside a policy without the root wallet. ERC-4337 / OKX smart accounts as the owner. Agent-as-solver already has an onchain capability bit — more specialist agents (RWA, payroll) plug into the same auction.</p>
-  <p style="margin-top:28px"><a class="btn" href="/app">Compose</a> <a class="btn ghost" href="/history">View history</a> <a class="btn ghost" href="/docs">API</a></p>
+  <p class="hint">Session keys so an agent can declare inside a policy without the root wallet. ERC-4337 / OKX smart accounts as the owner. Agent-as-solver already has an onchain capability bit. More specialist agents (RWA, payroll) plug into the same auction.</p>
+  <p style="margin-top:28px"><a class="btn" href="/app">Compose</a> <a class="btn ghost" href="/docs">API</a></p>
 </div>
 <footer class="foot" style="max-width:920px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/how">How it works</a><a href="/docs">Docs</a><a href="/spec">Spec</a></div></footer>
 <script>
@@ -71,7 +71,7 @@ document.getElementById("lookup").addEventListener("submit", (e) => {
   e.preventDefault();
   const owner = document.getElementById("ownerInput").value.trim();
   if (!owner.startsWith("0x") || owner.length !== 42) return;
-  location.href = `/history?owner=${owner}`;
+  location.href = `/app?owner=${owner}`;
 });
 </script>
 </body>
