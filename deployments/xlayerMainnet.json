@@ -1,0 +1,35 @@
+{
+  "network": "xlayerMainnet",
+  "chainId": 196,
+  "deployedAt": "2026-08-21T21:09:34.095Z",
+  "contracts": {
+    "solverRegistry": "0xcFE508898061880543eEA85d094EB1A5f33BE6b4",
+    "rwaRegistry": "0xebe3A32055caFFB715451Fb0Ab4Ea13737C7f1Dc",
+    "policyEngine": "0x6d32EBB3e9CDea479ae0A03C307C431076a8781e",
+    "intentRegistry": "0x4129073bf0B0c9b612fA33F8687DbF555646D515",
+    "settlement": "0x44F2b8b18Acdc3c68fB419Fb4D6f413be9167DFd",
+    "recurringRegistry": "0x528f31a76379EBf608f1DaF69c9E00d118629083",
+    "tslaVault": "0xdfF0606d86BF2a19d8A9D29221e9F03de9Ea1F93"
+  },
+  "roles": {
+    "treasury": "0xD9ac4CA5d5b931d645D5309bEE7b18db536245E8",
+    "coordinator": "0xD9ac4CA5d5b931d645D5309bEE7b18db536245E8",
+    "solverA": "0xD9ac4CA5d5b931d645D5309bEE7b18db536245E8"
+  },
+  "tokens": {
+    "USDT": "0x1e4a5963abfd975d8c9021ce480b42188849d41d",
+    "USDG": "0x4ae46a509F6b1D9056937BA4500cb143933D2dc8",
+    "TSLAx": "0x8aD3c73F833d3F9A523aB01476625F269aEB7Cf0",
+    "WOKB": "0xe538905cf8410324e03A5A23C1c177a474D59b2b"
+  },
+  "routers": [
+    {
+      "name": "Uniswap-V2",
+      "address": "0x182a927119d56008d921126764bf884221b10f59"
+    },
+    {
+      "name": "Uniswap-V3",
+      "address": "0x761E498d52f71F5E51E6F2C5B91c641C91982b5e"
+    }
+  ]
+}

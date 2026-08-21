@@ -225,7 +225,7 @@ await agent.history();</pre>
     <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can't touch funds and can't force a bad settlement. It posts an auctioneer bond. Anyone can call challengeSelection within 30 minutes if a strictly better bid was passed over.</p></div>
     <div class="faq"><b>Can an intent tokenize a real-world asset?</b><p>Yes. Kind RWA_ONBOARD is the offchain-to-onchain path: the intent names the asset (ISIN, ticker, or existing wrapper). Settlement files OnboardingRequested on RWARegistry. An attestor later publishes the token. A funded onboard can also acquire the wrapper in the same fill when a pool exists.</p></div>
     <div class="faq"><b>Is this wallet abstraction?</b><p>You sign an intent. The coordinator pays submit gas. Session keys and smart-account owners work. You do not need OKB to declare.</p></div>
-    <div class="faq"><b>Testnet or mainnet?</b><p>The app is X Layer testnet, with mintable demo tokens. The same protocol is built for mainnet against real USDT, USDG, and TSLAx. More on the <a href="/how#faq">How it works</a> page.</p></div>
+    <div class="faq"><b>Testnet or mainnet?</b><p>The app is X Layer testnet, with mintable demo tokens. The same protocol is live on X Layer mainnet against real USDT, USDG, and TSLAx. More on the <a href="/how#faq">How it works</a> page.</p></div>
   </section>
 
   <section class="close">

@@ -48,25 +48,32 @@ async function main() {
   const derivedKeys: Record<string, string> = {};
 
   if ((testnet || mainnet) && seedKey && signers.length < 3) {
-    coordinator = deriveWallet(seedKey, "coordinator");
-    solverA = deriveWallet(seedKey, "solver-a");
-    solverB = deriveWallet(seedKey, "solver-b");
-    solverC = deriveWallet(seedKey, "solver-c");
-    solverD = deriveWallet(seedKey, "solver-d");
-    treasury = deployer;
-    derivedKeys.COORDINATOR_PRIVATE_KEY = (coordinator as Wallet).privateKey;
-    derivedKeys.SOLVER_A_PRIVATE_KEY = (solverA as Wallet).privateKey;
-    derivedKeys.SOLVER_B_PRIVATE_KEY = (solverB as Wallet).privateKey;
-    derivedKeys.SOLVER_C_PRIVATE_KEY = (solverC as Wallet).privateKey;
-    derivedKeys.SOLVER_D_PRIVATE_KEY = (solverD as Wallet).privateKey;
+    if (mainnet) {
+      // Keep every role on the deployer so ~$0.5 of OKB covers gas only. No wallet drops, no 0.01 bonds.
+      coordinator = deployer;
+      treasury = deployer;
+      solverA = deployer;
+    } else {
+      coordinator = deriveWallet(seedKey, "coordinator");
+      solverA = deriveWallet(seedKey, "solver-a");
+      solverB = deriveWallet(seedKey, "solver-b");
+      solverC = deriveWallet(seedKey, "solver-c");
+      solverD = deriveWallet(seedKey, "solver-d");
+      treasury = deployer;
+      derivedKeys.COORDINATOR_PRIVATE_KEY = (coordinator as Wallet).privateKey;
+      derivedKeys.SOLVER_A_PRIVATE_KEY = (solverA as Wallet).privateKey;
+      derivedKeys.SOLVER_B_PRIVATE_KEY = (solverB as Wallet).privateKey;
+      derivedKeys.SOLVER_C_PRIVATE_KEY = (solverC as Wallet).privateKey;
+      derivedKeys.SOLVER_D_PRIVATE_KEY = (solverD as Wallet).privateKey;
 
-    const gasDrop = mainnet ? ethers.parseEther("0.002") : ethers.parseEther("0.008");
-    for (const wallet of [coordinator, solverA, solverB, solverC, solverD]) {
-      const addr = await wallet.getAddress();
-      const bal = await ethers.provider.getBalance(addr);
-      if (bal < gasDrop / 2n) {
-        const tx = await deployer.sendTransaction({ to: addr, value: gasDrop });
-        await tx.wait();
+      const gasDrop = ethers.parseEther("0.008");
+      for (const wallet of [coordinator, solverA, solverB, solverC, solverD]) {
+        const addr = await wallet.getAddress();
+        const bal = await ethers.provider.getBalance(addr);
+        if (bal < gasDrop / 2n) {
+          const tx = await deployer.sendTransaction({ to: addr, value: gasDrop });
+          await tx.wait();
+        }
       }
     }
   }
@@ -78,8 +85,8 @@ async function main() {
   console.log(`coordinator  ${await coordinator.getAddress()}`);
 
   // ---------------------------------------------------------------- core stack
-  const minBond = testnet ? ethers.parseEther("0.0001") : ethers.parseEther("0.001");
-  const auctioneerBond = testnet ? ethers.parseEther("0.0005") : ethers.parseEther("0.002");
+  const minBond = testnet ? ethers.parseEther("0.0001") : 1n;
+  const auctioneerBond = testnet ? ethers.parseEther("0.0005") : 0n;
 
   const solverRegistry = await (await ethers.getContractFactory("SolverRegistry"))
     .deploy(deployer.address, minBond);
@@ -107,7 +114,9 @@ async function main() {
   // ------------------------------------------------------------------- wiring
   await (await intentRegistry.setSettlement(await settlement.getAddress())).wait();
   await (await intentRegistry.setAuctioneer(await coordinator.getAddress())).wait();
-  await (await intentRegistry.connect(coordinator).fundAuctioneerBond({ value: auctioneerBond })).wait();
+  if (auctioneerBond > 0n) {
+    await (await intentRegistry.connect(coordinator).fundAuctioneerBond({ value: auctioneerBond })).wait();
+  }
   await (await solverRegistry.setReporter(await intentRegistry.getAddress(), true)).wait();
   await (await rwaRegistry.setAttestor(deployer.address, true)).wait();
   await (await settlement.setRwaRegistry(await rwaRegistry.getAddress())).wait();

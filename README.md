@@ -6,7 +6,7 @@ onchain — competing solvers work out how; the chain enforces that they did.
 
 **Live:** [tryintentos.xyz](https://tryintentos.xyz) (compose at `/app`)  
 **Testnet:** X Layer **1952** — mintable rails, the click-through demo.  
-**Mainnet:** X Layer **196** — same protocol, real USDT / USDG / TSLAx, Uniswap V2 + V3 adapter. Run `npm run deploy:mainnet -w @intentos/contracts` once the deployer has OKB.  
+**Mainnet:** X Layer — same protocol, live. Registry `0x4129073bf0B0c9b612fA33F8687DbF555646D515` against real USDT / USDG / TSLAx and a Uniswap V3 adapter. The clickable demo stays on testnet so anyone can mint.  
 **Repo:** [github.com/ezekiel6262/intentos](https://github.com/ezekiel6262/intentos)
 
 The four solvers on the demo are **IntentOS reference operators we run**, bonded so auctions are never empty. A missed guarantee slashes 10% of bond to the runner-up. KYB is checked at selection.

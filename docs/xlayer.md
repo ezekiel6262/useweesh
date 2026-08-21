@@ -33,13 +33,12 @@ mainnet** — see below.
 
 ## Mainnet (chain 196)
 
-The protocol is launched on X Layer mainnet with **real** USDT, USDG and TSLAx, Uniswap V2 allowlisted, and a `V3RouterAdapter` in front of SwapRouter02 / QuoterV2. That adapter exists because V2 has no USDT→USDG or USDT→TSLAx pair; V3 is where those pools live.
+The protocol is live on X Layer mainnet (`deployments/xlayerMainnet.json`). Real USDT, USDG and TSLAx, Uniswap V2 allowlisted, plus a `V3RouterAdapter` at `0x761E498d52f71F5E51E6F2C5B91c641C91982b5e` in front of SwapRouter02 / QuoterV2. V2 has no USDT→USDG or USDT→TSLAx pair; V3 is where those pools live.
 
-```bash
-npm run deploy:mainnet -w @intentos/contracts
-```
+IntentRegistry: `0x4129073bf0B0c9b612fA33F8687DbF555646D515`  
+Settlement: `0x44F2b8b18Acdc3c68fB419Fb4D6f413be9167DFd`
 
-Writes `deployments/xlayerMainnet.json`. The compose app stays on **testnet 1952** so anyone can mint and run the loop. Mainnet fills only where a pool actually quotes. There is no faucet on 196.
+The compose app stays on X Layer testnet so anyone can mint and run the loop. Mainnet fills only where a pool actually quotes. There is no faucet on mainnet.
 
 ## Going further on mainnet
 
