@@ -146,6 +146,7 @@ export interface Condition {
 export interface IntentRecord {
   intentId: Hex;
   owner: Address;
+  integrator?: Address;
   kind: IntentKind;
   status: IntentStatus;
   legCount: number;

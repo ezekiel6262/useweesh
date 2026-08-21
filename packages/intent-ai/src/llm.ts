@@ -60,7 +60,8 @@ Rules that matter:
 - maxSlippagePercent defaults to 1 unless the user gave a tolerance.
 - Set requireRwaAttested when the user cares that the assets are genuine tokenized real-world
   assets. Set requireCompliant when they ask for KYB'd or compliant solvers. Set sponsorGas when
-  they ask for gasless fulfillment. Set payTo to the 0x address on a payment. Set restrictToDeclaredAssets when they want the intent pinned to exactly these assets.
+  they ask for gasless fulfillment. Set integratorControlled for neobank / integrator-only selection.
+  Set payTo to the 0x address on a payment. Set restrictToDeclaredAssets when they want the intent pinned to exactly these assets.
 - Record anything you filled in yourself under assumptions. Use clarifications only for things a
   human really must answer — a missing amount, an unknown asset, a contradiction. Do not ask about
   details you were able to assume sensibly.

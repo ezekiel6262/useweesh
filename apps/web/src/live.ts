@@ -11,6 +11,10 @@ import {
   hashOutcome,
   hashPolicy,
   retimeDraft,
+  submitDomain,
+  SUBMIT_TYPES,
+  PERMIT_TYPES,
+  IntentKind,
   type IntentDraft,
 } from "@intentos/intent-schema";
 
@@ -61,6 +65,9 @@ const ERC20 = [
     ],
     outputs: [],
   },
+  { type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+  { type: "function", name: "nonces", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "version", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
 ] as const;
 
 const REGISTRY = [
@@ -80,6 +87,32 @@ const REGISTRY = [
     ],
     outputs: [{ name: "intentId", type: "bytes32" }],
   },
+  {
+    type: "function",
+    name: "submitFor",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "salt", type: "bytes32" },
+      { name: "kind", type: "uint8" },
+      { name: "outcomeHash", type: "bytes32" },
+      { name: "policyHash", type: "bytes32" },
+      { name: "legCount", type: "uint16" },
+      { name: "auctionEndsAt", type: "uint64" },
+      { name: "deadline", type: "uint64" },
+      { name: "integrator", type: "address" },
+      { name: "metadataURI", type: "string" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [{ name: "intentId", type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "nonces",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
 ] as const;
 
 export interface DeploymentInfo {
@@ -88,6 +121,7 @@ export interface DeploymentInfo {
   explorer: string;
   contracts: { intentRegistry: Address; settlement: Address; [k: string]: Address };
   tokens: Record<string, Address>;
+  roles?: { coordinator?: Address; [k: string]: Address | undefined };
 }
 
 function ethereum(): any {
@@ -191,12 +225,31 @@ function publicClient(rpc: string) {
 export async function mintTestUsdt(deployment: DeploymentInfo, account: Address, amount = 100_000_000_000n) {
   const usdt = deployment.tokens.USDT;
   if (!usdt) throw new Error("USDT is not on this deployment");
-  return sendTx({
+  const hash = await sendTx({
     account,
     rpc: deployment.rpc,
     to: usdt,
     data: encodeFunctionData({ abi: ERC20, functionName: "mint", args: [account, amount] }),
   });
+  const usdg = deployment.tokens.USDG;
+  if (usdg) {
+    await sendTx({
+      account,
+      rpc: deployment.rpc,
+      to: usdg,
+      data: encodeFunctionData({ abi: ERC20, functionName: "mint", args: [account, amount] }),
+    });
+  }
+  return hash;
+}
+
+const ZERO = "0x0000000000000000000000000000000000000000" as Address;
+
+async function signTypedData(account: Address, payload: unknown): Promise<Hex> {
+  return (await ethereum().request({
+    method: "eth_signTypedData_v4",
+    params: [account, JSON.stringify(payload)],
+  })) as Hex;
 }
 
 export async function submitDraft(
@@ -210,16 +263,31 @@ export async function submitDraft(
   if (chainId !== 1952) {
     throw new Error(`Wallet is on chain ${chainId}, not X Layer Testnet (1952). Switch networks and retry.`);
   }
-  const okb = await pub.getBalance({ address: account });
-  if (okb === 0n) {
-    throw new Error("This wallet has 0 OKB. The faucet must fund YOUR connected address, not the deployer, or submit cannot pay gas.");
-  }
 
   const now = Math.max(Math.floor(Date.now() / 1000), Number((await pub.getBlock()).timestamp));
   const stamped = retimeDraft(draft, { now: now + 8, auctionSeconds: 30, ttlSeconds: 180 });
-  stamped.outcome = { ...stamped.outcome, recipient: account };
+  if (stamped.outcome.kind !== IntentKind.PAYMENT) {
+    stamped.outcome = { ...stamped.outcome, recipient: account };
+  }
 
   const settlement = deployment.contracts.settlement;
+  const integrator =
+    stamped.metadata.integratorControlled && deployment.roles?.coordinator
+      ? deployment.roles.coordinator
+      : ZERO;
+  const metadata = (stamped.metadata.prompt ?? "").slice(0, 500);
+  const outcomeHash = hashOutcome(stamped.outcome);
+  const policyHash = hashPolicy(stamped.policy);
+
+  let permit: {
+    token: Address;
+    owner: Address;
+    spender: Address;
+    value: string;
+    deadline: string;
+    signature: Hex;
+  } | undefined;
+
   if (stamped.outcome.inputAmount > 0n) {
     const allowance = (await pub.readContract({
       address: stamped.outcome.inputToken,
@@ -228,52 +296,158 @@ export async function submitDraft(
       args: [account, settlement],
     })) as bigint;
     if (allowance < stamped.outcome.inputAmount) {
-      await sendTx({
-        account,
-        rpc: deployment.rpc,
-        to: stamped.outcome.inputToken,
-        data: encodeFunctionData({
-          abi: ERC20,
-          functionName: "approve",
-          args: [settlement, stamped.outcome.inputAmount],
-        }),
-      });
+      try {
+        const token = stamped.outcome.inputToken;
+        const [name, nonce] = await Promise.all([
+          pub.readContract({ address: token, abi: ERC20, functionName: "name" }) as Promise<string>,
+          pub.readContract({ address: token, abi: ERC20, functionName: "nonces", args: [account] }) as Promise<bigint>,
+        ]);
+        const permitDeadline = BigInt(now + 3_600);
+        const signature = await signTypedData(account, {
+          types: {
+            EIP712Domain: [
+              { name: "name", type: "string" },
+              { name: "version", type: "string" },
+              { name: "chainId", type: "uint256" },
+              { name: "verifyingContract", type: "address" },
+            ],
+            Permit: PERMIT_TYPES.Permit,
+          },
+          primaryType: "Permit",
+          domain: { name, version: "1", chainId, verifyingContract: token },
+          message: {
+            owner: account,
+            spender: settlement,
+            value: stamped.outcome.inputAmount.toString(),
+            nonce: nonce.toString(),
+            deadline: permitDeadline.toString(),
+          },
+        });
+        permit = {
+          token,
+          owner: account,
+          spender: settlement,
+          value: stamped.outcome.inputAmount.toString(),
+          deadline: permitDeadline.toString(),
+          signature,
+        };
+      } catch (error) {
+        const okb = await pub.getBalance({ address: account });
+        if (okb === 0n) {
+          throw new Error(
+            `Could not sign a gasless approval (${(error as Error).message}). Fund a little OKB for a one-time approve, or try again.`,
+          );
+        }
+        await sendTx({
+          account,
+          rpc: deployment.rpc,
+          to: stamped.outcome.inputToken,
+          data: encodeFunctionData({
+            abi: ERC20,
+            functionName: "approve",
+            args: [settlement, stamped.outcome.inputAmount],
+          }),
+        });
+      }
     }
   }
 
-  const metadata = (stamped.metadata.prompt ?? "").slice(0, 500);
-  const hash = await sendTx({
-    account,
-    rpc: deployment.rpc,
-    to: deployment.contracts.intentRegistry,
-    data: encodeFunctionData({
-      abi: REGISTRY,
-      functionName: "submit",
-      args: [
-        stamped.salt,
-        stamped.outcome.kind,
-        hashOutcome(stamped.outcome),
-        hashPolicy(stamped.policy),
-        stamped.outcome.legs.length,
-        stamped.auctionEndsAt,
-        stamped.deadline,
-        metadata,
+  const nonce = (await pub.readContract({
+    address: deployment.contracts.intentRegistry,
+    abi: REGISTRY,
+    functionName: "nonces",
+    args: [account],
+  })) as bigint;
+
+  const signature = await signTypedData(account, {
+    types: {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
       ],
-    }),
+      Submit: SUBMIT_TYPES.Submit,
+    },
+    primaryType: "Submit",
+    domain: submitDomain(chainId, deployment.contracts.intentRegistry),
+    message: {
+      owner: account,
+      kind: stamped.outcome.kind,
+      outcomeHash,
+      policyHash,
+      salt: stamped.salt,
+      auctionEndsAt: stamped.auctionEndsAt.toString(),
+      deadline: stamped.deadline.toString(),
+      legCount: stamped.outcome.legs.length,
+      integrator,
+      metadataURI: metadata,
+      nonce: nonce.toString(),
+    },
   });
 
   const intentId = computeIntentId({
     chainId: deployment.chainId,
     registry: deployment.contracts.intentRegistry,
     owner: account,
-    outcomeHash: hashOutcome(stamped.outcome),
-    policyHash: hashPolicy(stamped.policy),
+    outcomeHash,
+    policyHash,
     salt: stamped.salt,
     auctionEndsAt: stamped.auctionEndsAt,
     deadline: stamped.deadline,
   });
 
-  return { intentId, hash, draft: stamped };
+  try {
+    const response = await fetch("/api/relay", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        owner: account,
+        salt: stamped.salt,
+        kind: stamped.outcome.kind,
+        outcomeHash,
+        policyHash,
+        legCount: stamped.outcome.legs.length,
+        auctionEndsAt: stamped.auctionEndsAt.toString(),
+        deadline: stamped.deadline.toString(),
+        integrator,
+        metadataURI: metadata,
+        signature,
+        permit,
+      }),
+    });
+    const payload = (await response.json()) as { hash?: Hex; error?: string };
+    if (!response.ok || !payload.hash) throw new Error(payload.error ?? "relay failed");
+    await pub.waitForTransactionReceipt({ hash: payload.hash });
+    return { intentId, hash: payload.hash, draft: stamped };
+  } catch (error) {
+    const okb = await pub.getBalance({ address: account });
+    if (okb === 0n) {
+      throw new Error(
+        `${(error as Error).message}. Relay could not submit, and this wallet has 0 OKB so it cannot send the transaction itself.`,
+      );
+    }
+    const hash = await sendTx({
+      account,
+      rpc: deployment.rpc,
+      to: deployment.contracts.intentRegistry,
+      data: encodeFunctionData({
+        abi: REGISTRY,
+        functionName: "submit",
+        args: [
+          stamped.salt,
+          stamped.outcome.kind,
+          outcomeHash,
+          policyHash,
+          stamped.outcome.legs.length,
+          stamped.auctionEndsAt,
+          stamped.deadline,
+          metadata,
+        ],
+      }),
+    });
+    return { intentId, hash, draft: stamped };
+  }
 }
 
 export async function balanceOf(rpc: string, token: Address, account: Address): Promise<bigint> {

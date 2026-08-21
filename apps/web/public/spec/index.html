@@ -55,11 +55,11 @@
 <h2>Onchain addresses (testnet 1952)</h2>
 <table>
   <tr><th>Contract</th><th>Address</th></tr>
-  <tr><td>IntentRegistry</td><td><code>0x84E27EcE3Bb37e97C51EbE5438E4937ABD1e67F3</code></td></tr>
-  <tr><td>IntentSettlement</td><td><code>0x0e20f8239A37Fe6E2231D834ea67305fcF294509</code></td></tr>
-  <tr><td>PolicyEngine</td><td><code>0xE320FB63BDda6c333B915E36B69d7968E91C6962</code></td></tr>
-  <tr><td>SolverRegistry</td><td><code>0xa0d75b2BBBBf711764e0F0F5B7423E0B879257a3</code></td></tr>
-  <tr><td>RWARegistry</td><td><code>0x807F1Dec94d3a648351E369A0b032C26BAC7493b</code></td></tr>
+  <tr><td>IntentRegistry</td><td><code>0x2cc22cA31E1767Dbe639BA74AA441A4DE76606fD</code></td></tr>
+  <tr><td>IntentSettlement</td><td><code>0x6ddA9DC53b789a13eAc897CD2fCEc8a35607f10C</code></td></tr>
+  <tr><td>PolicyEngine</td><td><code>0xdBE7d92110f5aa428535Eb68291c668A203bE9b1</code></td></tr>
+  <tr><td>SolverRegistry</td><td><code>0x073a5541F4f8973dC36428E6a70Dac72922eb8ed</code></td></tr>
+  <tr><td>RWARegistry</td><td><code>0x780D39477b869681a23a0c4AB3bE17B9CDEBe875</code></td></tr>
 </table>
 
 <h2>What is committed</h2>
@@ -91,6 +91,7 @@ intentId     = keccak256(IntentOS.Intent.v1, chainId, registry, owner, hashes, s
 
 <h2>Solver lanes</h2>
 <p>Solvers advertise capability bits: <code>AI</code> · <code>COMPLIANT</code> · <code>RWA</code> · <code>STABLE</code> · <code>AGENT</code> · <code>GASLESS</code>. The registry owner attests KYB separately. <code>Policy.requireCompliant</code> and <code>Policy.sponsorGas</code> are hashed into the commitment, so a non-KYB or non-gasless winner reverts at settlement.</p>
+<p><code>submitFor</code> is the gasless path: the owner signs an EIP-712 <code>Submit</code> (and an ERC-20 <code>permit</code> if settlement needs an allowance). The coordinator pays gas. A named <code>integrator</code> may be pinned so only that address — typically a neobank coordinator — can select the winner.</p>
 
 <h2>Agent surface</h2>
 <p>Agents do not need a UI. <code>POST /api/declare</code> turns a sentence into calldata. The agent still signs. Open questions are not signed on anyone’s behalf.</p>

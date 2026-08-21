@@ -164,7 +164,7 @@
       <div class="actions">
         <button class="btn" id="parse">Parse</button>
         <button class="btn" id="fulfill">Submit &amp; settle</button>
-        <button class="btn ghost" id="faucet">Mint USDT</button>
+        <button class="btn ghost" id="faucet">Mint stables</button>
         <span class="note" id="parserNote"></span>
       </div>
       <div class="chips" id="chips"></div>
@@ -595,7 +595,7 @@ $("faucet").addEventListener("click", async () => {
     $("error").classList.remove("hide");
   } finally {
     $("faucet").disabled = false;
-    $("faucet").textContent = "Mint USDT";
+    $("faucet").textContent = "Mint stables";
   }
 });
 $("fulfill").addEventListener("click", () => runFulfill().catch((error) => {

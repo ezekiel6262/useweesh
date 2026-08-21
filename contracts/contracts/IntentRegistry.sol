@@ -39,6 +39,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         address selectedSolver;
         uint32 selectedBid;
         bool ownerSelected; // selection made by the owner => not challengeable
+        address integrator; // if set, only this address (or the owner) may select
     }
 
     struct Bid {
@@ -53,6 +54,11 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
 
     uint16 public constant BPS = 10_000;
     uint64 public constant MIN_AUCTION_WINDOW = 3 seconds;
+    bytes32 public constant SUBMIT_TYPEHASH = keccak256(
+        "Submit(address owner,uint8 kind,bytes32 outcomeHash,bytes32 policyHash,bytes32 salt,uint64 auctionEndsAt,uint64 deadline,uint16 legCount,address integrator,string metadataURI,uint256 nonce)"
+    );
+
+    mapping(address => uint256) public nonces;
 
     SolverRegistry public immutable solvers;
 
@@ -108,6 +114,7 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
     error NotDominating();
     error NotChallengeable();
     error TransferFailed();
+    error BadSignature();
 
     constructor(address owner_, SolverRegistry solvers_) Ownable(owner_) {
         solvers = solvers_;
@@ -158,15 +165,69 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         uint64 deadline,
         string calldata metadataURI
     ) external returns (bytes32) {
-        bytes32 intentId =
-            computeIntentId(msg.sender, outcomeHash, policyHash, salt, auctionEndsAt, deadline);
+        return _open(
+            msg.sender, salt, kind, outcomeHash, policyHash, legCount, auctionEndsAt, deadline, address(0), metadataURI
+        );
+    }
+
+    /// @notice Gasless submit. `owner` signs an EIP-712 `Submit`; the relayer (any account, typically
+    ///         the coordinator) pays gas. `integrator` pins selection to a named controller when set.
+    function submitFor(
+        address owner,
+        bytes32 salt,
+        IntentLib.Kind kind,
+        bytes32 outcomeHash,
+        bytes32 policyHash,
+        uint16 legCount,
+        uint64 auctionEndsAt,
+        uint64 deadline,
+        address integrator,
+        string calldata metadataURI,
+        bytes calldata signature
+    ) external returns (bytes32) {
+        uint256 nonce = nonces[owner]++;
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    SUBMIT_TYPEHASH,
+                    owner,
+                    uint8(kind),
+                    outcomeHash,
+                    policyHash,
+                    salt,
+                    auctionEndsAt,
+                    deadline,
+                    legCount,
+                    integrator,
+                    keccak256(bytes(metadataURI)),
+                    nonce
+                )
+            )
+        );
+        if (_recover(digest, signature) != owner) revert BadSignature();
+        return _open(owner, salt, kind, outcomeHash, policyHash, legCount, auctionEndsAt, deadline, integrator, metadataURI);
+    }
+
+    function _open(
+        address owner,
+        bytes32 salt,
+        IntentLib.Kind kind,
+        bytes32 outcomeHash,
+        bytes32 policyHash,
+        uint16 legCount,
+        uint64 auctionEndsAt,
+        uint64 deadline,
+        address integrator,
+        string calldata metadataURI
+    ) private returns (bytes32) {
+        bytes32 intentId = computeIntentId(owner, outcomeHash, policyHash, salt, auctionEndsAt, deadline);
         if (_intents[intentId].status != IntentLib.Status.NONE) revert IntentExists();
         if (legCount == 0) revert BadLegCount();
         if (auctionEndsAt < block.timestamp + MIN_AUCTION_WINDOW) revert BadTiming();
         if (deadline <= auctionEndsAt) revert BadTiming();
 
         _intents[intentId] = IntentRecord({
-            owner: msg.sender,
+            owner: owner,
             kind: kind,
             status: IntentLib.Status.OPEN,
             legCount: legCount,
@@ -177,14 +238,13 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
             policyHash: policyHash,
             selectedSolver: address(0),
             selectedBid: 0,
-            ownerSelected: false
+            ownerSelected: false,
+            integrator: integrator
         });
         _intentIds.push(intentId);
-        _byOwner[msg.sender].push(intentId);
+        _byOwner[owner].push(intentId);
 
-        emit IntentSubmitted(
-            intentId, msg.sender, kind, outcomeHash, policyHash, legCount, auctionEndsAt, deadline, metadataURI
-        );
+        emit IntentSubmitted(intentId, owner, kind, outcomeHash, policyHash, legCount, auctionEndsAt, deadline, metadataURI);
         return intentId;
     }
 
@@ -261,7 +321,8 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
         if (block.timestamp > r.deadline) revert BadTiming();
 
         bool byOwner = msg.sender == r.owner;
-        if (!byOwner && msg.sender != auctioneer) revert NotSelector();
+        address controller = r.integrator == address(0) ? auctioneer : r.integrator;
+        if (!byOwner && msg.sender != controller) revert NotSelector();
 
         Bid storage b = _bid(intentId, bidId);
         if (b.withdrawn) revert UnknownBid();
@@ -375,6 +436,32 @@ contract IntentRegistry is Ownable, ReentrancyGuard {
 
     function hashPolicy(IntentLib.Policy calldata policy) external pure returns (bytes32) {
         return IntentLib.hashPolicy(policy);
+    }
+
+    bytes32 private constant DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 private constant NAME_HASH = keccak256("IntentOS");
+    bytes32 private constant VERSION_HASH = keccak256("1");
+
+    function _hashTypedDataV4(bytes32 structHash) private view returns (bytes32) {
+        bytes32 domain = keccak256(abi.encode(DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, block.chainid, address(this)));
+        return keccak256(abi.encodePacked("\x19\x01", domain, structHash));
+    }
+
+    function _recover(bytes32 digest, bytes calldata signature) private pure returns (address) {
+        if (signature.length != 65) revert BadSignature();
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := calldataload(signature.offset)
+            s := calldataload(add(signature.offset, 32))
+            v := byte(0, calldataload(add(signature.offset, 64)))
+        }
+        if (v < 27) v += 27;
+        address signer = ecrecover(digest, v, r, s);
+        if (signer == address(0)) revert BadSignature();
+        return signer;
     }
 
     function _load(bytes32 intentId) private view returns (IntentRecord storage r) {

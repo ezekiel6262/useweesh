@@ -112,7 +112,10 @@ export function catalogFromDeployment(deployment: DeploymentFile): AssetCatalog 
       aliases.push(...(COMPANY_NAMES[symbol] ?? []));
     }
     if (symbol.toUpperCase() === "USDT") {
-      aliases.push("usdg", "usdc", "dai", "usd", "stable", "stablecoin", "stables");
+      aliases.push("usdc", "dai", "usd", "stable", "stablecoin", "stables");
+    }
+    if (symbol.toUpperCase() === "USDG") {
+      aliases.push("global dollar");
     }
 
     catalog.add({

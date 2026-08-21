@@ -9,6 +9,7 @@ const deployment = {
   contracts: {},
   tokens: {
     USDT: "0x0000000000000000000000000000000000000011",
+    USDG: "0x0000000000000000000000000000000000000012",
     TSLAx: "0x0000000000000000000000000000000000000021",
     NVDAx: "0x0000000000000000000000000000000000000022",
     AAPLx: "0x0000000000000000000000000000000000000023",
@@ -213,6 +214,7 @@ test("parseIntent uses Claude when a client is supplied, and validates what it r
             requireRwaAttested: true,
             requireCompliant: false,
             sponsorGas: false,
+            integratorControlled: false,
             payTo: null,
             restrictToDeclaredAssets: false,
             minSolverReputationPercent: null,
@@ -259,6 +261,7 @@ test("a model that names an unknown asset fails resolution instead of trading", 
           requireRwaAttested: false,
           requireCompliant: false,
           sponsorGas: false,
+          integratorControlled: false,
           payTo: null,
           restrictToDeclaredAssets: false,
           minSolverReputationPercent: null,
@@ -324,7 +327,7 @@ test("a three-way ratio works, and a mismatched one is ignored", () => {
 test("a gasless stablecoin payment compiles as a PAYMENT with a cash sleeve", async () => {
   const spec = parse("Pay 500 USDG gaslessly to 0x000000000000000000000000000000000000cafe");
   assert.equal(spec.action, "pay");
-  assert.equal(spec.inputSymbol, "USDT");
+  assert.equal(spec.inputSymbol, "USDG");
   assert.equal(spec.inputAmount, "500");
   assert.equal(spec.payTo, "0x000000000000000000000000000000000000cafe");
   assert.equal(spec.sponsorGas, true);
@@ -333,7 +336,7 @@ test("a gasless stablecoin payment compiles as a PAYMENT with a cash sleeve", as
   assert.equal(draft.outcome.kind, IntentKind.PAYMENT);
   assert.equal(draft.outcome.recipient, "0x000000000000000000000000000000000000cafe");
   assert.equal(draft.outcome.legs.length, 1);
-  assert.equal(draft.outcome.legs[0].token, deployment.tokens.USDT);
+  assert.equal(draft.outcome.legs[0].token, deployment.tokens.USDG);
   assert.equal(draft.policy.sponsorGas, true);
   assert.equal(draft.policy.maxFeeBps, 0);
 });

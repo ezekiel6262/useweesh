@@ -49,6 +49,9 @@ export const intentSpecSchema = z.object({
   sponsorGas: z
     .boolean()
     .describe("The winning solver must sponsor settlement gas"),
+  integratorControlled: z
+    .boolean()
+    .describe("Only a named integrator (neobank / fintech coordinator) may select the winner"),
   payTo: z
     .string()
     .nullable()
@@ -103,6 +106,7 @@ export function emptySpec(overrides: Partial<IntentSpec> = {}): IntentSpec {
     requireRwaAttested: false,
     requireCompliant: false,
     sponsorGas: false,
+    integratorControlled: false,
     payTo: null,
     restrictToDeclaredAssets: false,
     minSolverReputationPercent: null,

@@ -65,6 +65,7 @@ JSON shape:
   "requireRwaAttested": boolean,
   "requireCompliant": boolean,
   "sponsorGas": boolean,
+  "integratorControlled": boolean,
   "payTo": string | null,
   "restrictToDeclaredAssets": boolean,
   "minSolverReputationPercent": number | null,

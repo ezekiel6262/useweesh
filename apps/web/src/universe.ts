@@ -15,6 +15,7 @@ const RAW_PREVIEW: DeploymentFile = {
   contracts: {},
   tokens: {
     USDT: "0x00000000000000000000000000000000pre0001" as `0x${string}`,
+    USDG: "0x00000000000000000000000000000000pre0002" as `0x${string}`,
     TSLAx: "0x00000000000000000000000000000000pre0021" as `0x${string}`,
     NVDAx: "0x00000000000000000000000000000000pre0022" as `0x${string}`,
     AAPLx: "0x00000000000000000000000000000000pre0023" as `0x${string}`,
@@ -54,6 +55,7 @@ export interface PreviewAsset {
 
 export const PREVIEW_ASSETS: PreviewAsset[] = [
   { symbol: "USDT", name: "Tether USD", kind: "base", decimals: 6, usdPrice: 1, assetRef: "FIAT:USD", attested: true, class: "cash" },
+  { symbol: "USDG", name: "Global Dollar", kind: "base", decimals: 6, usdPrice: 1, assetRef: "FIAT:USD", attested: true, class: "cash" },
   { symbol: "TSLAx", name: "Tesla xStock", kind: "xstock", decimals: 18, usdPrice: 330, assetRef: "ISIN:US88160R1014", attested: true, class: "equity" },
   { symbol: "NVDAx", name: "NVIDIA xStock", kind: "xstock", decimals: 18, usdPrice: 180, assetRef: "ISIN:US67066G1040", attested: true, class: "equity" },
   { symbol: "AAPLx", name: "Apple xStock", kind: "xstock", decimals: 18, usdPrice: 230, assetRef: "ISIN:US0378331005", attested: true, class: "equity" },

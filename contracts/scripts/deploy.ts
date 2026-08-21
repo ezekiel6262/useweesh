@@ -52,7 +52,7 @@ async function main() {
     derivedKeys.SOLVER_A_PRIVATE_KEY = (solverA as Wallet).privateKey;
     derivedKeys.SOLVER_B_PRIVATE_KEY = (solverB as Wallet).privateKey;
 
-    const gasDrop = ethers.parseEther("0.002");
+    const gasDrop = ethers.parseEther("0.008");
     for (const wallet of [coordinator, solverA, solverB]) {
       const addr = await wallet.getAddress();
       const bal = await ethers.provider.getBalance(addr);
@@ -108,7 +108,9 @@ async function main() {
   const usdt = await erc20.deploy(BASE_ASSET.name, BASE_ASSET.symbol, BASE_ASSET.decimals);
   await usdt.waitForDeployment();
 
-  const tokens: Record<string, string> = { USDT: await usdt.getAddress() };
+  const usdg = await erc20.deploy("Global Dollar", "USDG", 6);
+  await usdg.waitForDeployment();
+  const tokens: Record<string, string> = { USDT: await usdt.getAddress(), USDG: await usdg.getAddress() };
   for (const asset of XSTOCKS) {
     const t = await erc20.deploy(asset.name, asset.symbol, asset.decimals);
     await t.waitForDeployment();
@@ -147,6 +149,9 @@ async function main() {
       await (await stock.mint(routerAddress, ethers.parseUnits("250000", asset.decimals))).wait();
     }
     await (await usdt.mint(routerAddress, ethers.parseUnits("50000000", BASE_ASSET.decimals))).wait();
+    // 1:1 USDG/USDT rail so stable payments and conversions quote without slippage beyond the venue fee.
+    await (await router.setPrice(tokens.USDT!, tokens.USDG!, WAD, ethers.parseUnits("50000", 6))).wait();
+    await (await usdg.mint(routerAddress, ethers.parseUnits("50000000", 6))).wait();
     await (await settlement.setRouterAllowed(routerAddress, true)).wait();
     routers.push({ name: venue.name, address: routerAddress });
   }
@@ -155,6 +160,7 @@ async function main() {
   const funded = [deployer, coordinator, solverA, solverB].filter(Boolean) as Signer[];
   for (const signer of funded) {
     await (await usdt.mint(await signer.getAddress(), ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
+    await (await usdg.mint(await signer.getAddress(), ethers.parseUnits("1000000", 6))).wait();
   }
 
   if (solverA && solverB) {

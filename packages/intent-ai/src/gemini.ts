@@ -63,6 +63,7 @@ JSON shape:
   "requireRwaAttested": boolean,
   "requireCompliant": boolean,
   "sponsorGas": boolean,
+  "integratorControlled": boolean,
   "payTo": string | null,
   "restrictToDeclaredAssets": boolean,
   "minSolverReputationPercent": number | null,
@@ -82,7 +83,7 @@ Rules:
 - Amounts are decimal strings in whole units ("10000", "2.5"), never wei.
 - Equal split → every weightPercent is null.
 - action "swap" for one target, "buy_basket" for several, "rebalance" when selling to fund buys, "onboard_rwa" to bring an asset onchain, "pay" for a stablecoin payment.
-- requireRwaAttested for attested / RWA / xStocks integrity. requireCompliant for KYB'd solvers. sponsorGas when they ask to go gasless. payTo is the 0x recipient on a payment.`,
+- requireRwaAttested for attested / RWA / xStocks integrity. requireCompliant for KYB'd solvers. sponsorGas when they ask to go gasless. integratorControlled for neobank/fintech selection. payTo is the 0x recipient on a payment.`,
           },
         ],
       },

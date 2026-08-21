@@ -186,6 +186,7 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
           }))
         : undefined,
       assumptions: spec.assumptions.length ? spec.assumptions : undefined,
+      integratorControlled: spec.integratorControlled || undefined,
     },
   });
 

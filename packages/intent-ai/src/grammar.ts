@@ -60,6 +60,7 @@ export function parseWithGrammar(prompt: string, catalog: AssetCatalog): Grammar
   spec.action = detectAction(text, spec);
   spec.requireCompliant = /\b(kyb|kyc|compliant solvers?|only compliant|kyb'?d)\b/.test(text);
   spec.sponsorGas = /\b(gasless(?:ly)?|sponsor(?:ed)? gas|pay(?:s|ing)? (?:the )?gas)\b/.test(text);
+  spec.integratorControlled = /\b(integrator[- ]controlled|neobank|fintech app)\b/.test(text);
   spec.minSolverReputationPercent = findReputationFloor(text);
   spec.requireRwaAttested = /\b(attested|verified|regulated)\b/.test(text) || spec.action === "onboard_rwa";
   spec.restrictToDeclaredAssets = /\b(only these|nothing else|no other (?:assets|tokens)|exactly these)\b/.test(text);
