@@ -51,6 +51,10 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .chip { font-size: 11.5px; color: var(--faint); border: 1px solid var(--line); background: none; padding: 4px 10px; cursor: pointer; }
   .chip:hover { color: var(--accent); border-color: var(--accent); }
+  .console-note { font-size: 12px; color: var(--faint); margin: 14px 0 0; line-height: 1.45; }
+  #consoleBody .kv-row { padding: 4px 0; border: 0; font-size: 13px; }
+  #consoleBody .kv-k { flex: 0 0 84px; }
+  #consoleBody .kv-v { text-align: right; overflow-wrap: anywhere; }
   .asset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   @media (max-width: 700px) { .loop { grid-template-columns: 1fr 1fr; } }
 </style>
@@ -120,10 +124,9 @@
 
     <div class="card" id="consoleCard">
       <h2 class="lab">Protocol console</h2>
-      <div id="consoleBody">
-        <div class="console-line"><b>chain</b> X Layer · 1952</div>
-        <div class="console-line"><b>status</b> connecting…</div>
-      </div>
+      <div id="consoleBody" class="kv"></div>
+      <p class="console-note">You sign · coordinator pays submit gas · solvers pay fulfillment.</p>
+      <div class="asset-row" id="laneRow"></div>
       <div class="asset-row" id="assetRow"></div>
     </div>
 
@@ -340,18 +343,16 @@ function setLoop(i) {
   const c = deployment?.contracts;
   const tokens = Object.keys(deployment?.tokens ?? {});
   const live = Boolean(health.live && c);
+  const row = (k, v) => `<div class="kv-row"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
   $("consoleBody").innerHTML = [
-    `<div class="console-line"><b>chain</b> X Layer · ${deployment?.chainId ?? 1952}</div>`,
-    `<div class="console-line"><b>status</b> ${live ? "live · solvers bonded · gasless relay on" : "offline"}</div>`,
-    c ? `<div class="console-line"><b>registry</b> <a href="${explorer("address/" + c.intentRegistry)}" target="_blank">${short(c.intentRegistry)}</a></div>` : "",
-    c ? `<div class="console-line"><b>settle</b> <a href="${explorer("address/" + c.settlement)}" target="_blank">${short(c.settlement)}</a></div>` : "",
-    `<div class="console-line"><b>lanes</b> AI · KYB · RWA · STABLE · AGENT · GASLESS</div>`,
-    `<div class="console-line"><b>kinds</b> SWAP · BASKET · REBALANCE · RWA_ONBOARD · PAYMENT</div>`,
-    `<div class="console-line"><b>enforces</b> weights · doubled floors · spend · KYB · gas</div>`,
-    `<div class="console-line"><b>submit</b> you sign · coordinator pays gas</div>`,
+    row("chain", `${deployment?.chainId ?? 1952} · ${live ? "live" : "offline"}`),
+    c ? row("registry", `<a href="${explorer("address/" + c.intentRegistry)}" target="_blank">${short(c.intentRegistry)}</a>`) : "",
+    c ? row("settlement", `<a href="${explorer("address/" + c.settlement)}" target="_blank">${short(c.settlement)}</a>`) : "",
   ].filter(Boolean).join("");
+  $("laneRow").innerHTML = ["AI", "KYB", "RWA", "STABLE", "AGENT", "GASLESS"]
+    .map((s) => `<span class="pill outline">${s}</span>`).join("");
   $("assetRow").innerHTML = (tokens.length ? tokens : ["USDT", "USDG", "TSLAx", "NVDAx", "AAPLx", "METAx", "SPYx", "GOOGLx"])
-    .map((s) => `<span class="pill">${esc(s)}</span>`).join("");
+    .map((s) => `<span class="pill outline">${esc(s)}</span>`).join("");
 }
 
 async function refreshRecent() {
