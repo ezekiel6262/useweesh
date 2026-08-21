@@ -69,15 +69,20 @@
     <svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg>
     <span>IntentOS</span>
   </a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+  <label class="nav-burger" for="nav-toggle" aria-label="Menu"><i></i><i></i><i></i></label>
+  <label class="nav-scrim" for="nav-toggle"></label>
   <nav>
     <a href="/">Home</a>
+    <a href="/how">How it works</a>
     <a href="/app" class="on">App</a>
     <a href="/agents">Agents</a>
     <a href="/docs">Docs</a>
-    <a href="/spec">Spec</a>
+    <a href="/standard">Standard</a>
+    <a class="btn nav-app" href="/app">Open app</a>
   </nav>
-  <div class="chip-net" id="mode">X LAYER · 1952 · TESTNET</div>
-  <button class="btn" id="connect" type="button">Connect</button>
+  <div class="chip-net" id="mode">X Layer testnet</div>
+  <button class="btn top-cta" id="connect" type="button">Connect</button>
 </header>
 
 <div class="workspace">
@@ -208,7 +213,7 @@
 <footer class="foot" id="proto">
   <span>© 2026 IntentOS · live on X Layer testnet</span>
   <div class="foot-links">
-    <a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/spec">Spec</a>
+    <a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/standard">Standard</a>
   </div>
 </footer>
 </div>
@@ -378,9 +383,7 @@ try {
   health = { live: false };
 }
 
-$("mode").textContent = health.live
-  ? `X LAYER · ${deployment?.chainId ?? 1952} · TESTNET`
-  : `X LAYER · OFFLINE`;
+$("mode").textContent = health.live ? "X Layer testnet" : "X Layer testnet · offline";
 
 try {
   const obs = await api("/api/health?kind=observations");
@@ -399,7 +402,7 @@ function setLoop(i) {
   const live = Boolean(health.live && c);
   const row = (k, v) => `<div class="kv-row"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
   $("consoleBody").innerHTML = [
-    row("chain", `${deployment?.chainId ?? 1952} · ${live ? "live" : "offline"}`),
+    row("chain", live ? "X Layer testnet · live" : "X Layer testnet · offline"),
     c ? row("registry", `<a href="${explorer("address/" + c.intentRegistry)}" target="_blank">${short(c.intentRegistry)}</a>`) : "",
     c ? row("settlement", `<a href="${explorer("address/" + c.settlement)}" target="_blank">${short(c.settlement)}</a>`) : "",
   ].filter(Boolean).join("");
@@ -456,7 +459,7 @@ async function renderSession() {
   $("sessionBody").classList.remove("hide");
   const kv = (k, v) => `<div class="kv-row"><span class="kv-k">${k}</span><span class="kv-v">${v}</span></div>`;
   let rows = kv("account", `<span title="${esc(account)}">${esc(short(account))}</span>`);
-  rows += kv("network", `X Layer ${deployment?.chainId ?? 1952}`);
+  rows += kv("network", "X Layer testnet");
   if (deployment) {
     try {
       const bals = await readBalances(deployment, account);

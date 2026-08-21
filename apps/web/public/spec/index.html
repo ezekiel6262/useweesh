@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS Spec</title>
+<title>IntentOS Standard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
@@ -22,14 +22,25 @@
 <body>
 <header class="top">
   <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
-  <nav><a href="/">Home</a><a href="/app">App</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="/spec" class="on">Spec</a></nav>
-  <span class="chip-net">X LAYER · 1952</span>
-  <a class="btn" href="/app">Connect</a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+  <label class="nav-burger" for="nav-toggle" aria-label="Menu"><i></i><i></i><i></i></label>
+  <label class="nav-scrim" for="nav-toggle"></label>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/how">How it works</a>
+    <a href="/app">App</a>
+    <a href="/agents">Agents</a>
+    <a href="/docs">Docs</a>
+    <a href="/standard" class="on">Standard</a>
+    <a class="btn nav-app" href="/app">Open app</a>
+  </nav>
+  <span class="chip-net">X Layer testnet</span>
+  <a class="btn top-cta" href="/app">Open app</a>
 </header>
 <div class="page">
-  <h6 class="kicker">Intent Standard</h6>
+  <h6 class="kicker">Standard</h6>
   <h1 class="display">The outcome, the policy, the hash</h1>
-  <p class="lede">Two packages, <code>intent-schema</code> and <code>IntentLib.sol</code>, must agree byte-for-byte on how an outcome and a policy hash. If they disagree, settlement reverts with <code>OutcomeMismatch</code>.</p>
+  <p class="lede">This is the Intent Standard (the rules). Two packages, <code>intent-schema</code> and <code>IntentLib.sol</code>, must agree byte-for-byte on how an outcome and a policy hash. If they disagree, settlement reverts with <code>OutcomeMismatch</code>.</p>
 
   <section>
     <h3 class="display">Worked example</h3>
@@ -68,16 +79,16 @@
   </section>
 
   <section>
-    <h3 class="display">Contracts on X Layer 1952</h3>
+    <h3 class="display">Contracts on X Layer testnet</h3>
     <table>
       <tr><th>Contract</th><th>Job</th><th>Address</th></tr>
-      <tr><td>IntentRegistry</td><td>Commit hashes, auction, select, gasless submitFor, session keys</td><td class="mono">0x8AA313ce51AdCC6c6B448Fd1fd0429dc24328eB6</td></tr>
-      <tr><td>IntentSettlement</td><td>Only contract that touches user funds</td><td class="mono">0x8CEC593527fB711205D3e656B1e277E35C793C9f</td></tr>
-      <tr><td>PolicyEngine</td><td>Guardrails</td><td class="mono">0xb59E325278F641847124A9F009b006713f7e1236</td></tr>
-      <tr><td>SolverRegistry</td><td>Bond, reputation, lanes, KYB</td><td class="mono">0xf46dCa275b0698f847f318DAc357A23540B44280</td></tr>
-      <tr><td>RWARegistry</td><td>Attestations and onboarding</td><td class="mono">0xBaF79Da5aE8c61EC95178B1c64d8280287553576</td></tr>
-      <tr><td>RecurringRegistry</td><td>Standing jobs the coordinator re-declares</td><td class="mono">0xF4e3018d883AAfA8541F1B722d392B14407d0AdC</td></tr>
-      <tr><td>RwaVault</td><td>1:1 TSLAx shares</td><td class="mono">0xA3741ff772A198c0374d37592931db33C5e6E096</td></tr>
+      <tr><td>IntentRegistry</td><td>Commit hashes, auction, select, gasless submitFor, session keys</td><td class="mono">0xba5e77ea6DC930c0A41F2d962AB3Efd6ffC3250A</td></tr>
+      <tr><td>IntentSettlement</td><td>Only contract that touches user funds</td><td class="mono">0xcDA3E1eaCF05B55cB04D781Fe6a0Cf365777073a</td></tr>
+      <tr><td>PolicyEngine</td><td>Guardrails</td><td class="mono">0xBc8963621E0333f3ABD3FC1B5a7A716D119f6B58</td></tr>
+      <tr><td>SolverRegistry</td><td>Bond, reputation, lanes, KYB</td><td class="mono">0x66874911ffFe383AB6E5fD1e3daFEE896bf2A0Db</td></tr>
+      <tr><td>RWARegistry</td><td>Attestations and onboarding</td><td class="mono">0x96061d44DFe85AB7e045645Cf7B7436854F77E3E</td></tr>
+      <tr><td>RecurringRegistry</td><td>Standing jobs the coordinator re-declares</td><td class="mono">0xcE91d813251EbdCc75Bc320690cE5b1A6dA54FEF</td></tr>
+      <tr><td>RwaVault</td><td>1:1 TSLAx shares</td><td class="mono">0x7147Da6E8a2C785C72662bE65FCF8d11D2Bf01Af</td></tr>
     </table>
   </section>
 

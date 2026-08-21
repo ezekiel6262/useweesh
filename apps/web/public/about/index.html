@@ -12,9 +12,20 @@
 <body>
 <header class="top">
   <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
-  <nav><a href="/">Home</a><a href="/app">App</a><a href="/agents">Agents</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
-  <span class="chip-net">X LAYER · 1952</span>
-  <a class="btn" href="/app">Connect</a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+  <label class="nav-burger" for="nav-toggle" aria-label="Menu"><i></i><i></i><i></i></label>
+  <label class="nav-scrim" for="nav-toggle"></label>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/how">How it works</a>
+    <a href="/app">App</a>
+    <a href="/agents">Agents</a>
+    <a href="/docs">Docs</a>
+    <a href="/standard">Standard</a>
+    <a class="btn nav-app" href="/app">Open app</a>
+  </nav>
+  <span class="chip-net">X Layer testnet</span>
+  <a class="btn top-cta" href="/app">Open app</a>
 </header>
 <div class="page">
   <h6 class="kicker">About</h6>

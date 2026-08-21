@@ -79,15 +79,20 @@
     <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg>
     <span>IntentOS</span>
   </a>
+  <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+  <label class="nav-burger" for="nav-toggle" aria-label="Menu"><i></i><i></i><i></i></label>
+  <label class="nav-scrim" for="nav-toggle"></label>
   <nav>
     <a href="/" class="on">Home</a>
+    <a href="/how">How it works</a>
     <a href="/app">App</a>
     <a href="/agents">Agents</a>
     <a href="/docs">Docs</a>
-    <a href="/spec">Spec</a>
+    <a href="/standard">Standard</a>
+    <a class="btn nav-app" href="/app">Open app</a>
   </nav>
-  <span class="chip-net">X LAYER · 1952 + 196</span>
-  <a class="btn" href="/app">Connect</a>
+  <span class="chip-net">X Layer testnet</span>
+  <a class="btn top-cta" href="/app">Open app</a>
 </header>
 
 <main class="wrap">
@@ -97,16 +102,16 @@
       <p>The chain enforces that they did. The X Layer-native Intent Operating System for agents, stablecoins and Real World Assets.</p>
       <div class="cta-col">
         <a class="btn" href="/app">Declare an intent</a>
-        <a class="btn ghost" href="/agents">Agents</a>
+        <a class="btn ghost" href="/how">How it works</a>
       </div>
     </div>
   </section>
-  <div class="fine">X Layer testnet 1952 (demo + mint) · mainnet 196 (protocol launched) · submitFor gasless · no new token</div>
+  <div class="fine">Live on X Layer testnet · mint demo stables · you sign, coordinator pays submit gas</div>
 
   <section class="stats">
-    <div><b>1952</b><span>testnet demo, mintable rails</span></div>
-    <div><b>196</b><span>mainnet ready · V3 adapter · real tokens</span></div>
-    <div><b>4</b><span>reference solvers we run, 6 lanes</span></div>
+    <div><b>Live</b><span>X Layer testnet, mint and run</span></div>
+    <div><b>~30s</b><span>auction window</span></div>
+    <div><b>4</b><span>reference solvers, six lanes</span></div>
     <div><b>10%</b><span>bond slashed on a missed guarantee</span></div>
   </section>
 
@@ -219,25 +224,25 @@ await agent.history();</pre>
     <div class="faq"><b>What stops a solver from lying in its bid?</b><p>Nothing stops the bid. Settlement reverts if the guarantee is missed, then reportFailure slashes 10% of the solver's bonded OKB to the runner-up. Reputation also drops. KYB is checked at selection, not after the fact.</p></div>
     <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can't touch funds and can't force a bad settlement. It posts an auctioneer bond. Anyone can call challengeSelection within 30 minutes if a strictly better bid was passed over.</p></div>
     <div class="faq"><b>Can an intent tokenize a real-world asset?</b><p>Yes. Kind RWA_ONBOARD is the offchain-to-onchain path: the intent names the asset (ISIN, ticker, or existing wrapper). Settlement files OnboardingRequested on RWARegistry. An attestor later publishes the token. A funded onboard can also acquire the wrapper in the same fill when a pool exists.</p></div>
-    <div class="faq"><b>Is this wallet abstraction / ERC-4337?</b><p>The live path is signed intents: EIP-712 Submit + exact-amount permit, ERC-1271 smart-account owners, session keys, coordinator-paid submitFor. There is no EntryPoint bundler on 1952. You sign; you do not need OKB to declare.</p></div>
-    <div class="faq"><b>Testnet or mainnet?</b><p>The app you click is X Layer testnet 1952, with mintable stand-in stables so anyone can run the loop. Mainnet 196 uses the same contracts against real USDT, USDG, TSLAx and a Uniswap V3 adapter (V2 has no those pairs). Broadcast with <span class="mono">npm run deploy:mainnet</span> once the deployer holds OKB. Fills only where a pool quotes.</p></div>
+    <div class="faq"><b>Is this wallet abstraction?</b><p>You sign an intent. The coordinator pays submit gas. Session keys and smart-account owners work. You do not need OKB to declare.</p></div>
+    <div class="faq"><b>Testnet or mainnet?</b><p>The app is X Layer testnet, with mintable demo tokens. The same protocol is built for mainnet against real USDT, USDG, and TSLAx. More on the <a href="/how#faq">How it works</a> page.</p></div>
   </section>
 
   <section class="close">
     <h2 class="display" style="font-size:26px;margin:0 0 12px">Ready when you are</h2>
-    <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect on X Layer testnet, mint test stables, and submit. Solvers we operate compete. The chain checks the result. Mainnet 196 is the same contracts against real tokens.</p>
+    <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect on X Layer testnet, mint test stables, and submit. Solvers we operate compete. The chain checks the result.</p>
     <a class="btn" href="/app" style="padding:14px 28px">Open the app</a>
   </section>
 </main>
 
 <section class="banner-dark"><div class="inner">
-  <span>LIVE ON X LAYER TESTNET · CHAIN 1952 · GAS IN OKB</span>
+  <span>LIVE ON X LAYER TESTNET</span>
   <span style="opacity:.7">REGISTRY 0x8AA3…8eB6 · SETTLEMENT 0x8CEC…C9f</span>
 </div></section>
 <footer class="foot" style="max-width:1120px">
   <span>© 2026 IntentOS · OKX Build X AI Season · live on X Layer testnet</span>
   <div class="foot-links">
-    <a href="/how">How it works</a><a href="/agents">Agents</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/changelog">Changelog</a><a href="/spec">Spec</a><a href="/app">App</a><a href="https://github.com/ezekiel6262/intentos">Repo</a>
+    <a href="/how">How it works</a><a href="/agents">Agents</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/changelog">Changelog</a><a href="/standard">Standard</a><a href="/app">App</a><a href="https://github.com/ezekiel6262/intentos">Repo</a>
   </div>
 </footer>
 <script>
