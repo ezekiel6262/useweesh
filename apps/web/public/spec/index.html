@@ -3,112 +3,96 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Intent Standard v0.1 — IntentOS</title>
-<meta name="description" content="The IntentOS Intent Standard: outcome, policy, auction, settlement. Single-chain on X Layer." />
+<title>IntentOS — Spec</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f7f4ee'/%3E%3Cpath d='M7 11 L16 23 L25 11' fill='none' stroke='%237a3b2e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/intentos.css" />
 <style>
-  :root {
-    --bg:#f7f4ee; --surface:#fffdf9; --ink:#241f1a; --ink-muted:#59524a; --ink-faint:#8a8177;
-    --accent:#7a3b2e; --divider:#e5ddd1; --shadow:0 4px 20px rgba(36,31,26,.06);
-    --sans:"Work Sans",system-ui,sans-serif; --serif:"Newsreader",Georgia,serif; --mono:"IBM Plex Mono",monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--sans)}
-  a{color:var(--accent);text-decoration:none}
-  .shell{max-width:760px;margin:0 auto;padding:0 20px 72px}
-  header{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--divider)}
-  .brand{margin-right:auto;font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);display:flex;gap:8px;align-items:center}
-  nav a{color:var(--ink-muted);margin-left:14px;font-size:13px}
-  nav a.on{color:var(--accent)}
-  h1{font-family:var(--serif);font-size:clamp(28px,4vw,40px);font-weight:500;line-height:1.15;margin:28px 0 12px}
-  h2{font-family:var(--serif);font-size:22px;font-weight:500;margin:36px 0 10px}
-  p,li{color:var(--ink-muted);max-width:68ch}
-  pre,code{font-family:var(--mono);font-size:12.5px}
-  pre{background:#fffdf9;border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);overflow:auto;color:var(--ink)}
-  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0 20px}
-  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);padding:8px 12px 8px 0;border-bottom:1px solid var(--divider)}
-  td{padding:8px 12px 8px 0;border-bottom:1px solid var(--divider);vertical-align:top;color:var(--ink-muted)}
+  .page { max-width: 880px; margin: 0 auto; padding: 56px clamp(16px,3vw,40px); }
+  .page h1 { font-size: clamp(30px,4vw,42px); margin: 0 0 18px; }
+  .lede { font-size: 16px; line-height: 1.65; color: #444; max-width: 64ch; margin-bottom: 48px; }
+  section { margin-bottom: 48px; border-top: 2px solid var(--ink); padding-top: 24px; }
+  h3.display { font-size: 18px; margin: 0 0 16px; }
+  .trace { display: grid; grid-template-columns: 100px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; }
+  .trace n { font-size: 11px; color: var(--accent); }
+  code { font-family: var(--mono); font-size: 12.5px; }
 </style>
 </head>
 <body>
-<div class="shell">
-<header>
-  <a class="brand" href="/">
-    <svg width="18" height="18" viewBox="0 0 26 26" aria-hidden><path d="M4 8 L13 20 L22 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    intentos
-  </a>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/app">Compose</a>
-    <a href="/spec" class="on">Spec</a>
-  </nav>
+<header class="top">
+  <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
+  <nav><a href="/">Home</a><a href="/app">App</a><a href="/docs">Docs</a><a href="/spec" class="on">Spec</a></nav>
+  <span class="chip-net">X LAYER · 1952</span>
+  <a class="btn" href="/app">Connect</a>
 </header>
+<div class="page">
+  <h6 class="kicker">Intent Standard</h6>
+  <h1 class="display">The outcome, the policy, the hash</h1>
+  <p class="lede">Two packages — <code>intent-schema</code> and <code>IntentLib.sol</code> — must agree byte-for-byte on how an outcome and a policy hash. If they disagree, settlement reverts with <code>OutcomeMismatch</code>.</p>
 
-<p class="kicker">Intent Standard v0.2 · X Layer</p>
-<h1>An intent is a commitment to an outcome.</h1>
-<p>Not a transaction. Not a route. Users and agents declare what should be true afterwards — a gasless USDG payment, an xStocks basket, an RWA onboard. AI and KYB’d solvers compete on how. Settlement checks the result against the declaration before anything is final.</p>
+  <section>
+    <h3 class="display">Worked example</h3>
+    <p class="hint">One playbook sentence, traced through the loop:</p>
+    <div class="hash-box" style="margin-bottom:16px">"put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets"</div>
+    <div class="trace"><n>IntentSpec</n><span>kind: BASKET, in: 5000 USDT, out: [NVDA 60%, AAPL 40%], requireRwaAttested: true</span></div>
+    <div class="trace"><n>IntentDraft</n><span>NVDAx weightBps 6000, AAPLx weightBps 4000, amounts in wei</span></div>
+    <div class="trace"><n>Hashes</n><span>outcomeHash + policyHash committed on IntentRegistry</span></div>
+    <div class="trace" style="border-bottom:1px solid var(--line)"><n>Settled</n><span>Winner held to max(user minOut, bid guarantee) on every leg. Dust returned to owner.</span></div>
+  </section>
 
-<h2>Onchain addresses (testnet 1952)</h2>
-<table>
-  <tr><th>Contract</th><th>Address</th></tr>
-  <tr><td>IntentRegistry</td><td><code>0x2cc22cA31E1767Dbe639BA74AA441A4DE76606fD</code></td></tr>
-  <tr><td>IntentSettlement</td><td><code>0x6ddA9DC53b789a13eAc897CD2fCEc8a35607f10C</code></td></tr>
-  <tr><td>PolicyEngine</td><td><code>0xdBE7d92110f5aa428535Eb68291c668A203bE9b1</code></td></tr>
-  <tr><td>SolverRegistry</td><td><code>0x073a5541F4f8973dC36428E6a70Dac72922eb8ed</code></td></tr>
-  <tr><td>RWARegistry</td><td><code>0x780D39477b869681a23a0c4AB3bE17B9CDEBe875</code></td></tr>
-</table>
+  <section>
+    <h3 class="display">Kinds</h3>
+    <table>
+      <tr><th>Kind</th><th>What it is</th></tr>
+      <tr><td class="mono">SWAP</td><td>One asset in → one asset out</td></tr>
+      <tr><td class="mono">BASKET</td><td>One asset in → weighted set out (xStocks portfolios)</td></tr>
+      <tr><td class="mono">REBALANCE</td><td>Exits → base → entries, one atomic tx</td></tr>
+      <tr><td class="mono">RWA_ONBOARD</td><td>Acquire an attested tokenized real-world asset</td></tr>
+      <tr><td class="mono">BATCH</td><td>Several of the above declared together</td></tr>
+      <tr><td class="mono">PAYMENT</td><td>1:1 stable send, including gasless USDG</td></tr>
+    </table>
+  </section>
 
-<h2>What is committed</h2>
-<p>Registry stores two hashes, not contents. Settlement reveals the outcome and policy and reverts if they do not hash-match.</p>
-<pre>outcomeHash  = keccak256(IntentOS.Outcome.v1, kind, token, amount, recipient, slippage, legs, exits)
-policyHash   = keccak256(IntentOS.Policy.v2, notional, validity, fee, reputation, rwa, kyb, gas, allowlist)
-intentId     = keccak256(IntentOS.Intent.v1, chainId, registry, owner, hashes, salt, auction, deadline)</pre>
+  <section>
+    <h3 class="display">Lifecycle</h3>
+    <p class="hint"><span class="pill outline">OPEN</span> → <span class="pill win">SELECTED</span> → <span class="pill" style="background:var(--accent);color:#fff">FULFILLED</span></p>
+    <p class="hint">Side paths: <code>CANCELLED</code>, <code>EXPIRED</code>, or back to <code>OPEN</code> on failure or a dominance challenge.</p>
+  </section>
 
-<h2>What settlement enforces</h2>
-<ul>
-  <li>Leg sizes are computed from committed <code>weightBps</code>. The solver never supplies amounts.</li>
-  <li>Each leg must clear <code>max(user minOut, solver guarantee)</code>.</li>
-  <li>Output is measured as a balance delta on the recipient, never taken from the router’s return.</li>
-  <li>Spend must meet <code>spendable × (1 − maxSlippageBps)</code> or the tx reverts.</li>
-  <li>Fee cap, spend cap, reputation floor, allowlist, RWA attestation, KYB, and gas sponsorship are checked by PolicyEngine.</li>
-</ul>
+  <section>
+    <h3 class="display">An outcome is</h3>
+    <p class="hint">Kind, input token/amount, recipient, slippage ceiling, acquisition legs (<code>token, weightBps, minOut</code>), exit legs (rebalance only).</p>
+    <h3 class="display" style="margin-top:28px">A policy (v2) is</h3>
+    <p class="hint">Spend cap, validity window, fee cap, reputation floor, <code>requireRwaAttested</code>, <code>requireCompliant</code> (KYB), <code>sponsorGas</code>, token allowlist. The registry stores hashes — never contents.</p>
+  </section>
 
-<h2>Lifecycle</h2>
-<pre>OPEN ──► SELECTED ──► FULFILLED
-  │          │
-  │          └── failure / dominance challenge ──► OPEN
-  ├── cancel ──► CANCELLED
-  └── deadline ──► EXPIRED</pre>
-<p>Bids are public and binding: fee, ETA, plan hash, and a guarantee vector — one per acquisition leg. A coordinator may select; anyone can challenge a dominated pick and cut its bond.</p>
+  <section>
+    <h3 class="display">Contracts — X Layer 1952</h3>
+    <table>
+      <tr><th>Contract</th><th>Job</th><th>Address</th></tr>
+      <tr><td>IntentRegistry</td><td>Commit hashes, auction, select, gasless submitFor</td><td class="mono">0x2cc22cA31E1767Dbe639BA74AA441A4DE76606fD</td></tr>
+      <tr><td>IntentSettlement</td><td>Only contract that touches user funds</td><td class="mono">0x6ddA9DC53b789a13eAc897CD2fCEc8a35607f10C</td></tr>
+      <tr><td>PolicyEngine</td><td>Guardrails</td><td class="mono">0xdBE7d92110f5aa428535Eb68291c668A203bE9b1</td></tr>
+      <tr><td>SolverRegistry</td><td>Bond, reputation, lanes, KYB</td><td class="mono">0x073a5541F4f8973dC36428E6a70Dac72922eb8ed</td></tr>
+      <tr><td>RWARegistry</td><td>Attestations and onboarding</td><td class="mono">0x780D39477b869681a23a0c4AB3bE17B9CDEBe875</td></tr>
+    </table>
+  </section>
 
-<h2>Kinds</h2>
-<p><code>SWAP</code> · <code>BASKET</code> · <code>REBALANCE</code> · <code>RWA_ONBOARD</code> · <code>BATCH</code> · <code>PAYMENT</code></p>
-<p>A six-asset xStocks basket is one intent. A rebalance sells and buys in the same settlement. A <code>PAYMENT</code> is a 1:1 stablecoin cash sleeve — including gasless USDG sends — not a disguised swap.</p>
-
-<h2>Solver lanes</h2>
-<p>Solvers advertise capability bits: <code>AI</code> · <code>COMPLIANT</code> · <code>RWA</code> · <code>STABLE</code> · <code>AGENT</code> · <code>GASLESS</code>. The registry owner attests KYB separately. <code>Policy.requireCompliant</code> and <code>Policy.sponsorGas</code> are hashed into the commitment, so a non-KYB or non-gasless winner reverts at settlement.</p>
-<p><code>submitFor</code> is the gasless path: the owner signs an EIP-712 <code>Submit</code> (and an ERC-20 <code>permit</code> if settlement needs an allowance). The coordinator pays gas. A named <code>integrator</code> may be pinned so only that address — typically a neobank coordinator — can select the winner.</p>
-
-<h2>Agent surface</h2>
-<p>Agents do not need a UI. <code>POST /api/declare</code> turns a sentence into calldata. The agent still signs. Open questions are not signed on anyone’s behalf.</p>
-<pre>POST /api/declare
-{ "prompt": "put 5,000 USDT into NVDA and AAPL, 60/40",
-  "recipient": "0x…" }
-
-→ { intentId, explanation, submit: { to, data } }
-
-Then sign submit.to / submit.data on chain 1952.
-Track: GET /api/intent?id=0x…
-Record: /intent/?id=0x…</pre>
-<p>SDK: <code>@intentos/sdk</code> — <code>agent.declare(prompt)</code> then <code>agent.track(intentId)</code>.</p>
-
-<h2>Trust</h2>
-<p>Not the solver, not the coordinator for funds, not the mempool, not the language model. You are trusting the router allowlist, the RWA attestors, and the contracts. Encoding is pinned across Solidity and TypeScript by a shared fixture; drift fails a test.</p>
-<p><a href="https://github.com/ezekiel6262/useweesh/blob/claude/intentos-x-layer-h6ybxp/docs/intent-standard.md">Full standard in the repo</a></p>
+  <section>
+    <h3 class="display">Trust model</h3>
+    <table>
+      <tr><th>Layer</th><th>Trust</th></tr>
+      <tr><td>Mempool / draft</td><td>Untrusted. Wrong hash → unsettleable.</td></tr>
+      <tr><td>Solver</td><td>Untrusted. Bid is a promise the contract enforces.</td></tr>
+      <tr><td>Coordinator</td><td>Cannot steal funds; can pick a worse solver — slashable.</td></tr>
+      <tr><td>Settlement</td><td>The only trusted arithmetic.</td></tr>
+    </table>
+  </section>
 </div>
+<footer class="foot" style="max-width:880px">
+  <span>© 2026 IntentOS · live on X Layer testnet</span>
+  <div class="foot-links"><a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a></div>
+</footer>
 </body>
 </html>

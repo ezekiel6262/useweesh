@@ -12,6 +12,11 @@
   "rewrites": [
     { "source": "/app", "destination": "/app/index.html" },
     { "source": "/intent", "destination": "/intent/index.html" },
-    { "source": "/spec", "destination": "/spec/index.html" }
+    { "source": "/spec", "destination": "/spec/index.html" },
+    { "source": "/docs", "destination": "/docs/index.html" },
+    { "source": "/how", "destination": "/how/index.html" },
+    { "source": "/solvers", "destination": "/solvers/index.html" },
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/changelog", "destination": "/changelog/index.html" }
   ]
 }

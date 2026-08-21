@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IntentOS — Solvers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/intentos.css" />
+<style>.page{max-width:1000px;margin:0 auto;padding:56px clamp(16px,3vw,40px)} h1{font-size:clamp(30px,4vw,42px);margin:0 0 18px} .two{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)} .two > div{padding:24px} .two > div + div{border-left:1px solid var(--line)} @media(max-width:700px){.two{grid-template-columns:1fr} .two > div + div{border-left:0;border-top:1px solid var(--line)}}</style>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="/"><svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg><span>IntentOS</span></a>
+  <nav><a href="/">Home</a><a href="/app">App</a><a href="/docs">Docs</a><a href="/spec">Spec</a></nav>
+  <span class="chip-net">X LAYER · 1952</span>
+  <a class="btn" href="/app">Connect</a>
+</header>
+<div class="page">
+  <h6 class="kicker">Solvers</h6>
+  <h1 class="display">Bond, declare a lane, compete</h1>
+  <p class="hint">A solver that wins and walks loses reputation. A solver that cannot meet its guarantee does not get paid.</p>
+  <ol class="hint" style="padding-left:18px;max-width:64ch">
+    <li>Post a bond in SolverRegistry.</li>
+    <li>Declare capability bits: AI · KYB · RWA · STABLE · AGENT · GASLESS.</li>
+    <li>Watch open intents. Bid fee, ETA, and guaranteedOut per leg — or decline.</li>
+    <li>Settle what you win. Miss a floor and the fill reverts.</li>
+  </ol>
+  <p style="margin:24px 0"><span class="pill outline">AI</span> <span class="pill outline">KYB</span> <span class="pill outline">RWA</span> <span class="pill outline">STABLE</span> <span class="pill outline">AGENT</span> <span class="pill outline">GASLESS</span></p>
+  <div class="two">
+    <div>
+      <h6 class="kicker">Aggressive</h6>
+      <p class="hint">AI · RWA · STABLE · GASLESS. Tight guarantees, wins on price. Ineligible when requireCompliant is set.</p>
+    </div>
+    <div>
+      <h6 class="kicker">Conservative</h6>
+      <p class="hint">KYB-attested · RWA · AGENT · GASLESS. Leaves headroom. The only live solver that can fill a compliant intent.</p>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:28px">SolverRegistry <span class="mono">0x073a5541F4f8973dC36428E6a70Dac72922eb8ed</span></p>
+  <p><a class="btn" href="/app">Watch a live auction</a></p>
+</div>
+<footer class="foot" style="max-width:1000px"><span>© 2026 IntentOS</span><div class="foot-links"><a href="/how">How it works</a><a href="/docs">Docs</a></div></footer>
+</body>
+</html>

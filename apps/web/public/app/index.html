@@ -3,225 +3,95 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — compose</title>
+<title>IntentOS — Compose</title>
 <meta name="description" content="Declare an outcome on X Layer. Solvers compete. Settlement verifies." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f7f4ee'/%3E%3Cpath d='M7 11 L16 23 L25 11' fill='none' stroke='%237a3b2e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/intentos.css" />
 <style>
-  :root {
-    --bg:#f7f4ee; --surface:#fffdf9; --ink:#241f1a; --ink-muted:#59524a; --ink-faint:#8a8177;
-    --accent:#7a3b2e; --accent-soft:#f1e2d8; --divider:#e5ddd1; --yes:#3f7a5c; --no:#a4463a; --warn:#8a6a2a;
-    --shadow: 0 4px 20px rgba(36,31,26,.06);
-    --sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
-    --serif: "Newsreader", ui-serif, Georgia, serif;
-    --mono: "IBM Plex Mono", ui-monospace, monospace;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--sans); min-height: 100%; overflow-x: hidden; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { opacity: .75; }
-  button { font: inherit; }
-  .shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 48px; }
-  header {
-    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
-    padding: 14px 0; border-bottom: 1px solid var(--divider);
-  }
-  .brand { display: flex; align-items: center; gap: 8px; margin-right: auto;
-    font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--ink); }
-  .brand:hover { opacity: 1; }
-  nav { display: flex; gap: 14px; }
-  nav a { color: var(--ink-muted); font-size: 13px; }
-  nav a.on { color: var(--accent); }
-  .mode, .addr {
-    font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted);
-    border: 1px solid var(--divider); background: var(--surface);
-    border-radius: 999px; padding: 7px 12px;
-  }
-  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yes); margin-right: 6px; }
-  .workspace { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr); gap: 16px; padding-top: 14px; }
-  @media (min-width: 901px) { .workspace { grid-template-columns: minmax(0, 1.25fr) minmax(0, 360px); } }
-  @media (max-width: 900px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
-  .card { background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
-  .lab { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); margin: 0 0 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  textarea {
-    width: 100%; min-height: 132px; resize: vertical; background: var(--bg); color: var(--ink);
-    border: 1px solid var(--divider); border-radius: 10px; padding: 12px 14px; font: inherit;
-  }
-  textarea:focus { outline: none; border-color: var(--accent); }
-  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-  .btn {
-    background: var(--accent); color: var(--bg); border: 0; border-radius: 999px;
-    padding: 8px 14px; font-weight: 600; font-size: 13px; cursor: pointer;
-  }
-  .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--divider); }
-  .btn.ghost:hover { border-color: var(--accent); }
-  .btn:disabled { opacity: .45; cursor: default; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .chip {
-    font-size: 11.5px; color: var(--ink-faint); border: 1px solid var(--divider);
-    background: none; border-radius: 999px; padding: 4px 10px; cursor: pointer;
-  }
-  .chip:hover { color: var(--accent); border-color: var(--accent); }
-  .stack { display: grid; gap: 14px; align-content: start; min-width: 0; }
-  pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .table-wrap { overflow-x: auto; min-width: 0; }
-  th { text-align: left; color: var(--ink-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; padding: 0 8px 8px 0; border-bottom: 1px solid var(--divider); }
-  td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--divider); color: var(--ink-muted); vertical-align: middle; }
-  td.num, th.num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink); }
-  tr:last-child td { border-bottom: 0; }
-  .barline { height: 5px; border-radius: 3px; background: var(--divider); overflow: hidden; min-width: 56px; }
-  .barline > i { display: block; height: 100%; background: var(--accent); }
-  .guards { display: flex; flex-wrap: wrap; gap: 6px; }
-  .guard { font-family: var(--mono); font-size: 11px; background: #efe9df; color: var(--ink-faint); border-radius: 10px; padding: 4px 8px; }
-  .guard.on { background: #e4efe9; color: var(--yes); }
-  .note { color: var(--ink-muted); font-size: 12.5px; overflow-wrap: anywhere; }
-  .err { color: var(--no); font-size: 13px; margin-top: 10px; }
-  .hide { display: none !important; }
-  .kind { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .05em; color: var(--accent); background: var(--accent-soft); border-radius: 10px; padding: 3px 8px; }
-  .pill { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; background: #efe9df; color: var(--ink-faint); white-space: nowrap; flex-shrink: 0; }
-  .pill.win { background: #e4efe9; color: var(--yes); }
-  .pill.bid { background: #f4ead0; color: var(--warn); }
-  .pill.no { background: #f6e3e0; color: var(--no); }
-  .empty { color: var(--ink-faint); font-size: 13.5px; padding: 8px 0 4px; line-height: 1.55; }
-  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--divider); font-size: 13px; min-width: 0; }
-  .row:last-child { border-bottom: 0; }
-  .row > * { min-width: 0; }
-  .mono { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
-  .kv { display: grid; min-width: 0; }
-  .kv-row {
-    display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
-    gap: 8px 12px; align-items: baseline; min-width: 0;
-    padding: 8px 0; border-bottom: 1px solid var(--divider);
-  }
-  .kv-row:last-child { border-bottom: 0; padding-bottom: 0; }
-  .kv-row:first-child { padding-top: 0; }
-  .kv-k { color: var(--ink-muted); font-size: 12.5px; }
-  .kv-v { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
-  .kv-v a { color: var(--accent); }
-  .kv > .note { padding-top: 8px; }
-  .commit { display: grid; gap: 12px; min-width: 0; }
-  .commit-item { min-width: 0; }
-  .commit-item .kv-k {
-    display: block; font-size: 10.5px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint);
-    margin: 0 0 6px;
-  }
-  .hash-box {
-    display: flex; align-items: flex-start; gap: 8px; min-width: 0;
-    background: var(--bg); border-radius: 8px; padding: 8px 10px;
-  }
-  .hash-box code {
-    flex: 1; min-width: 0; font-family: var(--mono); font-size: 11px;
-    line-height: 1.55; color: var(--ink-muted); overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-  .copy {
-    flex-shrink: 0; margin: 0; cursor: pointer;
-    font-family: var(--sans); font-size: 10.5px; font-weight: 600;
-    letter-spacing: .04em; text-transform: uppercase;
-    color: var(--accent); background: none; border: 0; padding: 2px 0;
-  }
-  .copy:hover { opacity: .75; }
-  .commit-note { margin: 2px 0 0; color: var(--ink-faint); font-size: 11.5px; line-height: 1.45; }
-  .solver { border-top: 1px solid var(--divider); padding-top: 10px; margin-top: 10px; }
-  .solver:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
-  .solver.head { display: flex; justify-content: space-between; gap: 8px; }
-  footer {
-    margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--divider);
-    color: var(--ink-faint); font-size: 11.5px; font-family: var(--mono);
-    display: flex; flex-wrap: wrap; gap: 10px 18px;
-  }
-  footer a { color: var(--ink-muted); }
-  .status-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
-  .loop {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
-    margin: 14px 0 0;
-  }
-  @media (max-width: 700px) { .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .loop span {
-    display: block; background: var(--bg); border-radius: 10px; padding: 10px 12px; min-width: 0;
-  }
-  .loop n {
-    display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
-    color: var(--accent); margin-bottom: 4px;
-  }
-  .loop b { display: block; font-size: 13px; font-weight: 600; }
-  .loop p { margin: 4px 0 0; color: var(--ink-muted); font-size: 12px; line-height: 1.4; }
-  .book-cat {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--ink-faint); font-weight: 600; margin: 14px 0 8px;
-  }
+  .shell { max-width: 1440px; margin: 0 auto; }
+  .workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(300px,360px); gap: 32px; padding: 28px clamp(16px,3vw,40px); }
+  @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
+  .stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  textarea { width: 100%; min-height: 88px; border: 1px solid var(--line); padding: 12px; resize: vertical; background: #fff; }
+  textarea:focus { outline: 2px solid var(--accent); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .note { color: var(--muted); font-size: 12.5px; }
+  .empty { color: var(--faint); font-size: 13px; }
+  .loop { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .loop > span { padding: 16px; border-right: 1px solid var(--line); min-width: 0; }
+  .loop > span:last-child { border-right: 0; }
+  .loop n { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+  .loop b { display: block; font-family: var(--display); font-weight: 700; font-size: 14px; text-transform: uppercase; margin-top: 4px; }
+  .loop p { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .loop > span.on { background: var(--ink); color: #fff; }
+  .loop > span.on n { color: var(--accent); }
+  .loop > span.on b, .loop > span.on p { color: #fff; }
+  .book-cat { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 14px 0 8px; }
   .book-cat:first-child { margin-top: 0; }
-  .use {
-    display: block; width: 100%; text-align: left; cursor: pointer;
-    background: var(--bg); border: 1px solid var(--divider); border-radius: 10px;
-    padding: 10px 12px; margin: 0 0 8px; color: inherit;
-  }
-  .use:hover { border-color: var(--accent); }
-  .use:last-child { margin-bottom: 0; }
-  .use strong { display: block; font-size: 13px; font-weight: 600; }
-  .use em { display: block; margin-top: 3px; font-style: normal; color: var(--ink-muted); font-size: 12px; line-height: 1.45; }
-  .use code {
-    display: block; margin-top: 6px; font-family: var(--mono); font-size: 11px;
-    color: var(--ink-faint); line-height: 1.45; overflow-wrap: anywhere;
-  }
-  .console-line {
-    font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
-    color: var(--ink-muted); padding: 5px 0; border-bottom: 1px solid var(--divider);
-  }
-  .console-line:last-child { border-bottom: 0; }
-  .console-line b { color: var(--ink-faint); font-weight: 500; display: inline-block; min-width: 72px; }
-  .asset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .hint { margin: 0 0 10px; color: var(--ink-muted); font-size: 13px; line-height: 1.5; }
+  .use { display: block; width: 100%; text-align: left; font-size: 13px; font-family: var(--mono); padding: 9px 12px; background: var(--wash); border: none; border-left: 2px solid transparent; margin: 0 0 6px; color: var(--ink); }
+  .use:hover { border-left-color: var(--accent); }
+  .use strong, .use em { display: none; }
+  .use code { display: block; font: inherit; }
+  .barline { height: 8px; background: #f0f0f0; }
+  .barline > i { display: block; height: 100%; background: var(--accent); }
+  .guards { display: flex; gap: 8px; flex-wrap: wrap; }
+  .guard { font-family: var(--mono); font-size: 11px; background: var(--wash); padding: 5px 10px; }
+  .kind { font-family: var(--mono); font-size: 11px; border: 1px solid var(--ink); padding: 4px 10px; }
+  .solver { background: var(--wash); padding: 12px 14px; margin-bottom: 8px; }
+  .solver.head { display: flex; justify-content: space-between; gap: 8px; }
+  .status-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .commit { display: grid; gap: 8px; }
+  .commit-note { font-size: 11px; color: var(--faint); margin: 10px 0 0; }
+  .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; font-family: var(--mono); }
+  .row:last-child { border-bottom: 0; }
+  .table-wrap { overflow-x: auto; min-width: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { font-size: 11.5px; color: var(--faint); border: 1px solid var(--line); background: none; padding: 4px 10px; cursor: pointer; }
+  .chip:hover { color: var(--accent); border-color: var(--accent); }
+  .asset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  @media (max-width: 700px) { .loop { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
 <div class="shell">
-<header>
-  <a class="brand" href="/">
-    <svg width="18" height="18" viewBox="0 0 26 26" aria-hidden>
-      <path d="M4 8 L13 20 L22 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    intentos
+<header class="top">
+  <a class="mark" href="/">
+    <svg width="18" height="18" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg>
+    <span>IntentOS</span>
   </a>
   <nav>
     <a href="/">Home</a>
-    <a href="/app" class="on">Compose</a>
+    <a href="/app" class="on">App</a>
+    <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
   </nav>
-  <div class="mode" id="mode"><span class="dot"></span>connecting</div>
-  <button class="btn ghost" id="connect" type="button">Connect</button>
+  <div class="chip-net" id="mode">X LAYER · 1952 · TESTNET</div>
+  <button class="btn" id="connect" type="button">Connect</button>
 </header>
 
 <div class="workspace">
   <div class="stack">
     <div class="card">
-      <h2 class="lab">Intent</h2>
-      <p class="hint">State an outcome. Solvers bid on how. Settlement sizes the legs from your weights and reverts if the floors are missed.</p>
-      <textarea id="prompt" spellcheck="false" placeholder="What should be true afterwards? Pick a playbook intent or write your own."></textarea>
+      <h2 class="lab">Intent composer</h2>
+      <textarea id="prompt" spellcheck="false" placeholder="Describe an outcome…"></textarea>
       <div class="actions">
         <button class="btn" id="parse">Parse</button>
-        <button class="btn" id="fulfill">Submit &amp; settle</button>
-        <button class="btn ghost" id="faucet">Mint stables</button>
+        <button class="btn ghost" id="fulfill">Submit &amp; settle</button>
+        <button class="btn link" id="faucet" type="button">Mint testnet stables</button>
         <span class="note" id="parserNote"></span>
       </div>
-      <div class="chips" id="chips"></div>
+      <div class="chips hide" id="chips"></div>
       <div id="error" class="err hide"></div>
-      <div class="loop">
-        <span><n>01</n><b>Declare</b><p>A sentence in tickers and percents. No addresses from the model.</p></span>
-        <span><n>02</n><b>Commit</b><p>Only outcome and policy hashes go onchain.</p></span>
-        <span><n>03</n><b>Auction</b><p>Solvers bid a fee, ETA, and guaranteed outs.</p></span>
-        <span><n>04</n><b>Settle</b><p>Weights are sized here. Miss a floor and it reverts.</p></span>
-      </div>
     </div>
 
-    <div class="card" id="playbookCard">
-      <h2 class="lab">Playbook</h2>
-      <p class="hint">Click any intent to load it. These are the jobs this protocol is built to take.</p>
-      <div id="playbook"></div>
+    <div class="loop" id="loopStrip">
+      <span class="on" data-step="0"><n>01</n><b>Declare</b></span>
+      <span data-step="1"><n>02</n><b>Commit</b></span>
+      <span data-step="2"><n>03</n><b>Auction</b></span>
+      <span data-step="3"><n>04</n><b>Settle</b></span>
     </div>
 
     <div class="card hide" id="outcomeCard">
@@ -233,6 +103,11 @@
     <div class="card hide" id="auctionCard">
       <h2 class="lab">Settlement log</h2>
       <div id="auctionBody"></div>
+    </div>
+
+    <div class="card" id="playbookCard">
+      <h2 class="lab">Playbook</h2>
+      <div id="playbook"></div>
     </div>
   </div>
 
@@ -291,8 +166,11 @@
   </div>
 </div>
 
-<footer id="proto">
-  <span>X Layer · 1952</span>
+<footer class="foot" id="proto">
+  <span>© 2026 IntentOS · live on X Layer testnet</span>
+  <div class="foot-links">
+    <a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/spec">Spec</a>
+  </div>
 </footer>
 </div>
 
@@ -426,11 +304,7 @@ $("chips").addEventListener("click", (event) => {
 $("playbook").innerHTML = PLAYBOOK.map((group) =>
   `<div class="book-cat">${esc(group.cat)}</div>` +
   group.items.map((item) =>
-    `<button class="use" type="button" data-prompt="${esc(item.prompt)}">
-      <strong>${esc(item.title)}</strong>
-      <em>${esc(item.blurb)}</em>
-      <code>${esc(item.prompt)}</code>
-    </button>`).join("")
+    `<button class="use" type="button" data-prompt="${esc(item.prompt)}">${esc(item.prompt)}</button>`).join("")
 ).join("");
 $("playbook").addEventListener("click", (event) => {
   const btn = event.target.closest(".use");
@@ -454,19 +328,12 @@ try {
   health = { live: false };
 }
 
-$("mode").innerHTML = health.live
-  ? `<span class="dot"></span>X Layer ${deployment?.chainId ?? 1952}`
-  : `offline`;
+$("mode").textContent = health.live
+  ? `X LAYER · ${deployment?.chainId ?? 1952} · TESTNET`
+  : `X LAYER · OFFLINE`;
 
-if (deployment?.contracts) {
-  const c = deployment.contracts;
-  $("proto").innerHTML = [
-    `<a href="${explorer("address/" + c.intentRegistry)}" target="_blank" rel="noopener">registry ${short(c.intentRegistry)}</a>`,
-    `<a href="${explorer("address/" + c.settlement)}" target="_blank" rel="noopener">settlement ${short(c.settlement)}</a>`,
-    `<a href="${explorer("address/" + deployment.tokens.USDT)}" target="_blank" rel="noopener">USDT ${short(deployment.tokens.USDT)}</a>`,
-    deployment.tokens.USDG ? `<a href="${explorer("address/" + deployment.tokens.USDG)}" target="_blank" rel="noopener">USDG ${short(deployment.tokens.USDG)}</a>` : "",
-    `<a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a>`,
-  ].filter(Boolean).join("");
+function setLoop(i) {
+  document.querySelectorAll("#loopStrip > span").forEach((el, n) => el.classList.toggle("on", n === i));
 }
 
 {
@@ -601,6 +468,7 @@ async function runParse() {
       lastParsed = await parse(prompt);
     }
     renderParsed(lastParsed);
+    setLoop(1);
   } catch (error) {
     lastParsed = null;
     for (const id of ["outcomeCard", "guardCard", "hashCard", "noticeCard", "auctionCard"]) $(id).classList.add("hide");
@@ -678,6 +546,7 @@ async function runFulfill() {
     lastDraft = submitted.draft;
     lastIntent = submitted.intentId;
     $("parserNote").innerHTML = `<a href="${explorer("tx/" + submitted.hash)}" target="_blank">${short(submitted.intentId)}</a>`;
+    setLoop(2);
     button.textContent = "Bidding…";
     const bid = await api("/api/bid", {
       method: "POST", headers: { "content-type": "application/json" },
@@ -703,6 +572,7 @@ async function runFulfill() {
       body: encode({ intentId: submitted.intentId, draft: lastDraft }),
     });
     renderLiveActivity([...(bid.activity ?? []), ...(settled.activity ?? [])], submitted.hash, closed?.selected?.solver);
+    setLoop(3);
     $("parserNote").textContent = "settled";
     await renderSession();
     await refreshRecent();
@@ -765,7 +635,7 @@ $("faucet").addEventListener("click", async () => {
     $("error").classList.remove("hide");
   } finally {
     $("faucet").disabled = false;
-    $("faucet").textContent = "Mint stables";
+    $("faucet").textContent = "Mint testnet stables";
   }
 });
 $("fulfill").addEventListener("click", () => runFulfill().catch((error) => {

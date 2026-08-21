@@ -3,280 +3,299 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>IntentOS — X Layer-native OS for agents, stablecoins, and RWAs</title>
-<meta name="description" content="Declare any outcome on X Layer — xStocks baskets, gasless stablecoin payments, RWA flows — and let AI plus compliant solvers fulfill it." />
-<meta property="og:title" content="IntentOS" />
-<meta property="og:description" content="The X Layer-native Intent Operating System for agents, stablecoins, and Real World Assets." />
+<title>IntentOS — State what should be true afterwards</title>
+<meta name="description" content="The X Layer-native Intent Operating System for agents, stablecoins, and Real World Assets. Declare an outcome. Solvers compete. The chain enforces that they did." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f7f4ee'/%3E%3Cpath d='M7 11 L16 23 L25 11' fill='none' stroke='%237a3b2e' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='white'/%3E%3Cpath d='M14 6 L6 6 L6 34 L14 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Cpath d='M26 6 L34 6 L34 34 L26 34' fill='none' stroke='%23ff4d2e' stroke-width='5'/%3E%3Crect x='16' y='16' width='8' height='8' fill='%23111111'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/intentos.css" />
 <style>
-  :root {
-    --bg: #f7f4ee;
-    --surface: #fffdf9;
-    --ink: #241f1a;
-    --ink-muted: #59524a;
-    --ink-faint: #8a8177;
-    --accent: #7a3b2e;
-    --accent-soft: #f1e2d8;
-    --divider: #e5ddd1;
-    --yes: #3f7a5c;
-    --no: #a4463a;
-    --shadow-card: 0 4px 20px rgba(36, 31, 26, 0.06);
-    --sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
-    --serif: "Newsreader", ui-serif, Georgia, serif;
-    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
-  body { text-wrap: pretty; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { opacity: 0.75; }
-  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
-  @media (min-width: 640px) { .wrap { padding: 0 32px; } }
-  @media (min-width: 1024px) { .wrap { padding: 0 64px; } }
-
-  .banner {
-    border-bottom: 1px solid var(--divider);
-    background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
-  }
-  .banner .wrap { padding: 10px 20px; font-size: 12.5px; line-height: 1.5; color: var(--accent); }
-  @media (min-width: 640px) { .banner .wrap { padding-left: 32px; padding-right: 32px; } }
-  @media (min-width: 1024px) { .banner .wrap { padding-left: 64px; padding-right: 64px; } }
-  .banner b { font-weight: 600; }
-
-  header { padding: 20px 0; }
-  .bar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
-  .brand {
-    display: flex; align-items: center; gap: 8px; margin-right: auto;
-    font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ink);
-  }
-  .brand:hover { opacity: 1; }
-  nav { display: flex; flex-wrap: wrap; gap: 16px; }
-  nav a { color: var(--ink-muted); font-size: 14px; }
-  nav a:hover { color: var(--accent); opacity: 1; }
-  nav a.on { color: var(--accent); }
-
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--accent); color: var(--bg); border: 0; border-radius: 999px;
-    padding: 12px 20px; font-weight: 600; font-size: 14px;
-  }
-  .btn:hover { opacity: 0.9; }
-  .btn.ghost {
-    background: var(--surface); color: var(--ink); border: 1px solid var(--divider);
-  }
-  .btn.ghost:hover { border-color: var(--accent); opacity: 1; }
-
-  .hero { padding: 48px 0 28px; }
-  .kicker {
-    font-family: var(--mono); font-size: 11.5px; color: var(--accent);
-    letter-spacing: 0.06em; margin: 0 0 14px; font-weight: 500;
-  }
-  .lede {
-    font-family: var(--serif); font-size: clamp(34px, 5.2vw, 58px);
-    font-weight: 500; line-height: 1.1; margin: 0 0 20px; max-width: 16ch; letter-spacing: -0.02em;
-  }
-  .lede em { font-style: italic; color: var(--accent); }
-  .sub { margin: 0 0 28px; max-width: 52ch; font-size: 17px; line-height: 1.65; color: var(--ink-muted); }
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .fine { margin-top: 18px; font-size: 12.5px; color: var(--ink-faint); }
-
-  .rule { border-top: 1px solid var(--divider); padding: 48px 0; }
-  h2.serif { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 20px; }
-  .stages { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  @media (max-width: 900px) { .stages { grid-template-columns: minmax(0, 1fr); } }
-  .grid2 { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (max-width: 760px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
-  .card pre.intent {
-    margin: 14px 0 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
-    color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere;
-  }
-  .card {
-    background: var(--surface); border-radius: 14px; padding: 20px 22px;
-    box-shadow: var(--shadow-card);
-  }
-  .card n { display: block; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 10px; }
-  .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
-  .card p { margin: 0; color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; }
-  .cols { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
-  @media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } }
-  .quote { font-family: var(--serif); font-size: 19px; line-height: 1.5; margin: 0 0 14px; }
-  .list { display: grid; gap: 10px; font-size: 14px; }
-  .list div { display: flex; gap: 12px; align-items: baseline; }
-  .list i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 18px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .chip {
-    font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted);
-    border: 1px solid var(--divider); background: var(--surface);
-    border-radius: 999px; padding: 7px 12px;
-  }
-  footer {
-    border-top: 1px solid var(--divider); padding: 36px 0 44px;
-    color: var(--ink-faint); font-size: 13px;
-    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px;
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 64px); }
+  .hero { padding: 80px 0 52px; display: grid; grid-template-columns: 8fr 4fr; gap: 40px; align-items: end; }
+  .hero h1 { font-size: clamp(38px, 5.4vw, 66px); }
+  .hero p { font-size: 15px; line-height: 1.6; color: #444; margin: 0 0 20px; }
+  .cta-col { display: flex; flex-direction: column; gap: 10px; }
+  .fine { font-family: var(--mono); font-size: 12px; color: var(--faint); padding-bottom: 32px; }
+  .stats { border-top: 2px solid var(--ink); padding: 28px 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-bottom: 1px solid var(--line); }
+  .stats div { padding-right: 20px; }
+  .stats b { display: block; font-family: var(--display); font-weight: 700; font-size: 28px; }
+  .stats span { display: block; font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .rail { position: relative; height: 3px; background: #e5e5e5; margin-bottom: 40px; }
+  .rail i { position: absolute; top: 0; left: 0; height: 100%; background: var(--accent); width: 25%; transition: width .7s cubic-bezier(.4,0,.2,1); }
+  .rail b { position: absolute; top: -5px; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); left: 25%; transform: translateX(-50%); transition: left .7s cubic-bezier(.4,0,.2,1); }
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); padding: 40px 0 0; }
+  .stage { border-left: 1px solid var(--line); padding-left: 20px; opacity: .4; transition: opacity .5s; }
+  .stage.on { opacity: 1; }
+  .stage .n { font-family: var(--display); font-weight: 700; font-size: 32px; color: #d8d8d8; line-height: 1; transition: color .5s; }
+  .stage.on .n { color: var(--accent); }
+  .stage h3 { font-weight: 600; font-size: 15px; margin: 8px 0 0; text-transform: uppercase; letter-spacing: .02em; }
+  .stage p { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 6px 0 0; }
+  .stage .live { font-size: 11px; color: var(--accent); font-family: var(--mono); margin: 8px 0 0; min-height: 14px; }
+  .life { margin-top: 36px; display: grid; grid-template-columns: 5fr 7fr; gap: 32px; align-items: center; border-top: 1px solid var(--line); padding-top: 28px; }
+  .life-label { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 11.5px; }
+  .pills span { padding: 5px 10px; border: 1px solid var(--ink); }
+  .pills span.on { background: var(--ink); color: #fff; }
+  .pills span.done { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .leg { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .leg em { font-style: normal; font-family: var(--mono); font-size: 11px; width: 52px; }
+  .bar { flex: 1; height: 6px; background: var(--faint-bg); }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 4%; transition: width .7s cubic-bezier(.4,0,.2,1); }
+  .split { border-top: 2px solid var(--ink); padding: 52px 0; display: grid; grid-template-columns: 5fr 7fr; gap: 48px; }
+  .prose { font-size: 15.5px; line-height: 1.65; color: #333; }
+  .prose p { margin: 0 0 16px; }
+  .prose p:last-child { margin: 0; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .cell { padding: 26px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .cell n { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--accent); }
+  .cell h3 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 8px 0 6px; }
+  .cell p { font-size: 13.5px; color: var(--muted); line-height: 1.55; margin: 0 0 12px; }
+  .ex { font-family: var(--mono); font-size: 12px; background: var(--wash); padding: 8px 10px; display: inline-block; }
+  .assets { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 20px; }
+  .assets span { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); padding: 5px 11px; }
+  .lanes { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .toggle { display: flex; gap: 0; border: 1px solid var(--ink); }
+  .toggle button { background: #fff; color: var(--ink); border: 0; font-weight: 600; font-size: 12.5px; padding: 9px 16px; }
+  .toggle button + button { border-left: 1px solid var(--ink); }
+  .toggle button.on { background: var(--ink); color: #fff; }
+  .bid { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--wash); margin-bottom: 10px; }
+  .quote { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.3; max-width: 38ch; margin: 0; text-transform: uppercase; letter-spacing: -0.01em; }
+  .recent a { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 16px; align-items: center; color: var(--ink); padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .faq { padding: 18px 0; border-top: 1px solid var(--line); }
+  .faq b { display: block; font-size: 14.5px; margin-bottom: 6px; }
+  .faq p { font-size: 13.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+  .close { border-top: 2px solid var(--ink); padding: 56px 0; text-align: center; }
+  @media (max-width: 860px) {
+    .hero, .life, .split, .grid2, .lanes { grid-template-columns: 1fr; }
+    .stats, .stages { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .recent a { grid-template-columns: 1fr auto; }
   }
 </style>
 </head>
 <body>
-
-<div class="banner"><div class="wrap">
-  <b>Live on X Layer Testnet.</b> You declare an outcome. Solvers compete. The chain settles it.
-</div></div>
-
-<header><div class="wrap bar">
-  <a class="brand" href="/">
-    <svg width="20" height="20" viewBox="0 0 26 26" aria-hidden>
-      <path d="M4 8 L13 20 L22 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    intentos
+<header class="top">
+  <a class="mark" href="/">
+    <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden><path d="M14 6 L6 6 L6 34 L14 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><path d="M26 6 L34 6 L34 34 L26 34" fill="none" stroke="#ff4d2e" stroke-width="5" stroke-linecap="square"/><rect x="16" y="16" width="8" height="8" fill="#111111"/></svg>
+    <span>IntentOS</span>
   </a>
   <nav>
     <a href="/" class="on">Home</a>
-    <a href="#loop">How it works</a>
+    <a href="/app">App</a>
+    <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
-    <a href="/app">Compose</a>
   </nav>
-  <a class="btn" href="/app">Open the app</a>
-</div></header>
+  <span class="chip-net">X LAYER · 1952</span>
+  <a class="btn" href="/app">Connect</a>
+</header>
 
 <main class="wrap">
-  <div class="hero">
-    <p class="kicker">AN INTENT OPERATING SYSTEM · X LAYER</p>
-    <h1 class="lede">Agents, stablecoins, and <em>real-world assets</em>.</h1>
-    <p class="sub">
-      IntentOS is the X Layer-native operating system for outcomes. Declare a gasless USDG payment,
-      a six-name xStocks basket, or an RWA onboard — then let AI and KYB’d solvers compete to fulfill it.
-      The chain still sizes the legs from your weights and reverts if the floors are missed.
-    </p>
-    <div class="actions">
-      <a class="btn" href="/app">Declare an intent</a>
-      <a class="btn ghost" href="#use">See what it can do</a>
+  <section class="hero">
+    <h1 class="display">State what should be true <span style="color:var(--accent)">afterwards</span>. AI and compliant solvers compete over how.</h1>
+    <div>
+      <p>The chain enforces that they did — the X Layer-native Intent Operating System for agents, stablecoins and Real World Assets.</p>
+      <div class="cta-col">
+        <a class="btn" href="/app">Declare an intent</a>
+        <a class="btn ghost" href="/spec">Read the spec</a>
+      </div>
     </div>
-    <p class="fine">X Layer testnet · solver-sponsored gas · no new token · no proprietary liquidity</p>
-  </div>
+  </section>
+  <div class="fine">X Layer testnet · solver-sponsored gas · no new token · no proprietary liquidity</div>
 
-  <section class="rule" id="loop">
-    <h2 class="serif">How it works</h2>
-    <div class="stages">
-      <div class="card"><n>01 · PARSE</n><h3>Declare</h3><p>A sentence becomes an IntentSpec in tickers and percents. The language model never names an address. A hallucinated ticker dies at the catalog, not in a transaction.</p></div>
-      <div class="card"><n>02 · COMMIT</n><h3>Hash, don’t instruct</h3><p>IntentRegistry stores the outcome hash and the policy hash. Only at settlement is the outcome revealed, and a mismatch reverts.</p></div>
-      <div class="card"><n>03 · AUCTION</n><h3>Bind the how</h3><p>Solvers bid a fee, an ETA, and a vector of guaranteed outputs. Winning means being held to that vector. A bonded coordinator can be slashed for a dominated pick.</p></div>
-      <div class="card"><n>04 · SETTLE</n><h3>Measure, then pay</h3><p>IntentSettlement sizes every leg from committed weights, calls allowlisted routers, and checks balance deltas on the recipient. The solver never supplies amounts.</p></div>
+  <section class="stats">
+    <div><b>1952</b><span>chain id · X Layer testnet</span></div>
+    <div><b>~30s</b><span>auction window</span></div>
+    <div><b>2</b><span>live solvers, 6 lanes</span></div>
+    <div><b>0</b><span>stripped floors on record</span></div>
+  </section>
+
+  <section style="padding:40px 0">
+    <div class="rail"><i id="railFill"></i><b id="railDot"></b></div>
+    <div class="stages" id="stages"></div>
+    <div class="life">
+      <div>
+        <div class="life-label">Lifecycle</div>
+        <div class="pills" id="pills">
+          <span id="pillOpen">OPEN</span><span style="color:var(--faint)">→</span>
+          <span id="pillSel">SELECTED</span><span style="color:var(--faint)">→</span>
+          <span id="pillFul">FULFILLED</span>
+        </div>
+      </div>
+      <div>
+        <div class="life-label">Live settlement preview — one basket, four legs</div>
+        <div id="previewLegs"></div>
+      </div>
     </div>
   </section>
 
-  <section class="rule" id="use">
-    <h2 class="serif">What you can declare</h2>
+  <section class="split">
+    <h6 class="kicker">Why this exists</h6>
+    <div class="prose">
+      <p>Tokenized equities and stables on X Layer are real. Using them still looks like a DEX: approve, swap, approve, swap, fix the fill that slipped. Agents have it worse — they must emit transactions, not outcomes.</p>
+      <p>IntentOS moves the boundary. The user or agent commits to an outcome and a policy. Solvers compete on fee, speed, and binding per-leg guarantees. Settlement sizes every leg from the user’s weights — a solver never supplies amounts. If a floor is missed, if capital is under-deployed, if a non-KYB solver wins a compliant intent, the transaction reverts.</p>
+      <p>Not a bridge. Not a chat UI that “does DeFi for you.” Single-chain on purpose: one atomic settlement, no half-finished cross-chain state.</p>
+    </div>
+  </section>
+
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <h2 class="display" style="font-size:24px;margin:0 0 24px">What you can declare</h2>
     <div class="grid2">
-      <div class="card">
-        <n>STABLECOINS · PAYMENTS</n>
-        <h3>Gasless 1:1 rails</h3>
-        <p>Pay an address in USDG, convert incoming stables, or run recurring payroll. Solvers sponsor settlement gas. The payment kind is a first-class outcome, not a disguised swap.</p>
-      </div>
-      <div class="card">
-        <n>RWA · XSTOCKS</n>
-        <h3>Tokenized markets, one intent</h3>
-        <p>Allocate, rebalance, or exit a basket of TSLA, NVDA, AAPL, META and SPY xStocks. Gate on 24h volume or volatility. Onboard an offchain asset and make it immediately usable.</p>
-      </div>
-      <div class="card">
-        <n>COMPLIANT · ENTERPRISE</n>
-        <h3>KYB’d solver lanes</h3>
-        <p>Pin an intent to attested, KYB-only solvers. Neobanks and fintechs building on X Layer keep execution inside a policy the chain will actually enforce.</p>
-      </div>
-      <div class="card">
-        <n>AGENTS</n>
-        <h3>Declare, or solve</h3>
-        <p>Agents submit the outcomes above through the SDK. They can also register as specialist solvers — an RWA agent, a stablecoin agent — and bid in the same auction.</p>
-      </div>
+      <div class="cell"><n>PAYMENTS</n><h3>Stables &amp; payments</h3><p>Gasless USDG sends and stable-to-stable swaps with a slippage ceiling, not a hope.</p><span class="ex">Pay 500 USDG gaslessly to 0x…cafe</span></div>
+      <div class="cell"><n>RWA</n><h3>xStocks &amp; RWA</h3><p>Weighted baskets across attested tokenized equities, sized from committed weights.</p><span class="ex">Allocate 10,000 USDT across 4 xStocks</span></div>
+      <div class="cell"><n>COMPLIANT</n><h3>Compliant only</h3><p>Pin a lane: only KYB-attested solvers may win. Everyone else reverts out.</p><span class="ex">Using only compliant solvers, allocate 25,000 USDT</span></div>
+      <div class="cell"><n>AGENTS</n><h3>Agents &amp; enterprise</h3><p>Declared via SDK, integrator-controlled selection, recurring rebalances.</p><span class="ex">Rebalance my xStocks every Monday</span></div>
     </div>
   </section>
 
-  <section class="rule" id="rwa">
-    <div class="cols">
-      <div>
-        <h2 class="serif">The best way to operate RWAs on X Layer</h2>
-        <p class="sub" style="margin-bottom:0">
-          One intent can allocate across TSLA, NVDA, AAPL, META and SPY xStocks with equal weight,
-          a slippage cap, attested-only assets, and a fee ceiling. Rebalances exit and enter
-          in the same transaction. A PAYMENT lands as a cash sleeve. Solvers that win and walk lose reputation.
-        </p>
-        <div class="chips">
-          <span class="chip">TSLAx</span>
-          <span class="chip">NVDAx</span>
-          <span class="chip">AAPLx</span>
-          <span class="chip">METAx</span>
-          <span class="chip">SPYx</span>
-          <span class="chip">GOOGLx</span>
-          <span class="chip">USDG</span>
-          <span class="chip">RWA attested</span>
-          <span class="chip">KYB solvers</span>
-          <span class="chip">gasless</span>
-        </div>
-      </div>
-      <div class="card">
-        <p class="quote">Weights are not negotiable. Floors are doubled. The whole notional gets deployed, or settlement reverts.</p>
-        <p>Guardrails travel with the intent: spend cap, fee cap, solver reputation, token allowlist, live RWA attestation, KYB-only execution, solver-sponsored gas.</p>
-      </div>
+  <section class="split">
+    <h6 class="kicker">Built for neobanks &amp; fintechs</h6>
+    <div class="prose" style="font-size:15px">
+      <p>Integrator-controlled selection pins who may pick the winning solver, so a neobank building on X Layer keeps execution inside a policy the chain will actually enforce — not a terms-of-service promise.</p>
+      <p>Pair that with KYB-only lanes and USDG rails, and a fintech front end can offer “declare an outcome” while every settlement still runs through the same auditable auction.</p>
     </div>
   </section>
 
-  <section class="rule" id="solvers">
-    <div class="cols">
-      <div>
-        <h2 class="serif">Modular solvers, not a single router.</h2>
-        <div class="list" style="margin-top:8px">
-          <div><i>AI</i><span>General solvers compete on fee, ETA, and guaranteed output.</span></div>
-          <div><i>KYB</i><span>Compliant solvers are owner-attested. Policy.requireCompliant reverts anyone else.</span></div>
-          <div><i>RWA</i><span>Specialists that only touch attested xStocks and tokenized funds.</span></div>
-          <div><i>GAS</i><span>Gasless solvers sponsor settlement. Humans and agents never need native OKB to finish.</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <n>ONE INTENT</n>
-        <pre class="intent">Using only compliant solvers, gaslessly convert stables into a diversified basket of 6 xStocks on X Layer, then rebalance monthly.</pre>
-      </div>
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <h6 class="kicker">The best way to operate RWAs on X Layer</h6>
+    <p class="prose" style="max-width:70ch;margin:0 0 20px">One intent can allocate across TSLA, NVDA, AAPL, META and SPY xStocks with equal weight, a slippage cap, attested-only assets, and a fee ceiling. Rebalances exit and enter in the same transaction. A PAYMENT lands as a cash sleeve.</p>
+    <div class="assets">
+      <span>TSLAx</span><span>NVDAx</span><span>AAPLx</span><span>METAx</span><span>SPYx</span><span>GOOGLx</span><span>USDG</span><span>RWA attested</span><span>KYB solvers</span><span>gasless</span>
+    </div>
+    <p class="display" style="font-size:15px;letter-spacing:-0.005em;margin:0 0 6px">Weights are not negotiable. Floors are doubled. The whole notional gets deployed, or settlement reverts.</p>
+    <p style="font-size:13.5px;color:var(--muted);margin:0">Guardrails travel with the intent: spend cap, fee cap, solver reputation, token allowlist, live RWA attestation, KYB-only execution, solver-sponsored gas.</p>
+  </section>
+
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <h2 class="display" style="font-size:22px;margin:0 0 24px">Modular solvers, not a single router</h2>
+    <div class="lanes">
+      <div class="cell"><n>AI</n><p style="margin-top:8px">General solvers compete on fee, ETA, and guaranteed output.</p></div>
+      <div class="cell"><n>KYB</n><p style="margin-top:8px">Compliant solvers are owner-attested. Policy.requireCompliant reverts anyone else.</p></div>
+      <div class="cell"><n>RWA</n><p style="margin-top:8px">Specialists that only touch attested xStocks and tokenized funds.</p></div>
+      <div class="cell"><n>GAS</n><p style="margin-top:8px">Gasless solvers sponsor settlement. Humans and agents never need native OKB to finish.</p></div>
     </div>
   </section>
 
-  <section class="rule">
-    <div class="cols">
-      <div>
-        <h2 class="serif">Agents declare. Agents can also solve.</h2>
-        <div class="list" style="margin-top:8px">
-          <div><i>01</i><span>They already speak in outcomes. Encoding four swaps is a bug farm.</span></div>
-          <div><i>02</i><span>Policy is committed, so a budget handed to an agent cannot step outside it.</span></div>
-          <div><i>03</i><span>The coordinator closes auctions so the agent does not have to stay online.</span></div>
-          <div><i>04</i><span>A solver that wins and walks loses reputation. The next intent can require a floor — or a KYB attestation.</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <n>@intentos/sdk</n>
-        <p style="font-family:var(--mono);font-size:12.5px;color:var(--ink);line-height:1.65">
-          await agent.declare(<br>
-          &nbsp;&nbsp;"pay 500 USDG gaslessly to 0xcafe…"<br>
-          );<br>
-          await agent.track(intentId);
-        </p>
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+      <h2 class="display" style="font-size:22px;margin:0">See the auction decide</h2>
+      <div class="toggle">
+        <button type="button" class="on" id="stdBtn">Standard</button>
+        <button type="button" id="kybBtn">Compliant only</button>
       </div>
     </div>
+    <p id="demoCap" style="font-size:13.5px;color:var(--muted);margin:0 0 20px;max-width:60ch">Any registered solver may bid. Aggressive usually wins on price.</p>
+    <div id="demoBids"></div>
   </section>
 
-  <section class="rule" style="border-bottom:0;padding-bottom:72px">
-    <div class="card" style="padding:28px 32px">
-      <h2 class="serif" style="margin-bottom:12px">Ready when you are.</h2>
-      <p class="sub">Connect a wallet on X Layer testnet, mint test USDT, and submit a live intent. Solvers compete. The chain checks the result.</p>
-      <a class="btn" href="/app">Open the app</a>
+  <section style="border-top:2px solid var(--ink);padding:56px 0">
+    <blockquote class="quote">“Using only compliant solvers, gaslessly convert stables into a diversified basket of six xStocks on X Layer, then rebalance monthly.”</blockquote>
+    <p style="font-size:13px;color:var(--muted);margin:14px 0 0">— a single declared outcome</p>
+  </section>
+
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <h6 class="kicker">Registry — recent</h6>
+    <div class="recent" id="recentHome"><p style="color:var(--faint)">No intents on this deployment yet.</p></div>
+  </section>
+
+  <section class="split" style="align-items:start;gap:40px">
+    <div>
+      <h6 class="kicker">Agents are first-class</h6>
+      <h2 class="display" style="font-size:22px;margin:0 0 12px">Declare via SDK</h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin:0">Clarifications hold the intent — nothing is signed until the spec is complete. Recurrence is metadata; the agent runtime submits once per period.</p>
     </div>
+    <pre style="border:1px solid var(--line);padding:20px;margin:0;font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;background:var(--wash)">await agent.declare(<span style="color:var(--accent)">"put 5,000 USDT into NVDA and AAPL, 60/40, only attested assets"</span>);
+await agent.track(intentId);</pre>
+  </section>
+
+  <section style="border-top:2px solid var(--ink);padding:48px 0">
+    <h2 class="display" style="font-size:22px;margin:0 0 24px">Isn’t this just a router?</h2>
+    <div class="faq"><b>Isn’t this just a router with extra steps?</b><p>A router returns whatever it returns. IntentOS measures the recipient’s balance delta and reverts if it misses max(user minOut, solver guarantee) — the guarantee is enforced, not advisory.</p></div>
+    <div class="faq"><b>Why single-chain, not a bridge?</b><p>One atomic settlement means no half-finished cross-chain state. A guarantee that only means something if every leg lands in the same transaction.</p></div>
+    <div class="faq"><b>What stops a solver from lying in its bid?</b><p>Nothing stops the bid — the contract stops the payout. A solver that wins and can’t meet its guarantee doesn’t get paid, and its reputation drops.</p></div>
+    <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can’t touch funds and can’t force a bad settlement — it can only pick a worse bid, and that’s slashable via challengeSelection.</p></div>
+  </section>
+
+  <section class="close">
+    <h2 class="display" style="font-size:26px;margin:0 0 12px">Ready when you are</h2>
+    <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect a wallet on X Layer testnet, mint test stables, and submit a live intent. Solvers compete. The chain checks the result.</p>
+    <a class="btn" href="/app" style="padding:14px 28px">Open the app</a>
   </section>
 </main>
 
-<div class="wrap">
-  <footer>
-    <span>© 2026 IntentOS · OKX Build X AI Season · live on X Layer testnet</span>
-    <span><a href="/spec">spec</a> · <a href="https://github.com/ezekiel6262/useweesh" target="_blank" rel="noopener">source</a></span>
-  </footer>
-</div>
+<section class="banner-dark"><div class="inner">
+  <span>LIVE ON X LAYER TESTNET · CHAIN 1952 · GAS IN OKB</span>
+  <span style="opacity:.7">REGISTRY 0x2cc2…06fD · SETTLEMENT 0x6ddA…f10C</span>
+</div></section>
+<footer class="foot" style="max-width:1120px">
+  <span>© 2026 IntentOS · OKX Build X AI Season · live on X Layer testnet</span>
+  <div class="foot-links">
+    <a href="/how">How it works</a><a href="/solvers">Solvers</a><a href="/docs">Docs</a><a href="/about">About</a><a href="/changelog">Changelog</a><a href="/spec">Spec</a><a href="/app">App</a><a href="https://github.com/ezekiel6262/useweesh">Repo</a>
+  </div>
+</footer>
+<script>
+const NOTES = ['parsing "allocate 10,000 USDT…"', 'outcomeHash 0xa41c… committed', 'Aggressive bids 0.18% · 4s', 'floors cleared · reverts averted'];
+const LOOP = [
+  { n: '01', title: 'Declare', body: 'Sentence becomes an IntentSpec — tickers, percents. Never addresses.' },
+  { n: '02', title: 'Commit', body: 'Compiled, signed, hashed. Only the hash goes onchain.' },
+  { n: '03', title: 'Auction', body: 'Solvers bid fee, eta and a guaranteed output per leg.' },
+  { n: '04', title: 'Settle', body: 'Reveal, size legs, measure deltas, enforce floors — or revert.' },
+];
+const DEMO = {
+  standard: {
+    cap: 'Any registered solver may bid. Aggressive usually wins on price.',
+    bids: [
+      ['Aggressive', 'AI · RWA · STABLE · GASLESS', 'won · fee 0.18%', true],
+      ['Conservative', 'KYB · RWA · AGENT · GASLESS', 'declined · fee 0.24%', false],
+    ],
+  },
+  compliant: {
+    cap: 'requireCompliant is set. Aggressive is excluded from the auction outright — not outbid, ineligible.',
+    bids: [
+      ['Aggressive', 'AI · RWA · STABLE · GASLESS', 'ineligible — not KYB', false],
+      ['Conservative', 'KYB · RWA · AGENT · GASLESS', 'won · fee 0.27%', true],
+    ],
+  },
+};
+let step = 0;
+function paintLoop() {
+  document.getElementById('railFill').style.width = ((step + 1) / 4) * 100 + '%';
+  document.getElementById('railDot').style.left = ((step + 1) / 4) * 100 + '%';
+  document.getElementById('stages').innerHTML = LOOP.map((s, i) =>
+    `<div class="stage${i === step ? ' on' : ''}"><div class="n">${s.n}</div><h3>${s.title}</h3><p>${s.body}</p><p class="live">${i === step ? NOTES[i] : ''}</p></div>`).join('');
+  document.getElementById('pillOpen').className = step === 0 ? 'on' : '';
+  document.getElementById('pillSel').className = step === 1 || step === 2 ? 'on' : '';
+  document.getElementById('pillFul').className = step === 3 ? 'done' : '';
+  const fill = step === 3 ? '100%' : step === 2 ? '55%' : step >= 1 ? '20%' : '4%';
+  document.getElementById('previewLegs').innerHTML = ['TSLAx','NVDAx','AAPLx','SPYx'].map((t) =>
+    `<div class="leg"><em>${t}</em><div class="bar"><i style="width:${fill}"></i></div></div>`).join('');
+}
+paintLoop();
+setInterval(() => { step = (step + 1) % 4; paintLoop(); }, 2400);
+
+function paintDemo(lane) {
+  const d = DEMO[lane];
+  document.getElementById('stdBtn').className = lane === 'standard' ? 'on' : '';
+  document.getElementById('kybBtn').className = lane === 'compliant' ? 'on' : '';
+  document.getElementById('demoCap').textContent = d.cap;
+  document.getElementById('demoBids').innerHTML = d.bids.map(([solver, laneName, status, win]) =>
+    `<div class="bid"><div><div style="font-family:var(--display);font-weight:700;font-size:14px">${solver}</div><div style="font-size:11px;color:var(--faint);font-family:var(--mono);margin-top:2px">${laneName}</div></div><span class="pill ${win ? 'win' : 'no'}">${status}</span></div>`).join('');
+}
+paintDemo('standard');
+document.getElementById('stdBtn').onclick = () => paintDemo('standard');
+document.getElementById('kybBtn').onclick = () => paintDemo('compliant');
+
+(async () => {
+  try {
+    const res = await fetch('/api/recent');
+    const data = await res.json();
+    const intents = data.intents ?? [];
+    if (!intents.length) return;
+    const short = (a) => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '';
+    const tone = (l) => /fulfill/i.test(l) ? 'win' : /select|open/i.test(l) ? 'bid' : 'no';
+    document.getElementById('recentHome').innerHTML = intents.slice(0, 6).map((it) =>
+      `<a href="/intent/?id=${it.intentId}"><span class="mono">${short(it.intentId)}</span><span class="mono" style="color:var(--faint)">${it.statusLabel ?? ''}</span><span style="color:var(--muted)">${short(it.owner)} · ${it.bidCount} bid${it.bidCount === 1 ? '' : 's'}</span><span class="pill ${tone(it.statusLabel)}">${it.statusLabel}</span></a>`).join('');
+  } catch { /* empty registry */ }
+})();
+</script>
 </body>
 </html>
