@@ -10,8 +10,8 @@ import {
   submitDomain,
   SUBMIT_TYPES,
 } from "@intentos/sdk";
-import { readBody, send } from "./_lib/json.js";
-import { catalog, loadLiveDeployment, operatorClient, reader } from "./_lib/runtime.js";
+import { readBody, send } from "./json.js";
+import { catalog, loadLiveDeployment, operatorClient, reader } from "./runtime.js";
 
 export const config = { maxDuration: 60 };
 
@@ -71,7 +71,7 @@ const RECURRING_ABI = [
   },
 ] as const;
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export async function handleRecurring(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") return send(res, 204, {});
   try {
     if (req.method === "GET") {
@@ -147,6 +147,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     send(res, 500, { error: (error as Error).message });
   }
+}
+
+export async function tickDueJobs() {
+  const coordinator = operatorClient("COORDINATOR_PRIVATE_KEY");
+  const deployment = loadLiveDeployment();
+  const recurring = deployment.contracts.recurringRegistry as Address | undefined;
+  if (!recurring) return { ran: [] as { id: number; error?: string }[] };
+  const due = (await coordinator.publicClient.readContract({
+    address: recurring,
+    abi: RECURRING_ABI,
+    functionName: "dueIds",
+    args: [8n],
+  })) as bigint[];
+  const ran: { id: number; intentId?: Hex; hash?: Hex; error?: string }[] = [];
+  for (const id of due) {
+    try {
+      const job = await readJob(coordinator, recurring, id);
+      const submitted = await declareFromJob(job.owner, job.prompt);
+      await coordinator.write(recurring, RECURRING_ABI as any, "markRun", [id]);
+      ran.push({ id: Number(id), intentId: submitted.intentId, hash: submitted.hash });
+    } catch (error) {
+      ran.push({ id: Number(id), error: (error as Error).message });
+    }
+  }
+  return { ran };
 }
 
 async function readJob(client: ReturnType<typeof reader>, recurring: Address, id: bigint) {

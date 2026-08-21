@@ -132,10 +132,10 @@ document.getElementById("root").addEventListener("click", async (event) => {
     const accounts = await eth.request({ method: "eth_requestAccounts" });
     const from = accounts[0];
     const intentId = new URLSearchParams(location.search).get("id");
-    const prepared = await fetch("/api/challenge", {
+    const prepared = await fetch("/api/ops", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ intentId, bidId }),
+      body: JSON.stringify({ kind: "challenge", intentId, bidId }),
     });
     const call = await prepared.json();
     if (!prepared.ok) throw new Error(call.error ?? "could not encode challenge");

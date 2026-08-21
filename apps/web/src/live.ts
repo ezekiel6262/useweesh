@@ -577,10 +577,11 @@ export async function authorizeCoordinatorSession(
     },
   });
   try {
-    const response = await fetch("/api/session", {
+    const response = await fetch("/api/ops", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
+        kind: "session",
         owner: account,
         key: coordinator,
         expiresAt: expiresAt.toString(),

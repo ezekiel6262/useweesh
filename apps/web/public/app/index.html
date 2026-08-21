@@ -365,9 +365,9 @@ $("mode").textContent = health.live
   ? `X LAYER · ${deployment?.chainId ?? 1952} · TESTNET`
   : `X LAYER · OFFLINE`;
 
-try { fetch("/api/recurring", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
+try { fetch("/api/ops?kind=tick"); } catch {}
 try {
-  const obs = await api("/api/observations");
+  const obs = await api("/api/ops?kind=observations");
   if (obs && typeof obs.volume === "number") {
     $("laneRow").dataset.volume = String(obs.volume);
   }
@@ -653,10 +653,11 @@ async function runFulfill() {
     await refreshHistory();
     if (lastDraft?.metadata?.schedule?.everySeconds && account) {
       try {
-        await api("/api/recurring", {
+        await api("/api/ops", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: encode({
+            kind: "recurring",
             action: "create",
             owner: account,
             prompt: $("prompt").value.trim(),
