@@ -29,6 +29,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     send(res, 200, { ok: true, activity });
   } catch (error) {
-    send(res, 500, { error: (error as Error).message });
+    send(res, 200, { ok: false, activity: [], error: (error as Error).message });
   }
 }

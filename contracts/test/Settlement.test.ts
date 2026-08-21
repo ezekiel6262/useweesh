@@ -252,4 +252,26 @@ describe("IntentSettlement", () => {
     const spentOnStock = (amount * 7_000n) / 10_000n;
     expect(await env.base.balanceOf(env.signers.user.address)).to.equal(beforeUsdt - spentOnStock);
   });
+
+  it("files an RWA onboarding request for a zero-notional tokenize intent", async () => {
+    const { env, stocks } = await loadFixture(basketFixture);
+    const outcome = {
+      kind: 3, // RWA_ONBOARD
+      inputToken: env.addresses.base,
+      inputAmount: 0n,
+      recipient: env.signers.user.address,
+      maxSlippageBps: 100,
+      legs: [{ token: stocks[0]!.address, weightBps: 10_000, minOut: 0n }],
+      exits: [] as any[],
+    };
+    const { intentId } = await submitIntent(env, env.signers.user, outcome);
+    await env.intentRegistry.connect(env.signers.solverA).placeBid(intentId, 0, 30, ethers.ZeroHash, [0n]);
+    await time.increase(25);
+    await env.intentRegistry.connect(env.signers.coordinator).selectWinner(intentId, 0);
+    await env.settlement
+      .connect(env.signers.solverA)
+      .settle(intentId, outcome, ZERO_POLICY, [route(env.addresses.routerA, [env.addresses.base, stocks[0]!.address])], []);
+    expect(await env.rwaRegistry.requestCount()).to.equal(1);
+    expect((await env.intentRegistry.getIntent(intentId)).status).to.equal(3);
+  });
 });

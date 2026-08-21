@@ -1,8 +1,15 @@
 # IntentOS
 
 **The X Layer-native Intent Operating System for agents, stablecoins, and Real World Assets.**
-You state an outcome — a gasless USDG payment, an xStocks basket, an RWA onboard — competing
-AI and KYB’d solvers work out how to reach it; the chain enforces that they did.
+You state an outcome — a gasless USDG payment, an xStocks basket, or bringing an offchain asset
+onchain — competing solvers work out how; the chain enforces that they did.
+
+**Live:** [tryintentos.xyz](https://tryintentos.xyz) (compose at `/app`)  
+**Testnet:** X Layer **1952** — mintable rails, the click-through demo.  
+**Mainnet:** X Layer **196** — same protocol, real USDT / USDG / TSLAx, Uniswap V2 + V3 adapter. Run `npm run deploy:mainnet -w @intentos/contracts` once the deployer has OKB.  
+**Repo:** [github.com/ezekiel6262/intentos](https://github.com/ezekiel6262/intentos)
+
+The four solvers on the demo are **IntentOS reference operators we run**, bonded so auctions are never empty. A missed guarantee slashes 10% of bond to the runner-up. KYB is checked at selection.
 
 ```
 "Allocate 10,000 USDT across TSLA, NVDA, AAPL and SPY xStocks with equal weight,
@@ -78,6 +85,8 @@ npm run chain          # terminal 1 — a local X Layer stand-in
 npm run deploy:local   # terminal 2 — contracts, demo assets, two venues
 npm run demo           # the whole loop, end to end
 ```
+
+RWA tokenization is a first-class kind (`RWA_ONBOARD`): an intent can file `OnboardingRequested` for an ISIN or wrapper with zero notional, or acquire the attested token in the same settlement when a pool exists.
 
 Then the distributed version — a coordinator, solvers and an agent as separate processes:
 

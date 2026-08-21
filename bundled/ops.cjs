@@ -52042,7 +52042,7 @@ init_external();
 // packages/intent-schema/dist/schema.js
 var address = external_exports.string().regex(/^0x[0-9a-fA-F]{40}$/, "expected a 20-byte address").transform((v) => v);
 var hex32 = external_exports.string().regex(/^0x[0-9a-fA-F]{64}$/, "expected a 32-byte hex string").transform((v) => v);
-var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^\d+$/)]).transform(BigInt);
+var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^(n:)?\d+$/)]).transform((v) => BigInt(typeof v === "string" && v.startsWith("n:") ? v.slice(2) : v));
 var basketLegSchema = external_exports.object({
   token: address,
   weightBps: external_exports.number().int().min(1).max(1e4),
@@ -54634,6 +54634,19 @@ var SETTLEMENT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "rwa",
+    "outputs": [
+      {
+        "internalType": "contract RWARegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint16",
@@ -54660,6 +54673,19 @@ var SETTLEMENT_ABI = [
       }
     ],
     "name": "setRouterAllowed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "rwa_",
+        "type": "address"
+      }
+    ],
+    "name": "setRwaRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -57322,7 +57348,7 @@ function parseWithGrammar(prompt, catalog2) {
   spec.sponsorGas = /\b(gasless(?:ly)?|sponsor(?:ed)? gas|pay(?:s|ing)? (?:the )?gas)\b/.test(text);
   spec.integratorControlled = /\b(integrator[- ]controlled|neobank|fintech app)\b/.test(text);
   spec.minSolverReputationPercent = findReputationFloor(text);
-  spec.requireRwaAttested = /\b(attested|verified|regulated)\b/.test(text) || spec.action === "onboard_rwa";
+  spec.requireRwaAttested = spec.action === "onboard_rwa" ? /\bonly attested\b/.test(text) : /\b(attested|verified|regulated)\b/.test(text);
   spec.restrictToDeclaredAssets = /\b(only these|nothing else|no other (?:assets|tokens)|exactly these)\b/.test(text);
   spec.ttlMinutes = findTtlMinutes(text);
   spec.recurrence = findRecurrence(text);
@@ -57452,8 +57478,9 @@ function findRatio(text, legCount) {
   return null;
 }
 function detectAction(text, spec) {
-  if (/\b(tokeni[sz]e|bring .* onchain|onboard|issue .* onchain)\b/.test(text))
+  if (/\b(tokeni[sz]e|bring .{0,40} onchain|onboard|issue .{0,40} onchain|isin[:\s]|real[- ]world asset)\b/.test(text)) {
     return "onboard_rwa";
+  }
   if (spec.exits.length > 0 || /\brebalance|reweight|rotate\b/.test(text))
     return "rebalance";
   const namesXstock = spec.targets.some((t) => !isStableSymbol(t.symbol));
@@ -57630,7 +57657,8 @@ async function compileSpec(spec, options) {
     };
   });
   const isRebalance = spec.action === "rebalance";
-  if (!isRebalance && spec.inputAmount === null) {
+  const isOnboard = spec.action === "onboard_rwa";
+  if (!isRebalance && !isOnboard && spec.inputAmount === null) {
     throw new CompileError(`the intent does not say how much ${input.symbol} to deploy`, spec.clarifications);
   }
   if (isRebalance && exits.length === 0) {

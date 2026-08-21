@@ -2,6 +2,7 @@ import { ethers, network } from "hardhat";
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BASE_ASSET, ETF_SYMBOLS, VENUES, XSTOCKS } from "../config/assets";
+import { XLAYER_MAINNET } from "../config/mainnet";
 import { keccak256, toUtf8Bytes, Wallet, type Signer } from "ethers";
 
 const WAD = 10n ** 18n;
@@ -36,6 +37,7 @@ async function main() {
   const seedKey = process.env.PRIVATE_KEY;
   const chainId = Number((await ethers.provider.getNetwork()).chainId);
   const testnet = chainId === 1952 || chainId === 195;
+  const mainnet = chainId === 196;
 
   let treasury: Signer = signers[1] ?? deployer;
   let coordinator: Signer = signers[2] ?? deployer;
@@ -45,7 +47,7 @@ async function main() {
   let solverD: Signer | undefined = signers[6];
   const derivedKeys: Record<string, string> = {};
 
-  if (testnet && seedKey && signers.length < 3) {
+  if ((testnet || mainnet) && seedKey && signers.length < 3) {
     coordinator = deriveWallet(seedKey, "coordinator");
     solverA = deriveWallet(seedKey, "solver-a");
     solverB = deriveWallet(seedKey, "solver-b");
@@ -58,7 +60,7 @@ async function main() {
     derivedKeys.SOLVER_C_PRIVATE_KEY = (solverC as Wallet).privateKey;
     derivedKeys.SOLVER_D_PRIVATE_KEY = (solverD as Wallet).privateKey;
 
-    const gasDrop = ethers.parseEther("0.008");
+    const gasDrop = mainnet ? ethers.parseEther("0.002") : ethers.parseEther("0.008");
     for (const wallet of [coordinator, solverA, solverB, solverC, solverD]) {
       const addr = await wallet.getAddress();
       const bal = await ethers.provider.getBalance(addr);
@@ -76,8 +78,8 @@ async function main() {
   console.log(`coordinator  ${await coordinator.getAddress()}`);
 
   // ---------------------------------------------------------------- core stack
-  const minBond = testnet ? ethers.parseEther("0.0001") : ethers.parseEther("0.01");
-  const auctioneerBond = testnet ? ethers.parseEther("0.0005") : ethers.parseEther("1");
+  const minBond = testnet ? ethers.parseEther("0.0001") : ethers.parseEther("0.001");
+  const auctioneerBond = testnet ? ethers.parseEther("0.0005") : ethers.parseEther("0.002");
 
   const solverRegistry = await (await ethers.getContractFactory("SolverRegistry"))
     .deploy(deployer.address, minBond);
@@ -108,58 +110,80 @@ async function main() {
   await (await intentRegistry.connect(coordinator).fundAuctioneerBond({ value: auctioneerBond })).wait();
   await (await solverRegistry.setReporter(await intentRegistry.getAddress(), true)).wait();
   await (await rwaRegistry.setAttestor(deployer.address, true)).wait();
+  await (await settlement.setRwaRegistry(await rwaRegistry.getAddress())).wait();
 
-  // -------------------------------------------------------------- demo assets
-  const erc20 = await ethers.getContractFactory("MockERC20");
-  const usdt = await erc20.deploy(BASE_ASSET.name, BASE_ASSET.symbol, BASE_ASSET.decimals);
-  await usdt.waitForDeployment();
+  const tokens: Record<string, string> = {};
+  const routers: { name: string; address: string }[] = [];
+  const reviewBy = Math.floor(Date.now() / 1000) + 365 * 24 * 3600;
 
-  const usdg = await erc20.deploy("Global Dollar", "USDG", 6);
-  await usdg.waitForDeployment();
-  const tokens: Record<string, string> = { USDT: await usdt.getAddress(), USDG: await usdg.getAddress() };
-  for (const asset of XSTOCKS) {
-    const t = await erc20.deploy(asset.name, asset.symbol, asset.decimals);
-    await t.waitForDeployment();
-    tokens[asset.symbol] = await t.getAddress();
-
-    const reviewBy = Math.floor(Date.now() / 1000) + 365 * 24 * 3600;
+  if (mainnet) {
+    tokens.USDT = XLAYER_MAINNET.tokens.USDT;
+    tokens.USDG = XLAYER_MAINNET.tokens.USDG;
+    tokens.TSLAx = XLAYER_MAINNET.tokens.TSLAx;
+    tokens.WOKB = XLAYER_MAINNET.wokb;
     await (
       await rwaRegistry.attest(
-        tokens[asset.symbol]!,
-        ETF_SYMBOLS.has(asset.symbol) ? 2 : 1, // AssetClass.ETF : AssetClass.EQUITY
-        asset.symbol,
-        asset.assetRef,
-        `https://intentos.xyz/rwa/${asset.symbol}.json`,
+        tokens.TSLAx,
+        1,
+        "TSLAx",
+        "ISIN:CH1436219252",
+        "https://app.rwa.xyz/assets/TSLAx",
         reviewBy,
       )
     ).wait();
-  }
-
-  // -------------------------------------------------------------- demo venues
-  const routerFactory = await ethers.getContractFactory("MockDexRouter");
-  const routers: { name: string; address: string }[] = [];
-  for (const venue of VENUES) {
-    const router = await routerFactory.deploy(venue.name, venue.feeBps);
-    await router.waitForDeployment();
-    const routerAddress = await router.getAddress();
-
+    await (await settlement.setRouterAllowed(XLAYER_MAINNET.uniswapV2Router, true)).wait();
+    routers.push({ name: "Uniswap-V2", address: XLAYER_MAINNET.uniswapV2Router });
+    const adapter = await (await ethers.getContractFactory("V3RouterAdapter")).deploy(
+      XLAYER_MAINNET.uniswapV3.swapRouter02,
+      XLAYER_MAINNET.uniswapV3.quoterV2,
+    );
+    await adapter.waitForDeployment();
+    const adapterAddress = await adapter.getAddress();
+    await (await settlement.setRouterAllowed(adapterAddress, true)).wait();
+    routers.push({ name: "Uniswap-V3", address: adapterAddress });
+    console.log(`mainnet tokens USDT/USDG/TSLAx attested TSLAx`);
+    console.log(`v3 adapter ${adapterAddress}`);
+  } else {
+    const erc20 = await ethers.getContractFactory("MockERC20");
+    const usdt = await erc20.deploy(BASE_ASSET.name, BASE_ASSET.symbol, BASE_ASSET.decimals);
+    await usdt.waitForDeployment();
+    const usdg = await erc20.deploy("Global Dollar", "USDG", 6);
+    await usdg.waitForDeployment();
+    tokens.USDT = await usdt.getAddress();
+    tokens.USDG = await usdg.getAddress();
     for (const asset of XSTOCKS) {
-      const priceE18 = usdtToAssetPriceE18(asset.usdPrice, venue.priceSkewBps[asset.symbol] ?? 0);
-      // Depth in USDT base units: this much notional costs one bp of price impact. 5,000 USDT
-      // per bp puts a 10,000 USDT leg at ~2 bps, which is the right order for X Layer liquidity.
-      const depth = BigInt(Math.round(5_000 * (venue.depthMultiplier[asset.symbol] ?? 1))) * 10n ** 6n;
-      await (await router.setPrice(tokens.USDT!, tokens[asset.symbol]!, priceE18, depth)).wait();
-
-      // Seed both sides of the book.
-      const stock = await ethers.getContractAt("MockERC20", tokens[asset.symbol]!);
-      await (await stock.mint(routerAddress, ethers.parseUnits("250000", asset.decimals))).wait();
+      const t = await erc20.deploy(asset.name, asset.symbol, asset.decimals);
+      await t.waitForDeployment();
+      tokens[asset.symbol] = await t.getAddress();
+      await (
+        await rwaRegistry.attest(
+          tokens[asset.symbol]!,
+          ETF_SYMBOLS.has(asset.symbol) ? 2 : 1,
+          asset.symbol,
+          asset.assetRef,
+          `https://intentos.xyz/rwa/${asset.symbol}.json`,
+          reviewBy,
+        )
+      ).wait();
     }
-    await (await usdt.mint(routerAddress, ethers.parseUnits("50000000", BASE_ASSET.decimals))).wait();
-    // 1:1 USDG/USDT rail so stable payments and conversions quote without slippage beyond the venue fee.
-    await (await router.setPrice(tokens.USDT!, tokens.USDG!, WAD, ethers.parseUnits("50000", 6))).wait();
-    await (await usdg.mint(routerAddress, ethers.parseUnits("50000000", 6))).wait();
-    await (await settlement.setRouterAllowed(routerAddress, true)).wait();
-    routers.push({ name: venue.name, address: routerAddress });
+    const routerFactory = await ethers.getContractFactory("MockDexRouter");
+    for (const venue of VENUES) {
+      const router = await routerFactory.deploy(venue.name, venue.feeBps);
+      await router.waitForDeployment();
+      const routerAddress = await router.getAddress();
+      for (const asset of XSTOCKS) {
+        const priceE18 = usdtToAssetPriceE18(asset.usdPrice, venue.priceSkewBps[asset.symbol] ?? 0);
+        const depth = BigInt(Math.round(5_000 * (venue.depthMultiplier[asset.symbol] ?? 1))) * 10n ** 6n;
+        await (await router.setPrice(tokens.USDT!, tokens[asset.symbol]!, priceE18, depth)).wait();
+        const stock = await ethers.getContractAt("MockERC20", tokens[asset.symbol]!);
+        await (await stock.mint(routerAddress, ethers.parseUnits("250000", asset.decimals))).wait();
+      }
+      await (await usdt.mint(routerAddress, ethers.parseUnits("50000000", BASE_ASSET.decimals))).wait();
+      await (await router.setPrice(tokens.USDT!, tokens.USDG!, WAD, ethers.parseUnits("50000", 6))).wait();
+      await (await usdg.mint(routerAddress, ethers.parseUnits("50000000", 6))).wait();
+      await (await settlement.setRouterAllowed(routerAddress, true)).wait();
+      routers.push({ name: venue.name, address: routerAddress });
+    }
   }
 
   const recurring = await (await ethers.getContractFactory("RecurringRegistry")).deploy(deployer.address);
@@ -175,15 +199,18 @@ async function main() {
   );
   await tslaVault.waitForDeployment();
 
-  // Fund operator accounts so solvers and the dashboard have something to spend.
-  const funded = [deployer, coordinator, solverA, solverB, solverC, solverD].filter(Boolean) as Signer[];
-  for (const signer of funded) {
-    await (await usdt.mint(await signer.getAddress(), ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
-    await (await usdg.mint(await signer.getAddress(), ethers.parseUnits("1000000", 6))).wait();
-    await (await (await ethers.getContractAt("MockERC20", tokens.TSLAx!)).mint(
-      await signer.getAddress(),
-      ethers.parseUnits("1000", 18),
-    )).wait();
+  if (!mainnet) {
+    const usdt = await ethers.getContractAt("MockERC20", tokens.USDT!);
+    const usdg = await ethers.getContractAt("MockERC20", tokens.USDG!);
+    const funded = [deployer, coordinator, solverA, solverB, solverC, solverD].filter(Boolean) as Signer[];
+    for (const signer of funded) {
+      await (await usdt.mint(await signer.getAddress(), ethers.parseUnits("1000000", BASE_ASSET.decimals))).wait();
+      await (await usdg.mint(await signer.getAddress(), ethers.parseUnits("1000000", 6))).wait();
+      await (await (await ethers.getContractAt("MockERC20", tokens.TSLAx!)).mint(
+        await signer.getAddress(),
+        ethers.parseUnits("1000", 18),
+      )).wait();
+    }
   }
 
   if (solverA && solverB) {

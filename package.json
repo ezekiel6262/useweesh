@@ -28,7 +28,8 @@
     "build:web": "npm run build -w @intentos/intent-schema && npm run build -w @intentos/intent-ai && npm run build -w @intentos/web",
     "build:api": "node scripts/bundle-api.mjs",
     "seed:intents": "npx tsx scripts/seedIntents.ts",
-    "verify:explorer": "node scripts/verify-explorer.mjs"
+    "verify:explorer": "node scripts/verify-explorer.mjs",
+    "deploy:mainnet": "npm run deploy:mainnet -w @intentos/contracts"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

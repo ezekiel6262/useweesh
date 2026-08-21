@@ -2263,6 +2263,19 @@ export const SETTLEMENT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "rwa",
+    "outputs": [
+      {
+        "internalType": "contract RWARegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint16",
@@ -2289,6 +2302,19 @@ export const SETTLEMENT_ABI = [
       }
     ],
     "name": "setRouterAllowed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "rwa_",
+        "type": "address"
+      }
+    ],
+    "name": "setRwaRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -62,7 +62,10 @@ export function parseWithGrammar(prompt: string, catalog: AssetCatalog): Grammar
   spec.sponsorGas = /\b(gasless(?:ly)?|sponsor(?:ed)? gas|pay(?:s|ing)? (?:the )?gas)\b/.test(text);
   spec.integratorControlled = /\b(integrator[- ]controlled|neobank|fintech app)\b/.test(text);
   spec.minSolverReputationPercent = findReputationFloor(text);
-  spec.requireRwaAttested = /\b(attested|verified|regulated)\b/.test(text) || spec.action === "onboard_rwa";
+  spec.requireRwaAttested =
+    spec.action === "onboard_rwa"
+      ? /\bonly attested\b/.test(text)
+      : /\b(attested|verified|regulated)\b/.test(text);
   spec.restrictToDeclaredAssets = /\b(only these|nothing else|no other (?:assets|tokens)|exactly these)\b/.test(text);
   spec.ttlMinutes = findTtlMinutes(text);
   spec.recurrence = findRecurrence(text);
@@ -227,7 +230,13 @@ function findRatio(text: string, legCount: number): number[] | null {
 }
 
 function detectAction(text: string, spec: IntentSpec): IntentSpec["action"] {
-  if (/\b(tokeni[sz]e|bring .* onchain|onboard|issue .* onchain)\b/.test(text)) return "onboard_rwa";
+  if (
+    /\b(tokeni[sz]e|bring .{0,40} onchain|onboard|issue .{0,40} onchain|isin[:\s]|real[- ]world asset)\b/.test(
+      text,
+    )
+  ) {
+    return "onboard_rwa";
+  }
   if (spec.exits.length > 0 || /\brebalance|reweight|rotate\b/.test(text)) return "rebalance";
   const namesXstock = spec.targets.some((t) => !isStableSymbol(t.symbol));
   if (!namesXstock && /\b(pay(?:ing|ment|roll|out)?|subscription)\b/.test(text)) return "pay";

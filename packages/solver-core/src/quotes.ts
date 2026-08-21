@@ -1,5 +1,5 @@
 import type { Address, PublicClient } from "viem";
-import { DEX_ROUTER_ABI, type Route } from "@intentos/intent-schema";
+import { type Route } from "@intentos/intent-schema";
 
 /**
  * Venue quoting.
@@ -74,13 +74,7 @@ export class Quoter {
     const results = await Promise.all(
       attempts.map(async ({ venue, path }) => {
         try {
-          const amounts = (await this.options.publicClient.readContract({
-            address: venue.address,
-            abi: DEX_ROUTER_ABI,
-            functionName: "getAmountsOut",
-            args: [amountIn, path],
-          })) as readonly bigint[];
-
+          const amounts = await this.readAmountsOut(venue.address, amountIn, path);
           const amountOut = amounts[amounts.length - 1]!;
           if (amountOut === 0n) return null;
           return { venue, route: { router: venue.address, path }, amountIn, amountOut } satisfies Quote;
@@ -92,6 +86,37 @@ export class Quoter {
     );
 
     return results.filter((q): q is Quote => q !== null);
+  }
+
+  private async readAmountsOut(router: Address, amountIn: bigint, path: Address[]): Promise<readonly bigint[]> {
+    const abi = [
+      {
+        type: "function",
+        name: "getAmountsOut",
+        stateMutability: "nonpayable",
+        inputs: [
+          { name: "amountIn", type: "uint256" },
+          { name: "path", type: "address[]" },
+        ],
+        outputs: [{ name: "amounts", type: "uint256[]" }],
+      },
+    ] as const;
+    try {
+      return (await this.options.publicClient.readContract({
+        address: router,
+        abi,
+        functionName: "getAmountsOut",
+        args: [amountIn, path],
+      })) as readonly bigint[];
+    } catch {
+      const simulated = await this.options.publicClient.simulateContract({
+        address: router,
+        abi,
+        functionName: "getAmountsOut",
+        args: [amountIn, path],
+      });
+      return simulated.result as readonly bigint[];
+    }
   }
 
   /** What `amount` of `token` is worth in the base asset. Used to compare heterogeneous baskets. */

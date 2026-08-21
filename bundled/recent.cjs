@@ -37144,7 +37144,7 @@ init_external();
 // packages/intent-schema/dist/schema.js
 var address = external_exports.string().regex(/^0x[0-9a-fA-F]{40}$/, "expected a 20-byte address").transform((v) => v);
 var hex32 = external_exports.string().regex(/^0x[0-9a-fA-F]{64}$/, "expected a 32-byte hex string").transform((v) => v);
-var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^\d+$/)]).transform(BigInt);
+var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^(n:)?\d+$/)]).transform((v) => BigInt(typeof v === "string" && v.startsWith("n:") ? v.slice(2) : v));
 var basketLegSchema = external_exports.object({
   token: address,
   weightBps: external_exports.number().int().min(1).max(1e4),
@@ -39565,6 +39565,19 @@ var SETTLEMENT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "rwa",
+    "outputs": [
+      {
+        "internalType": "contract RWARegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint16",
@@ -39591,6 +39604,19 @@ var SETTLEMENT_ABI = [
       }
     ],
     "name": "setRouterAllowed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "rwa_",
+        "type": "address"
+      }
+    ],
+    "name": "setRwaRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

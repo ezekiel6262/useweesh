@@ -86,7 +86,7 @@
     <a href="/docs">Docs</a>
     <a href="/spec">Spec</a>
   </nav>
-  <span class="chip-net">X LAYER · 1952</span>
+  <span class="chip-net">X LAYER · 1952 + 196</span>
   <a class="btn" href="/app">Connect</a>
 </header>
 
@@ -101,13 +101,13 @@
       </div>
     </div>
   </section>
-  <div class="fine">X Layer testnet · wallet abstraction via submitFor · agents share owner history · no new token</div>
+  <div class="fine">X Layer testnet 1952 (demo + mint) · mainnet 196 (protocol launched) · submitFor gasless · no new token</div>
 
   <section class="stats">
-    <div><b>1952</b><span>chain id · X Layer testnet</span></div>
-    <div><b>~30s</b><span>auction window</span></div>
-    <div><b>2</b><span>live solvers, 6 lanes</span></div>
-    <div><b>0</b><span>stripped floors on record</span></div>
+    <div><b>1952</b><span>testnet demo, mintable rails</span></div>
+    <div><b>196</b><span>mainnet ready · V3 adapter · real tokens</span></div>
+    <div><b>4</b><span>reference solvers we run, 6 lanes</span></div>
+    <div><b>10%</b><span>bond slashed on a missed guarantee</span></div>
   </section>
 
   <section style="padding:40px 0">
@@ -142,7 +142,7 @@
     <h2 class="display" style="font-size:24px;margin:0 0 24px">What you can declare</h2>
     <div class="grid2">
       <div class="cell"><n>PAYMENTS</n><h3>Stables &amp; payments</h3><p>Gasless USDG sends and stable-to-stable swaps with a slippage ceiling, not a hope.</p><span class="ex">Pay 500 USDG gaslessly to 0x…cafe</span></div>
-      <div class="cell"><n>RWA</n><h3>xStocks &amp; RWA</h3><p>Weighted baskets across attested tokenized equities, sized from committed weights.</p><span class="ex">Allocate 10,000 USDT across 4 xStocks</span></div>
+      <div class="cell"><n>RWA</n><h3>xStocks &amp; tokenize</h3><p>Buy attested xStocks, or declare an offchain asset to be brought onchain. Settlement files OnboardingRequested; an attestor publishes the token.</p><span class="ex">Tokenize Tesla as TSLAx on X Layer</span></div>
       <div class="cell"><n>COMPLIANT</n><h3>Compliant only</h3><p>Pin a lane: only KYB-attested solvers may win. Everyone else reverts out.</p><span class="ex">Using only compliant solvers, allocate 25,000 USDT</span></div>
       <div class="cell"><n>AGENTS</n><h3>Agents &amp; enterprise</h3><p>Declared via SDK, same owner history as a wallet, integrator-controlled selection.</p><span class="ex">Rebalance my xStocks every Monday</span><p style="margin:12px 0 0;font-size:12px"><a href="/agents">Agent surface</a> · <a href="/app">App</a></p></div>
     </div>
@@ -216,14 +216,16 @@ await agent.history();</pre>
     <h2 class="display" style="font-size:22px;margin:0 0 24px">Isn’t this just a router?</h2>
     <div class="faq"><b>Isn't this just a router with extra steps?</b><p>A router returns whatever it returns. IntentOS measures the recipient's balance delta and reverts if it misses max(user minOut, solver guarantee). The guarantee is enforced, not advisory.</p></div>
     <div class="faq"><b>Why single-chain, not a bridge?</b><p>One atomic settlement means no half-finished cross-chain state. A guarantee that only means something if every leg lands in the same transaction.</p></div>
-    <div class="faq"><b>What stops a solver from lying in its bid?</b><p>Nothing stops the bid. The contract stops the payout. A solver that wins and can't meet its guarantee doesn't get paid, and its reputation drops.</p></div>
-    <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can't touch funds and can't force a bad settlement. It can only pick a worse bid, and that's slashable via challengeSelection.</p></div>
-    <div class="faq"><b>Is this wallet abstraction / ERC-4337?</b><p>The live path is signed intents: EIP-712 Submit + exact-amount permit, coordinator pays submit gas. Agents are owner addresses on the same registry. Smart accounts and session keys are next, not a rewrite.</p></div>
+    <div class="faq"><b>What stops a solver from lying in its bid?</b><p>Nothing stops the bid. Settlement reverts if the guarantee is missed, then reportFailure slashes 10% of the solver's bonded OKB to the runner-up. Reputation also drops. KYB is checked at selection, not after the fact.</p></div>
+    <div class="faq"><b>Do I need to trust the coordinator?</b><p>No. It can't touch funds and can't force a bad settlement. It posts an auctioneer bond. Anyone can call challengeSelection within 30 minutes if a strictly better bid was passed over.</p></div>
+    <div class="faq"><b>Can an intent tokenize a real-world asset?</b><p>Yes. Kind RWA_ONBOARD is the offchain-to-onchain path: the intent names the asset (ISIN, ticker, or existing wrapper). Settlement files OnboardingRequested on RWARegistry. An attestor later publishes the token. A funded onboard can also acquire the wrapper in the same fill when a pool exists.</p></div>
+    <div class="faq"><b>Is this wallet abstraction / ERC-4337?</b><p>The live path is signed intents: EIP-712 Submit + exact-amount permit, ERC-1271 smart-account owners, session keys, coordinator-paid submitFor. There is no EntryPoint bundler on 1952. You sign; you do not need OKB to declare.</p></div>
+    <div class="faq"><b>Testnet or mainnet?</b><p>The app you click is X Layer testnet 1952, with mintable stand-in stables so anyone can run the loop. Mainnet 196 uses the same contracts against real USDT, USDG, TSLAx and a Uniswap V3 adapter (V2 has no those pairs). Broadcast with <span class="mono">npm run deploy:mainnet</span> once the deployer holds OKB. Fills only where a pool quotes.</p></div>
   </section>
 
   <section class="close">
     <h2 class="display" style="font-size:26px;margin:0 0 12px">Ready when you are</h2>
-    <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect a wallet on X Layer testnet, mint test stables, and submit a live intent. Solvers compete. The chain checks the result.</p>
+    <p style="font-size:15px;color:var(--muted);max-width:52ch;margin:0 auto 24px">Connect on X Layer testnet, mint test stables, and submit. Solvers we operate compete. The chain checks the result. Mainnet 196 is the same contracts against real tokens.</p>
     <a class="btn" href="/app" style="padding:14px 28px">Open the app</a>
   </section>
 </main>

@@ -37153,7 +37153,7 @@ init_external();
 // packages/intent-schema/dist/schema.js
 var address = external_exports.string().regex(/^0x[0-9a-fA-F]{40}$/, "expected a 20-byte address").transform((v) => v);
 var hex32 = external_exports.string().regex(/^0x[0-9a-fA-F]{64}$/, "expected a 32-byte hex string").transform((v) => v);
-var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^\d+$/)]).transform(BigInt);
+var bigintish = external_exports.union([external_exports.bigint(), external_exports.number().int().nonnegative(), external_exports.string().regex(/^(n:)?\d+$/)]).transform((v) => BigInt(typeof v === "string" && v.startsWith("n:") ? v.slice(2) : v));
 var basketLegSchema = external_exports.object({
   token: address,
   weightBps: external_exports.number().int().min(1).max(1e4),
@@ -39650,6 +39650,19 @@ var SETTLEMENT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "rwa",
+    "outputs": [
+      {
+        "internalType": "contract RWARegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint16",
@@ -39676,6 +39689,19 @@ var SETTLEMENT_ABI = [
       }
     ],
     "name": "setRouterAllowed",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "rwa_",
+        "type": "address"
+      }
+    ],
+    "name": "setRwaRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -42776,12 +42802,7 @@ var Quoter = class {
     const attempts = this.options.venues.flatMap((venue) => this.pathsFor(tokenIn, tokenOut).map((path) => ({ venue, path })));
     const results = await Promise.all(attempts.map(async ({ venue, path }) => {
       try {
-        const amounts = await this.options.publicClient.readContract({
-          address: venue.address,
-          abi: DEX_ROUTER_ABI,
-          functionName: "getAmountsOut",
-          args: [amountIn, path]
-        });
+        const amounts = await this.readAmountsOut(venue.address, amountIn, path);
         const amountOut = amounts[amounts.length - 1];
         if (amountOut === 0n)
           return null;
@@ -42791,6 +42812,36 @@ var Quoter = class {
       }
     }));
     return results.filter((q) => q !== null);
+  }
+  async readAmountsOut(router, amountIn, path) {
+    const abi2 = [
+      {
+        type: "function",
+        name: "getAmountsOut",
+        stateMutability: "nonpayable",
+        inputs: [
+          { name: "amountIn", type: "uint256" },
+          { name: "path", type: "address[]" }
+        ],
+        outputs: [{ name: "amounts", type: "uint256[]" }]
+      }
+    ];
+    try {
+      return await this.options.publicClient.readContract({
+        address: router,
+        abi: abi2,
+        functionName: "getAmountsOut",
+        args: [amountIn, path]
+      });
+    } catch {
+      const simulated = await this.options.publicClient.simulateContract({
+        address: router,
+        abi: abi2,
+        functionName: "getAmountsOut",
+        args: [amountIn, path]
+      });
+      return simulated.result;
+    }
   }
   /** What `amount` of `token` is worth in the base asset. Used to compare heterogeneous baskets. */
   async valueIn(token, base, amount) {
@@ -43366,10 +43417,28 @@ async function handler(req, res) {
     } catch {
       feed.observe({ volume: 25e5, funding: 0.012, volatility: 18 });
     }
-    const solvers = makeSolvers(feed);
+    let solvers;
+    try {
+      solvers = makeSolvers(feed);
+    } catch (error51) {
+      return send(res, 200, {
+        ok: false,
+        activity: [],
+        skipped: `solvers unavailable: ${error51.message}`
+      });
+    }
     const activity = [];
     for (const solver of solvers) {
-      activity.push(...await solver.tick());
+      try {
+        activity.push(...await solver.tick());
+      } catch (error51) {
+        activity.push({
+          intentId: body.intentId,
+          action: "failed",
+          detail: error51.message,
+          at: Math.floor(Date.now() / 1e3)
+        });
+      }
     }
     send(res, 200, { ok: true, activity });
   } catch (error51) {

@@ -10,6 +10,7 @@ import {IntentLib} from "./libraries/IntentLib.sol";
 import {IDexRouter} from "./interfaces/IDexRouter.sol";
 import {IntentRegistry} from "./IntentRegistry.sol";
 import {PolicyEngine} from "./PolicyEngine.sol";
+import {RWARegistry} from "./RWARegistry.sol";
 
 /// @title IntentSettlement
 /// @notice Executes a winning solver's plan and verifies it against what the user declared.
@@ -44,6 +45,7 @@ contract IntentSettlement is Ownable, ReentrancyGuard {
 
     IntentRegistry public immutable registry;
     PolicyEngine public immutable policyEngine;
+    RWARegistry public rwa;
 
     /// @notice Protocol success fee, taken as a share of the solver fee.
     uint16 public protocolFeeShareBps = 3_000;
@@ -100,7 +102,16 @@ contract IntentSettlement is Ownable, ReentrancyGuard {
         Ctx memory c = _open(intentId, outcome, policy, entryRoutes, exitRoutes);
 
         c.notional = _collect(c, outcome, exitRoutes);
-        if (c.notional == 0) revert ZeroInput();
+
+        if (c.notional == 0) {
+            if (outcome.kind != IntentLib.Kind.RWA_ONBOARD) revert ZeroInput();
+            policyEngine.check(outcome, policy, c.solver, 0, c.feeBps);
+            _fileOnboarding(intentId, outcome);
+            received = new uint256[](outcome.legs.length);
+            registry.markFulfilled(intentId, 0, 0);
+            emit IntentSettled(intentId, c.solver, outcome.recipient, 0, 0, 0, _tokensOf(outcome.legs), received);
+            return received;
+        }
 
         policyEngine.check(outcome, policy, c.solver, c.notional, c.feeBps);
 
@@ -116,6 +127,10 @@ contract IntentSettlement is Ownable, ReentrancyGuard {
 
         uint256 protocolFee = _payFees(outcome.inputToken, c);
         _refundDust(outcome.inputToken, c);
+
+        if (outcome.kind == IntentLib.Kind.RWA_ONBOARD) {
+            _fileOnboarding(intentId, outcome);
+        }
 
         registry.markFulfilled(intentId, c.notional, c.fee);
 
@@ -272,6 +287,30 @@ contract IntentSettlement is Ownable, ReentrancyGuard {
     }
 
     // ------------------------------------------------------------- governance
+
+    function _fileOnboarding(bytes32 intentId, IntentLib.Outcome calldata outcome) private {
+        if (address(rwa) == address(0)) return;
+        for (uint256 i = 0; i < outcome.legs.length; i++) {
+            rwa.requestOnboarding(outcome.legs[i].token, RWARegistry.AssetClass.EQUITY, "", _intentRef(intentId));
+        }
+    }
+
+    function _intentRef(bytes32 intentId) private pure returns (string memory) {
+        bytes16 hexChars = 0x30313233343536373839616263646566;
+        bytes memory out = new bytes(66);
+        out[0] = "0";
+        out[1] = "x";
+        for (uint256 i = 0; i < 32; i++) {
+            uint8 b = uint8(intentId[i]);
+            out[2 + i * 2] = hexChars[b >> 4];
+            out[3 + i * 2] = hexChars[b & 0x0f];
+        }
+        return string(out);
+    }
+
+    function setRwaRegistry(address rwa_) external onlyOwner {
+        rwa = RWARegistry(rwa_);
+    }
 
     function setRouterAllowed(address router, bool allowed) external onlyOwner {
         isRouterAllowed[router] = allowed;

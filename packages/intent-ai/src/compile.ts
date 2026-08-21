@@ -77,7 +77,8 @@ export async function compileSpec(spec: IntentSpec, options: CompileOptions): Pr
   });
 
   const isRebalance = spec.action === "rebalance";
-  if (!isRebalance && spec.inputAmount === null) {
+  const isOnboard = spec.action === "onboard_rwa";
+  if (!isRebalance && !isOnboard && spec.inputAmount === null) {
     throw new CompileError(`the intent does not say how much ${input.symbol} to deploy`, spec.clarifications);
   }
   if (isRebalance && exits.length === 0) {

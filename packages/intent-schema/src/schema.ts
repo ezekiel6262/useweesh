@@ -14,7 +14,9 @@ const hex32 = z
   .regex(/^0x[0-9a-fA-F]{64}$/, "expected a 32-byte hex string")
   .transform((v) => v as `0x${string}`);
 
-const bigintish = z.union([z.bigint(), z.number().int().nonnegative(), z.string().regex(/^\d+$/)]).transform(BigInt);
+const bigintish = z
+  .union([z.bigint(), z.number().int().nonnegative(), z.string().regex(/^(n:)?\d+$/)])
+  .transform((v) => BigInt(typeof v === "string" && v.startsWith("n:") ? v.slice(2) : v));
 
 export const basketLegSchema = z.object({
   token: address,

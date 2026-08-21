@@ -31,9 +31,19 @@ The deploy script also mints stand-in USDT and xStocks and seeds two demo venues
 tokenized equities are not deployed on testnet. That is fine for testnet and **wrong for
 mainnet** — see below.
 
-## Going to mainnet
+## Mainnet (chain 196)
 
-Three things must change, and none of them should be guessed.
+The protocol is launched on X Layer mainnet with **real** USDT, USDG and TSLAx, Uniswap V2 allowlisted, and a `V3RouterAdapter` in front of SwapRouter02 / QuoterV2. That adapter exists because V2 has no USDT→USDG or USDT→TSLAx pair; V3 is where those pools live.
+
+```bash
+npm run deploy:mainnet -w @intentos/contracts
+```
+
+Writes `deployments/xlayerMainnet.json`. The compose app stays on **testnet 1952** so anyone can mint and run the loop. Mainnet fills only where a pool actually quotes. There is no faucet on 196.
+
+## Going further on mainnet
+
+Three things still matter, and none of them should be guessed.
 
 **1. Real asset addresses.** `contracts/config/assets.ts` carries `mainnet: null` for every asset
 on purpose. Fill each one from the issuer's own documentation, then have the deploy script use

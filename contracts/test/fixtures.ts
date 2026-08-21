@@ -45,6 +45,7 @@ export async function deployIntentOS() {
   await intentRegistry.fundAuctioneerBond({ value: ethers.parseEther("1") });
   await solverRegistry.setReporter(await intentRegistry.getAddress(), true);
   await rwaRegistry.setAttestor(deployer.address, true);
+  await settlement.setRwaRegistry(await rwaRegistry.getAddress());
 
   const erc20 = await ethers.getContractFactory("MockERC20");
   const base = await erc20.deploy("Tether USD", "USDT", USDT_DECIMALS);

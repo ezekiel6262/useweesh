@@ -22,10 +22,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch {
       feed.observe({ volume: 2_500_000, funding: 0.012, volatility: 18 });
     }
-    const solvers = makeSolvers(feed);
+    let solvers;
+    try {
+      solvers = makeSolvers(feed);
+    } catch (error) {
+      return send(res, 200, {
+        ok: false,
+        activity: [],
+        skipped: `solvers unavailable: ${(error as Error).message}`,
+      });
+    }
     const activity = [];
     for (const solver of solvers) {
-      activity.push(...(await solver.tick()));
+      try {
+        activity.push(...(await solver.tick()));
+      } catch (error) {
+        activity.push({
+          intentId: body.intentId,
+          action: "failed",
+          detail: (error as Error).message,
+          at: Math.floor(Date.now() / 1000),
+        });
+      }
     }
     send(res, 200, { ok: true, activity });
   } catch (error) {

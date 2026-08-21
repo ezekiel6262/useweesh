@@ -31,6 +31,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const report = await makeCoordinator().close(body.intentId as Hex, draft);
     send(res, 200, report);
   } catch (error) {
-    send(res, 500, { error: (error as Error).message });
+    send(res, 200, {
+      intentId: (readBody(req) as { intentId?: string })?.intentId,
+      ranking: [],
+      skipped: (error as Error).message,
+    });
   }
 }
